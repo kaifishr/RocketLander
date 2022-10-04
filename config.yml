@@ -1,0 +1,33 @@
+optimizer:
+  n_simulation_steps: 200
+  n_boosters: 4
+env: 
+  gravity: 
+    x: 0.0                           # [m / s^2]
+    y: -9.81                         # [m / s^2]
+  booster: 
+    init_pos: 
+      x: 0.0                       # [m]
+      y: 50.0                      # [m]
+    init_linear_vel: 
+      x: 0.0                       # [m / s]
+      y: -10.0                     # [m / s]
+    init_angular_vel: 0.0            # [rad / s]
+    init_angle: 0.0                   # deg 
+    engine:  # merlin
+      merlin: 
+        max_force: 0.0        # [N]
+        angle_max: 20.0     # [deg] 
+      cold_gas: 
+        max_force: 0.0        # [N]
+    noise: 
+      position: 
+        x: .0                       # Standard deviation [m]
+        y: .0                       # Standard deviation [m]
+      linear_velocity: 
+        x: .0                        # Standard deviation [m / s]
+        y: .0                        # Standard deviation [m / s]
+      angular_velocity: .0             # Standard deviation [rad / s]
+      angle: .0                      # Standard deviation [deg]
+render: 
+  force_scaling: 0.01
