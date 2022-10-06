@@ -37,13 +37,21 @@ not work: Breakable, Liquid, Raycast, TimeOfImpact, ... (incomplete)
 """
 
 import pygame
-from pygame.locals import (QUIT, KEYDOWN, KEYUP)
+from pygame.locals import QUIT, KEYDOWN, KEYUP
 import Box2D
-from Box2D.b2 import (world, staticBody, dynamicBody, kinematicBody,
-                      polygonShape, circleShape, edgeShape, loopShape)
+from Box2D.b2 import (
+    world,
+    staticBody,
+    dynamicBody,
+    kinematicBody,
+    polygonShape,
+    circleShape,
+    edgeShape,
+    loopShape,
+)
 
 # todo: move this to framework class
-PPM = 1.0                       # kf: zoom in / out
+PPM = 1.0  # kf: zoom in / out
 SCREEN_WIDTH, SCREEN_HEIGHT = 500, 1000
 SCREEN_OFFSETX, SCREEN_OFFSETY = SCREEN_WIDTH * 1.0 / 2.0, 0.9 * SCREEN_HEIGHT
 colors = {
@@ -61,23 +69,28 @@ def fix_vertices(vertices):
 def _draw_polygon(polygon, screen, body, fixture):
     transform = body.transform
     vertices = fix_vertices([transform * v * PPM for v in polygon.vertices])
-    pygame.draw.polygon(
-        screen, [c / 2.0 for c in colors[body.type]], vertices, 0)
+    pygame.draw.polygon(screen, [c / 2.0 for c in colors[body.type]], vertices, 0)
     pygame.draw.polygon(screen, colors[body.type], vertices, 1)
+
+
 polygonShape.draw = _draw_polygon
 
 
 def _draw_circle(circle, screen, body, fixture):
     position = fix_vertices([body.transform * circle.pos * PPM])[0]
-    pygame.draw.circle(screen, colors[body.type],
-                       position, int(circle.radius * PPM))
+    pygame.draw.circle(screen, colors[body.type], position, int(circle.radius * PPM))
+
+
 circleShape.draw = _draw_circle
 
 
 def _draw_edge(edge, screen, body, fixture):
     vertices = fix_vertices(
-        [body.transform * edge.vertex1 * PPM, body.transform * edge.vertex2 * PPM])
+        [body.transform * edge.vertex1 * PPM, body.transform * edge.vertex2 * PPM]
+    )
     pygame.draw.line(screen, colors[body.type], vertices[0], vertices[1])
+
+
 edgeShape.draw = _draw_edge
 
 
@@ -88,6 +101,8 @@ def _draw_loop(loop, screen, body, fixture):
     for v2 in vertices:
         pygame.draw.line(screen, colors[body.type], v1, v2)
         v1 = v2
+
+
 loopShape.draw = _draw_loop
 
 
@@ -101,12 +116,14 @@ def draw_world(screen, world):
 class Keys(object):
     pass
 
+
 # The following import is only needed to do the initial loading and
 # overwrite the Keys class.
 import framework
+
 # Set up the keys (needed as the normal framework abstracts them between
 # backends)
-keys = [s for s in dir(pygame.locals) if s.startswith('K_')]
+keys = [s for s in dir(pygame.locals) if s.startswith("K_")]
 for key in keys:
     value = getattr(pygame.locals, key)
     setattr(Keys, key, value)
@@ -122,10 +139,11 @@ class SimpleFramework(object):
         groundbody:
         is_render:
     """
-    name = 'Booster'
-    description = 'Learning to land a booster.'
-    MAX_FPS = 100   # max frames per second when rendering turned off. 
-                    # todo: not sure if even necessary if you want to go as fast as possible.
+
+    name = "Booster"
+    description = "Learning to land a booster."
+    MAX_FPS = 100  # max frames per second when rendering turned off.
+    # todo: not sure if even necessary if you want to go as fast as possible.
     # Target frames per second.
     TARGET_FPS = 60
     TIMESTEP = 1.0 / TARGET_FPS
@@ -137,7 +155,7 @@ class SimpleFramework(object):
     def __init__(self):
         self.world = world()
 
-        print('Initializing pygame framework...')
+        print("Initializing pygame framework...")
         # Pygame Initialization
         pygame.init()
         caption = "Python Box2D Testbed - Simple backend - " + self.name
@@ -187,7 +205,9 @@ class SimpleFramework(object):
         """
 
         for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == Keys.K_ESCAPE):
+            if event.type == QUIT or (
+                event.type == KEYDOWN and event.key == Keys.K_ESCAPE
+            ):
                 exit()
             elif event.type == KEYDOWN:
                 self.Keyboard(event.key)
@@ -197,7 +217,7 @@ class SimpleFramework(object):
         if self.is_render:
 
             self.screen.fill((0, 0, 0))
-            self.textLine = 15 # move outside?
+            self.textLine = 15  # move outside?
 
             # Step the world
             self.world.Step(self.TIMESTEP, self.VEL_ITERS, self.POS_ITERS)
@@ -210,7 +230,7 @@ class SimpleFramework(object):
 
             if self.description:
                 # Draw the name of the test running
-                for s in self.description.split('\n'):
+                for s in self.description.split("\n"):
                     self.Print(s, (127, 255, 127))
 
             pygame.display.flip()
@@ -226,12 +246,12 @@ class SimpleFramework(object):
             # todo: clock.tick and clock.get_fps() probably not necessary to go max speed.
             self.clock.tick(self.MAX_FPS)
             self.fps = self.clock.get_fps()
-            
+
         print(f"FPS {self.fps:.2f}")
-        
+
         if self.description:
             self.Print(f"\n{int(self.fps)}", (127, 255, 127))
-            
+
         self.world.contactListener = None
         self.world.destructionListener = None
         self.world.renderer = None

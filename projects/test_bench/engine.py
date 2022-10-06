@@ -6,7 +6,6 @@ from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape, b2Vec2, b2Color
 
 
 class TestObject(Framework):
-
     def __init__(self):
         super(TestObject, self).__init__()
 
@@ -16,10 +15,10 @@ class TestObject(Framework):
         self.world.gravity = (0.0, -10.0)
         self.world.CreateStaticBody(
             shapes=[
-                    b2EdgeShape(vertices=[(-10, 0), (10, 0)]),
-                    b2EdgeShape(vertices=[(-10, 0), (-20, 20)]),
-                    b2EdgeShape(vertices=[(10, 0), (20, 20)]),
-                ]
+                b2EdgeShape(vertices=[(-10, 0), (10, 0)]),
+                b2EdgeShape(vertices=[(-10, 0), (-20, 20)]),
+                b2EdgeShape(vertices=[(10, 0), (20, 20)]),
+            ]
         )
 
         obj_vertices = [(0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), (0.5, -0.5)]
@@ -28,7 +27,9 @@ class TestObject(Framework):
         height, width = 6, 4
         position = b2Vec2(12, 20)
         linear_velocity = (0.0, -10.0)
-        self.obj = self.world.CreateDynamicBody(position=position, linearVelocity=linear_velocity, allowSleep=False)
+        self.obj = self.world.CreateDynamicBody(
+            position=position, linearVelocity=linear_velocity, allowSleep=False
+        )
 
         # Engine
         density = 1
@@ -62,16 +63,23 @@ class TestObject(Framework):
         self.line_color = (0, 1, 0)
         p1 = self.obj.GetWorldPoint(force_start)
 
-        force_length = force_x   # should be linear function of force
+        force_length = force_x  # should be linear function of force
         force_direction = (alpha * force_length, 0.0)
         p2 = p1 + self.obj.GetWorldVector(force_direction)
-        self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(*self.line_color))
+        self.renderer.DrawSegment(
+            self.renderer.to_screen(p1),
+            self.renderer.to_screen(p2),
+            b2Color(*self.line_color),
+        )
 
-        force_length = force_y   # should be linear function of force
+        force_length = force_y  # should be linear function of force
         force_direction = (0.0, alpha * force_length)
         p2 = p1 + self.obj.GetWorldVector(force_direction)
-        self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(*self.line_color))
-
+        self.renderer.DrawSegment(
+            self.renderer.to_screen(p1),
+            self.renderer.to_screen(p2),
+            b2Color(*self.line_color),
+        )
 
     def Step(self, settings):
         super(TestObject, self).Step(settings)

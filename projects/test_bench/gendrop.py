@@ -5,16 +5,17 @@ import time
 import numpy as np
 import pygame
 
-from Box2D.examples.framework import (Framework, main)
-from Box2D import (b2CircleShape, b2EdgeShape, b2FixtureDef, b2PolygonShape)
+from Box2D.examples.framework import Framework, main
+from Box2D import b2CircleShape, b2EdgeShape, b2FixtureDef, b2PolygonShape
+
 # from simple_framework import SimpleFramework
 
 
 class Bullet(Framework):
-# class Bullet(SimpleFramework):
+    # class Bullet(SimpleFramework):
 
     name = "Test"
-    description = 'Test description'
+    description = "Test description"
 
     def __init__(self):
         super(Bullet, self).__init__()
@@ -31,14 +32,32 @@ class Bullet(Framework):
         )
 
         # vertices_prototype = np.random.random(size=(16, 2))
-        vertices_prototype = [(-0.5, -0.5), (-0.5, -0.25),  (-0.5, 0.0),  (-0.5, 0.25),
-                              (-0.5, 0.5),  (-0.25, 0.5),  (0.0, 0.5),  (0.25, 0.5),
-                              (0.5, 0.5),  (0.5, 0.25),  (0.5, 0.0),  (0.5, -0.25),
-                              (0.5, -0.5),  (0.25, -0.5),  (0.0, -0.5),  (-0.25, -0.5)]
+        vertices_prototype = [
+            (-0.5, -0.5),
+            (-0.5, -0.25),
+            (-0.5, 0.0),
+            (-0.5, 0.25),
+            (-0.5, 0.5),
+            (-0.25, 0.5),
+            (0.0, 0.5),
+            (0.25, 0.5),
+            (0.5, 0.5),
+            (0.5, 0.25),
+            (0.5, 0.0),
+            (0.5, -0.25),
+            (0.5, -0.5),
+            (0.25, -0.5),
+            (0.0, -0.5),
+            (-0.25, -0.5),
+        ]
 
         scale = 4.0
-        self.vertices = [tuple(scale * num for num in item) for item in vertices_prototype]
-        self.fixture_def = b2FixtureDef(shape=b2PolygonShape(vertices=self.vertices), density=self.density)
+        self.vertices = [
+            tuple(scale * num for num in item) for item in vertices_prototype
+        ]
+        self.fixture_def = b2FixtureDef(
+            shape=b2PolygonShape(vertices=self.vertices), density=self.density
+        )
         self.bullet_fixture = self.bullet.CreateFixture(self.fixture_def)
 
         # Circles
@@ -98,11 +117,15 @@ class Bullet(Framework):
                 self.position.append((x, y))
 
     def _create_circle(self, pos):
-        fixture = b2FixtureDef(shape=b2CircleShape(radius=self.circle_radius, pos=(0, 0)), 
-                               density=self.circle_density, 
-                               friction=self.circle_friction)
+        fixture = b2FixtureDef(
+            shape=b2CircleShape(radius=self.circle_radius, pos=(0, 0)),
+            density=self.circle_density,
+            friction=self.circle_friction,
+        )
 
-        self.circles.append(self.world.CreateDynamicBody(position=pos, fixtures=fixture))
+        self.circles.append(
+            self.world.CreateDynamicBody(position=pos, fixtures=fixture)
+        )
 
     def _generate_population(self):
         for _ in range(self.population_size):
@@ -111,11 +134,18 @@ class Bullet(Framework):
     def _mutate(self):
         buffer = list()
         for vertices in self.individuals:
-            buffer.append([tuple((num + 10*np.random.uniform(-1, 1)) for num in item) for item in vertices])
+            buffer.append(
+                [
+                    tuple((num + 10 * np.random.uniform(-1, 1)) for num in item)
+                    for item in vertices
+                ]
+            )
         self.individuals = buffer
 
     def _set_fixture_def(self):
-        self.fixture_def = b2FixtureDef(shape=b2PolygonShape(vertices=self.vertices), density=self.density)
+        self.fixture_def = b2FixtureDef(
+            shape=b2PolygonShape(vertices=self.vertices), density=self.density
+        )
 
     def Step(self, settings):
         t0 = time.time()

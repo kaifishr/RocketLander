@@ -4,9 +4,10 @@ import yaml
 
 class Config:
     """Configuration class.
-    Class creates nested configuration for parameters used 
+    Class creates nested configuration for parameters used
     in different modules during training.
     """
+
     def __init__(self, d: dict = None) -> None:
         """Initializes config class."""
         self.merge_dict(d)
@@ -60,7 +61,7 @@ def load_config(path: str) -> Config:
             cfg = yaml.safe_load(fp)
         except yaml.YAMLError as exc:
             print(exc)
-    
+
     config = Config(cfg)
 
     return config

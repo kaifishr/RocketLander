@@ -8,11 +8,11 @@ random.seed(0)
 
 from torch.utils.tensorboard import SummaryWriter
 
-from environment import Environment
-from config import load_config, Config
+from src.environment import Environment
+from src.config import Config
 
 
-class Optimizer: 
+class Optimizer:
     """Contains logic for optimization.
 
     Optimizer uses Environment to interact with physics simulation.
@@ -22,8 +22,9 @@ class Optimizer:
         env:
         booster:
         data:
-    
+
     """
+
     def __init__(self, config: Config):
 
         # Environemnt creates the interface between booster and optimizer.
@@ -39,7 +40,7 @@ class Optimizer:
         """Computes action based on current data.
 
         This module holds the boosters brain.
-        
+
         """
         for booster, data in zip(self.boosters, self.data):
             print(booster.control_system(data))
@@ -53,19 +54,18 @@ class Optimizer:
         """
         iteration = 0
 
-        while True:
+        # while True:
 
-            score = 0.0
-            self.writer.add_scalar("training/score", score, iteration)
+        #     score = 0.0
+        #     self.writer.add_scalar("training/score", score, iteration)
 
-            iteration += 1
-
+        #     iteration += 1
 
         # Simulation step
-        # while True: 
+        # while True:
         #     self.env.run_()        # Minimal Framework, this works with while-loop
 
-        self.env.run()          # Standard Framework
+        self.env.run()  # Standard Framework
 
         # Read / extract booster data.
         # self.data = self.env.read_data()
@@ -77,9 +77,9 @@ class Optimizer:
         #     self.env.reset()
 
 
-if __name__ == "__main__":
-
-    config = load_config(path="../config.yml")
-    print(config)
-    optimizer = Optimizer(config=config)
-    optimizer.optimize()
+# if __name__ == "__main__":
+#
+#     config = load_config(path="../config.yml")
+#     print(config)
+#     optimizer = Optimizer(config=config)
+#     optimizer.optimize()

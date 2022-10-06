@@ -8,7 +8,7 @@ from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape, b2Vec2
 
 # Use this as template for rocket booster and landing pad.
 # Move code to respective files.
-class Box():
+class Box:
     """Template class for objects.
 
     Example usage:
@@ -35,8 +35,8 @@ class Box():
         min_pos_y = 80
         max_pos_y = 120
 
-        init_pos_x = self._pos_rand(min_pos_x, max_pos_x) 
-        init_pos_y = self._pos_rand(min_pos_y, max_pos_y) 
+        init_pos_x = self._pos_rand(min_pos_x, max_pos_x)
+        init_pos_y = self._pos_rand(min_pos_y, max_pos_y)
 
         init_position = (init_pos_x, init_pos_y)
 
@@ -51,17 +51,21 @@ class Box():
         )
 
         # Add properties to dynamic body
-        vertices = [(5 * random.random() * x, 5 * random.random() * y) for (x, y) in self.engines_prototype]
+        vertices = [
+            (5 * random.random() * x, 5 * random.random() * y)
+            for (x, y) in self.engines_prototype
+        ]
         density = 100 * random.random() + 1
 
-        box_fixture = b2FixtureDef(shape=b2PolygonShape(vertices=vertices), density=density)
+        box_fixture = b2FixtureDef(
+            shape=b2PolygonShape(vertices=vertices), density=density
+        )
         _ = box.CreateFixture(box_fixture)
 
         return box
 
 
 class TestObject(Framework):
-
     def __init__(self):
         super(TestObject, self).__init__()
 
@@ -69,18 +73,20 @@ class TestObject(Framework):
         self.world.gravity = (0.0, 0.0)
         self.world.CreateStaticBody(
             shapes=[
-                    b2EdgeShape(vertices=[(-10, 0), (10, 0)]),
-                    b2EdgeShape(vertices=[(-10, 0), (-20, 20)]),
-                    b2EdgeShape(vertices=[(10, 0), (20, 20)]),
-                ]
+                b2EdgeShape(vertices=[(-10, 0), (10, 0)]),
+                b2EdgeShape(vertices=[(-10, 0), (-20, 20)]),
+                b2EdgeShape(vertices=[(10, 0), (20, 20)]),
+            ]
         )
 
         obj_vertices = [(1.0, 1.0), (-1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]
 
-        # Create object 
+        # Create object
         pos1 = b2Vec2(12, 20) + (0, 0)
         velocity = (0.0, -10.0)
-        obj1 = self.world.CreateDynamicBody(position=pos1, linearVelocity=velocity, allowSleep=False)
+        obj1 = self.world.CreateDynamicBody(
+            position=pos1, linearVelocity=velocity, allowSleep=False
+        )
 
         # Upper part (central object)
         obj1_h = 8
@@ -93,20 +99,27 @@ class TestObject(Framework):
 
         # Left leg
         leg_density = 1.0
-        left_leg = b2PolygonShape(vertices=((-1.0, -obj1_h), (-4, -11), (-4.1, -11), (-1.1, -obj1_h)))
+        left_leg = b2PolygonShape(
+            vertices=((-1.0, -obj1_h), (-4, -11), (-4.1, -11), (-1.1, -obj1_h))
+        )
         left_leg_fixture_ = b2FixtureDef(shape=left_leg, density=leg_density)
         _ = obj1.CreateFixture(left_leg_fixture_)
 
         # Left leg
-        right_leg = b2PolygonShape(vertices=((1.0, -obj1_h), (4, -11), (4.1, -11), (1.1, -obj1_h)))
+        right_leg = b2PolygonShape(
+            vertices=((1.0, -obj1_h), (4, -11), (4.1, -11), (1.1, -obj1_h))
+        )
         right_leg_fixture_ = b2FixtureDef(shape=right_leg, density=leg_density)
         _ = obj1.CreateFixture(right_leg_fixture_)
 
-        # Engines 
+        # Engines
         obj2_h = 0.75
         obj2_w = 1
         obj2_density = 100
-        obj2_vertices = [(obj2_w * item[0], obj2_h * item[1] - obj1_h - obj2_h) for item in obj_vertices]
+        obj2_vertices = [
+            (obj2_w * item[0], obj2_h * item[1] - obj1_h - obj2_h)
+            for item in obj_vertices
+        ]
         obj2_shape = b2PolygonShape(vertices=obj2_vertices)
         # obj2_shape = b2PolygonShape(vertices=((1.0), (), (), ()))
         obj2_fixture_def = b2FixtureDef(shape=obj2_shape, density=obj2_density)

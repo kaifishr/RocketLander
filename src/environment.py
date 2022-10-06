@@ -6,6 +6,7 @@ DEBUG = False
 DEVMODE = True
 
 import random
+
 random.seed(0)
 
 from Box2D import b2Vec2, b2Color
@@ -17,14 +18,14 @@ else:
 
 from Box2D import b2Vec2, b2Color
 
-from booster import Booster
-from pad import LandingPad
-from config import Config
+from src.booster import Booster
+from src.pad import LandingPad
+from src.config import Config
 
 
 class Environment(Framework):
     """Environment class holds pyhsical objects of simulation.
-    
+
     Optimizer class uses Environment to for genetic optimization / reinforcement learning.
     """
 
@@ -41,7 +42,9 @@ class Environment(Framework):
 
         # Booster
         self.num_boosters = config.optimizer.n_boosters
-        self.boosters = [Booster(world=self.world, config=config) for _ in range(self.num_boosters)]
+        self.boosters = [
+            Booster(world=self.world, config=config) for _ in range(self.num_boosters)
+        ]
 
         self.force_merlin_engine = None
         self.force_cold_gas_engine = None
@@ -68,7 +71,7 @@ class Environment(Framework):
             booster.massData
             booster.linearVelocity
             booster.angularVelocity
-        
+
         """
         data = [
             [
@@ -78,7 +81,8 @@ class Environment(Framework):
                 booster.body.linearVelocity.y,
                 booster.body.angularVelocity,
                 booster.body.angle,
-            ] for booster in self.boosters
+            ]
+            for booster in self.boosters
         ]
 
         if DEBUG:
@@ -91,7 +95,7 @@ class Environment(Framework):
         for i, booster in enumerate(self.boosters):
             print(f"Booster {i}")
             print(f"{booster.body.transform = }")
-            print(f"{booster.body.position = }") 
+            print(f"{booster.body.position = }")
             print(f"{booster.body.angle = }")
             print(f"{booster.body.localCenter = }")
             print(f"{booster.body.worldCenter = }")
@@ -100,10 +104,10 @@ class Environment(Framework):
             print(f"{booster.body.angularVelocity = }\n")
 
     def apply_action(
-        self, 
+        self,
         force_merlin_engine: tuple = (0.0, 0.0),
-        force_cold_gas_engine: tuple = ((0.0, 0.0), (0.0, 0.0))
-        ):
+        force_cold_gas_engine: tuple = ((0.0, 0.0), (0.0, 0.0)),
+    ):
         """Applies action coming from neural network.
 
         Network returns for merlin engines
@@ -111,7 +115,7 @@ class Environment(Framework):
             F'x, F'y in the range [0, 1] (sigmoid)
 
         The following transformation is used to avoid exceeding engine's max thrust
-            
+
             F_x = F_max * F'_x / sqrt(2)
             F_y = F_max * F'_y / sqrt(2)
 
@@ -122,32 +126,48 @@ class Environment(Framework):
 
         TODO: Shouldn't this be part of Booster class? Booster's networks
         computes set of actions and Booster's control system method executes
-        actions. 
+        actions.
         """
         # comp_actions() predicts which forces to apply
         # The predictions are a vector for each booster with F_x and F_y
         f_x_max = self.config.env.booster.engine.merlin.max_force
         f_y_max = self.config.env.booster.engine.merlin.max_force
 
-        self.force_merlin_engine = [(random.uniform(-1, 1) * f_x_max, random.uniform(0, 1) * f_y_max) for _ in self.boosters] # some fake data
+        self.force_merlin_engine = [
+            (random.uniform(-1, 1) * f_x_max, random.uniform(0, 1) * f_y_max)
+            for _ in self.boosters
+        ]  # some fake data
 
         f_max = self.config.env.booster.engine.cold_gas.max_force
-        self.force_cold_gas_engine_left = [(random.random() * f_max, 0.0) for _ in self.boosters] # some fake data
-        self.force_cold_gas_engine_right = [(random.random() * f_max, 0.0) for _ in self.boosters] # some fake data
+        self.force_cold_gas_engine_left = [
+            (random.random() * f_max, 0.0) for _ in self.boosters
+        ]  # some fake data
+        self.force_cold_gas_engine_right = [
+            (-random.random() * f_max, 0.0) for _ in self.boosters
+        ]  # some fake data
 
         for booster, force_merlin, force_cold_gas_left, force_cold_gas_right in zip(
-            self.boosters, self.force_merlin_engine, self.force_cold_gas_engine_left, self.force_cold_gas_engine_right
-            ):
+            self.boosters,
+            self.force_merlin_engine,
+            self.force_cold_gas_engine_left,
+            self.force_cold_gas_engine_right,
+        ):
 
             #####################################
             # Apply force coming from main engine
             #####################################
-            f = booster.body.GetWorldVector(localVector=force_merlin)  # Get the world coordinates of a vector given the local coordinates.
+            f = booster.body.GetWorldVector(
+                localVector=force_merlin
+            )  # Get the world coordinates of a vector given the local coordinates.
 
-            local_point_merlin = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
-            local_point_merlin = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
+            local_point_merlin = b2Vec2(
+                0.0, -(0.5 * booster.hull.height + booster.engines.height)
+            )
+            local_point_merlin = b2Vec2(
+                0.0, -(0.5 * booster.hull.height + booster.engines.height)
+            )
 
-            p = booster.body.GetWorldPoint(localPoint=local_point_merlin) 
+            p = booster.body.GetWorldPoint(localPoint=local_point_merlin)
             # Apply force f to point p of booster.
             booster.body.ApplyForce(f, p, True)
 
@@ -155,15 +175,27 @@ class Environment(Framework):
             # Apply force coming from cold gas thruster
             ###########################################
             # Left
-            local_point_cold_gas_left = b2Vec2(-0.5 * booster.hull.width, 0.5 * booster.hull.height)
-            f = booster.body.GetWorldVector(localVector=force_cold_gas_left)  # Get the world coordinates of a vector given the local coordinates.
-            p = booster.body.GetWorldPoint(localPoint=local_point_cold_gas_left)    # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
+            local_point_cold_gas_left = b2Vec2(
+                -0.5 * booster.hull.width, 0.5 * booster.hull.height
+            )
+            f = booster.body.GetWorldVector(
+                localVector=force_cold_gas_left
+            )  # Get the world coordinates of a vector given the local coordinates.
+            p = booster.body.GetWorldPoint(
+                localPoint=local_point_cold_gas_left
+            )  # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
             booster.body.ApplyForce(f, p, True)
 
             # Right
-            local_point_cold_gas_right = b2Vec2(0.5 * booster.hull.width, 0.5 * booster.hull.height)
-            f = booster.body.GetWorldVector(localVector=force_cold_gas_right)  # Get the world coordinates of a vector given the local coordinates.
-            p = booster.body.GetWorldPoint(localPoint=local_point_cold_gas_right)    # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
+            local_point_cold_gas_right = b2Vec2(
+                0.5 * booster.hull.width, 0.5 * booster.hull.height
+            )
+            f = booster.body.GetWorldVector(
+                localVector=force_cold_gas_right
+            )  # Get the world coordinates of a vector given the local coordinates.
+            p = booster.body.GetWorldPoint(
+                localPoint=local_point_cold_gas_right
+            )  # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
             booster.body.ApplyForce(f, p, True)
 
     def _render_force(self):
@@ -178,46 +210,75 @@ class Environment(Framework):
         self.line_color = (0, 1, 0)
 
         for booster, force_merlin, force_cold_gas_left, force_cold_gas_right in zip(
-            self.boosters, self.force_merlin_engine, self.force_cold_gas_engine_left, self.force_cold_gas_engine_right
-            ):
+            self.boosters,
+            self.force_merlin_engine,
+            self.force_cold_gas_engine_left,
+            self.force_cold_gas_engine_right,
+        ):
 
             force_x, force_y = force_merlin
 
             # Engines
-            local_point_merlin = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
+            local_point_merlin = b2Vec2(
+                0.0, -(0.5 * booster.hull.height + booster.engines.height)
+            )
             p1 = booster.body.GetWorldPoint(localPoint=local_point_merlin)
 
-            force_length = force_x   # should be linear function of force
+            force_length = force_x  # should be linear function of force
             force_direction = (-alpha * force_length, 0.0)
             p2 = p1 + booster.body.GetWorldVector(force_direction)
-            self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(*self.line_color))
+            self.renderer.DrawSegment(
+                self.renderer.to_screen(p1),
+                self.renderer.to_screen(p2),
+                b2Color(*self.line_color),
+            )
 
-            force_length = force_y   # should be linear function of force
+            force_length = force_y  # should be linear function of force
             force_direction = (0.0, -alpha * force_length)
             p2 = p1 + booster.body.GetWorldVector(force_direction)
-            self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(*self.line_color))
+            self.renderer.DrawSegment(
+                self.renderer.to_screen(p1),
+                self.renderer.to_screen(p2),
+                b2Color(*self.line_color),
+            )
 
             force_direction = alpha * b2Vec2(-force_x, -force_y)
             p2 = p1 + booster.body.GetWorldVector(force_direction)
-            self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(1, 0, 0))
+            self.renderer.DrawSegment(
+                self.renderer.to_screen(p1),
+                self.renderer.to_screen(p2),
+                b2Color(1, 0, 0),
+            )
 
             # Cold gas thruster
 
             # Left
-            force_x, _ = force_cold_gas_left     # Thruster has no force_y component.
-            local_point_cold_gas_left = b2Vec2(-0.5 * booster.hull.width, 0.5 * booster.hull.height)
+            force_x, _ = force_cold_gas_left  # Thruster has no force_y component.
+            local_point_cold_gas_left = b2Vec2(
+                -0.5 * booster.hull.width, 0.5 * booster.hull.height
+            )
             p1 = booster.body.GetWorldPoint(localPoint=local_point_cold_gas_left)
             force_direction = (-alpha * force_x, 0.0)
             p2 = p1 + booster.body.GetWorldVector(force_direction)
-            self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(*self.line_color))
+            self.renderer.DrawSegment(
+                self.renderer.to_screen(p1),
+                self.renderer.to_screen(p2),
+                b2Color(*self.line_color),
+            )
 
             # Right
-            force_x, _ = force_cold_gas_right     # Thruster has no force_y component.
-            local_point_cold_gas_right = b2Vec2(0.5 * booster.hull.width, 0.5 * booster.hull.height)
+            force_x, _ = force_cold_gas_right  # Thruster has no force_y component.
+            local_point_cold_gas_right = b2Vec2(
+                0.5 * booster.hull.width, 0.5 * booster.hull.height
+            )
             p1 = booster.body.GetWorldPoint(localPoint=local_point_cold_gas_right)
-            force_direction = (alpha * force_x, 0.0)
+            force_direction = (-alpha * force_x, 0.0)
             p2 = p1 + booster.body.GetWorldVector(force_direction)
-            self.renderer.DrawSegment(self.renderer.to_screen(p1), self.renderer.to_screen(p2), b2Color(*self.line_color))
+            self.renderer.DrawSegment(
+                self.renderer.to_screen(p1),
+                self.renderer.to_screen(p2),
+                b2Color(*self.line_color),
+            )
 
     def run_(self):
         """Main loop.

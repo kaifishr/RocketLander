@@ -6,7 +6,7 @@ import numpy as np
 from Box2D import b2FixtureDef, b2PolygonShape, b2Filter, b2Vec2
 from Box2D.Box2D import b2World, b2Body
 
-from config import Config
+from src.config import Config
 
 
 class Booster2D:
@@ -51,9 +51,11 @@ class Booster2D:
 
         def _add_hull(self, body) -> None:
             """Adds hull to body."""
-            self.vertices = [(self.width * x, self.height * y) for (x, y) in self.vertices]
+            self.vertices = [
+                (self.width * x, self.height * y) for (x, y) in self.vertices
+            ]
             hull_fixture_def = b2FixtureDef(
-                shape=b2PolygonShape(vertices=self.vertices), 
+                shape=b2PolygonShape(vertices=self.vertices),
                 density=self.density,
                 filter=b2Filter(groupIndex=-1),  # negative groups never collide
             )
@@ -67,9 +69,9 @@ class Booster2D:
 
         # Parameters for engine
         density = 100.0
-        height = 1.0
-        width_min = 0.5 
-        width_max = 1.0 
+        height = 0.8
+        width_min = 0.5
+        width_max = 1.0
 
         def __init__(self, body: b2Body, hull) -> None:
             """Initializes engines class."""
@@ -83,15 +85,15 @@ class Booster2D:
             def engine_nozzle(mount_point: b2Vec2):
                 """Adds three engines to booster."""
                 r_0 = mount_point + b2Vec2(0.5 * self.width_min, 0.0)
-                r_1 = mount_point + b2Vec2(- 0.5 * self.width_min, 0.0)
-                r_2 = mount_point + b2Vec2(- 0.5 * self.width_max, -self.height)
+                r_1 = mount_point + b2Vec2(-0.5 * self.width_min, 0.0)
+                r_2 = mount_point + b2Vec2(-0.5 * self.width_max, -self.height)
                 r_3 = mount_point + b2Vec2(0.5 * self.width_max, -self.height)
                 return r_0, r_1, r_2, r_3
 
             mount_points = [
                 b2Vec2(0.0, -0.5 * self.hull.height),
                 b2Vec2(-(1.0 / 3.0) * self.hull.width, -0.5 * self.hull.height),
-                b2Vec2((1.0 / 3.0) * self.hull.width, -0.5 * self.hull.height)
+                b2Vec2((1.0 / 3.0) * self.hull.width, -0.5 * self.hull.height),
             ]
 
             for mount_point in mount_points:
@@ -101,7 +103,7 @@ class Booster2D:
                 )
 
                 engine_fixture_def = b2FixtureDef(
-                    shape=engine_polygon, 
+                    shape=engine_polygon,
                     density=self.density,
                     filter=b2Filter(groupIndex=-1),  # negative groups never collide
                 )
@@ -113,10 +115,11 @@ class Booster2D:
 
         Adds landing legs to booster.
         """
+
         # Parameters
         density = 2.0
 
-        # Define coordinates of polygon in shape of landing leg. 
+        # Define coordinates of polygon in shape of landing leg.
         y_hull_low = 2.0
         y_hull_high = 4.0
         y_ground = -2.5
@@ -128,10 +131,9 @@ class Booster2D:
             self.body = body
             self.hull = hull
             self._add_legs()
-    
+
         def _add_legs(self) -> None:
-            """Adds landing legs to booster.
-            """
+            """Adds landing legs to booster."""
 
             # Center coordinates
             center = b2Vec2(-0.5 * self.hull.width, -0.5 * self.hull.height)
@@ -145,9 +147,11 @@ class Booster2D:
             left_leg_polygon = b2PolygonShape(vertices=(r_0, r_1, r_2, r_3))
 
             left_leg_fixture = b2FixtureDef(
-                shape=left_leg_polygon, 
+                shape=left_leg_polygon,
                 density=self.density,
-                filter=b2Filter(groupIndex=-1)     # no interactions with any part of other boosters
+                filter=b2Filter(
+                    groupIndex=-1
+                ),  # no interactions with any part of other boosters
             )
 
             left_leg_fixture = self.body.CreateFixture(left_leg_fixture)
@@ -164,9 +168,11 @@ class Booster2D:
             right_leg_polygon = b2PolygonShape(vertices=(r_0, r_1, r_2, r_3))
 
             right_leg_fixture = b2FixtureDef(
-                shape=right_leg_polygon, 
+                shape=right_leg_polygon,
                 density=self.density,
-                filter=b2Filter(groupIndex=-1)     # no interactions with any part of other boosters
+                filter=b2Filter(
+                    groupIndex=-1
+                ),  # no interactions with any part of other boosters
             )
 
             right_leg_fixture = self.body.CreateFixture(right_leg_fixture)
@@ -190,16 +196,14 @@ class Booster2D:
 
         self.body = self.world.CreateDynamicBody(
             bullet=True,
-            allowSleep=False,
+            allowSleep=True,
             position=self.init_position,
             linearVelocity=self.init_linear_velocity,
             angularVelocity=self.init_angular_velocity,
-            angle = self.init_angle,
+            angle=self.init_angle,
         )
 
-        self.hull = self.Hull(
-            body=self.body
-        )
+        self.hull = self.Hull(body=self.body)
 
         self.engines = self.Engines(
             body=self.body,
@@ -212,8 +216,7 @@ class Booster2D:
         )
 
     def reset(self, noise: bool = False) -> None:
-        """Resets booster to initial position and velocity.
-        """
+        """Resets booster to initial position and velocity."""
         init_position = self.init_position
         init_linear_velocity = self.init_linear_velocity
         init_angular_velocity = self.init_angular_velocity
@@ -264,6 +267,6 @@ class Booster(Booster2D):
         """
         # Toy predictor
         weights = np.random.normal(size=(2, 6))
-        bias = np.random.normal(size=(2, ))
+        bias = np.random.normal(size=(2,))
         pred = np.matmul(np.array(weights), data) + bias
         return pred
