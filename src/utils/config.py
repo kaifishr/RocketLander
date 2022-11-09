@@ -1,11 +1,11 @@
 """Class to hold configuration."""
 from pathlib import Path
-
 import yaml
 
 
 class Config:
     """Configuration class.
+
     Class creates nested configuration for parameters used
     in different modules during training.
     """
@@ -56,13 +56,13 @@ def load_config(path: str) -> Config:
 
     Returns:
         Dictionary holding content of yaml file.
-
     """
     with open(path, "r") as fp:
         try:
             config = yaml.safe_load(fp)
+            print(config)
         except yaml.YAMLError as exc:
-            print(exc)
+            raise FileNotFoundError(exc)
 
     return config
 

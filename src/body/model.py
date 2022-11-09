@@ -1,6 +1,6 @@
 """Contains neural network definitions.
 
-The drone's brain represented by a feedforward neural network.
+The booster's brain represented by a feedforward neural network.
 """
 import numpy
 import numpy as np
@@ -12,23 +12,24 @@ from src.utils.config import Config
 from src.utils.utils import load_checkpoint
 
 
-class NetworkLoader:
+class ModelLoader:
     """Loads NumPy or PyTorch neural network."""
 
     def __init__(self, config: Config) -> None:
         """Initializes Network wrapper."""
         self.config = config
 
-        # Compute normalization parameter for input data
-        x_min = config.env.domain.limit.x_min
-        x_max = config.env.domain.limit.x_max
-        y_min = config.env.domain.limit.y_min
-        y_max = config.env.domain.limit.y_max
+        # # Compute normalization parameter for input data
+        # x_min = config.env.domain.limit.x_min
+        # x_max = config.env.domain.limit.x_max
+        # y_min = config.env.domain.limit.y_min
+        # y_max = config.env.domain.limit.y_max
 
-        domain_diam_x = x_max - x_min
-        domain_diam_y = y_max - y_min
+        # domain_diam_x = x_max - x_min
+        # domain_diam_y = y_max - y_min
 
-        self.normalizer = 1.0 / (domain_diam_x**2 + domain_diam_y**2) ** 0.5
+        # self.normalizer = 1.0 / (domain_diam_x**2 + domain_diam_y**2) ** 0.5
+        self.normalizer = 1.0
 
     def __call__(self):
         """Loads and returns model.
@@ -76,7 +77,7 @@ class NumpyNeuralNetwork:
         self.mutation_prob = config.optimizer.mutation_probability
         self.mutation_rate = config.optimizer.mutation_rate
 
-        config = config.env.drone.neural_network
+        config = config.env.booster.neural_network
 
         in_features = config.num_dim_in
         out_features = config.num_dim_out
@@ -178,7 +179,7 @@ class TorchNeuralNetwork(nn.Module):
         self.mutation_prob = config.optimizer.mutation_probability
         self.mutation_rate = config.optimizer.mutation_rate
 
-        config = config.env.drone.neural_network
+        config = config.env.booster.neural_network
 
         in_features = config.num_dim_in
         out_features = config.num_dim_out

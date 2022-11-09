@@ -5,6 +5,8 @@
 
 tl;dr: Simulation framework for propulsive booster landing.
 
+The booster's goal is to reach the landing pad at height $0$ at a velocity smaller or equal to $v_{\text{max}}$.
+
 ---
 ## TODOs
 - Create version of code that can be used for genetic optimization as well as for reinforcement learning.

@@ -25,7 +25,7 @@ class Optimizer:
         self.config = config
         self.writer = SummaryWriter()
 
-        # Create UUID for Pygame window.
+        # Create UUID for PyGame window.
         self.config.id = self.writer.log_dir.split("/")[-1]
 
         self.env = Environment(config=config)
@@ -51,15 +51,14 @@ class Optimizer:
             # Physics and rendering
             self.env.step()
 
-            # Ray casting and positioning
-            self.env.ray_casting()
+            # Detects collision with ground. 
+            self.env.collision_detection()
 
-            # Detect collisions with other bodies
-            if not self.config.env.allow_collision_domain:
-                self.env.collision_detection()
-
-            # Compute current fitness / score of drone
+            # Compute current fitness / score of booster
             self.env.comp_score()
+
+            # Fetch data of each booster used for neural network.
+            self.env.fetch_data()
 
             # Run neural network prediction
             self.env.comp_action()

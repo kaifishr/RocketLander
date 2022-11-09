@@ -1,15 +1,16 @@
 """Defines rocket booster in Box2d."""
+import copy
 import math
 import random
-import numpy as np
 
 from Box2D import b2FixtureDef, b2PolygonShape, b2Filter, b2Vec2
 from Box2D.Box2D import b2World, b2Body
 
 from src.config import Config
+from src.body.model import ModelLoader
 
 
-class Booster2D:
+class Booster2D:    # BoosterBody
     """Rocket booster class.
 
     Rocket booster consits of three main parts:
@@ -184,15 +185,15 @@ class Booster2D:
         self.world = world
 
         self.init_position = b2Vec2(
-            config.env.booster.init_pos.x,
-            config.env.booster.init_pos.y,
+            config.env.booster.init.position.x,
+            config.env.booster.init.position.y,
         )
         self.init_linear_velocity = b2Vec2(
-            config.env.booster.init_linear_vel.x,
-            config.env.booster.init_linear_vel.y,
+            config.env.booster.init.linear_velocity.x,
+            config.env.booster.init.linear_velocity.y,
         )
-        self.init_angular_velocity = config.env.booster.init_angular_vel
-        self.init_angle = (config.env.booster.init_angle * math.pi) / 180.0
+        self.init_angular_velocity = config.env.booster.init.angular_velocity
+        self.init_angle = (config.env.booster.init.angle * math.pi) / 180.0
 
         self.body = self.world.CreateDynamicBody(
             bullet=True,
@@ -253,20 +254,227 @@ class Booster(Booster2D):
     """Booster class holds PyBox2D booster object as well
     as the booster logic"""
 
+    num_engines = 3
+
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes Booster class."""
         super().__init__(world=world, config=config)
-        # self.model = Model(dims_in, dims_out)
 
-    def control_system(self, data):
-        """The booster's brain.
+        self.model = ModelLoader(config=config)()
 
-        Data receives data and predicts new forces.
+        # Forces predicted by neural network.
+        # Initialized with 0 for each engine.
+        self.forces = [0.0 for _ in range(self.num_engines)]
 
-        TODO: Move this method to Booster() class. This class will be renamed Booster() -> Booster_()
+        self.max_force = config.env.booster.engine.main.max_force
+        # self.max_force = config.env.booster.engine.coldgas.max_force # TODO
+
+        # Input data for neural network
+        self.data = []
+
+        # Fitness score
+        self.score = 0.0
+
+    def fetch_data(self):
+        """Fetches data from booster that is fed into neural network."""
+        self.data = [
+            self.body.position.x,
+            self.body.position.y,
+            self.body.linearVelocity.x,
+            self.body.linearVelocity.y,
+            self.body.angularVelocity,
+            self.body.angle,
+        ]
+
+    def mutate(self, model: object) -> None:
+            """Mutates drone's neural network.
+
+            TODO: Move to genetic optimizer. This is only for genetic optimization relevant.
+
+            Args:
+                model: The current best model.
+            """
+            self.model = copy.deepcopy(model)
+            self.model.mutate_weights()
+
+    def comp_score(self) -> None:
+        """Computes current fitness score.
+
+        Accumulates drone's linear velocity over one generation.
+        This effectively computes the distance traveled by the
+        drone over time divided by the simulation's step size.
+
         """
-        # Toy predictor
-        weights = np.random.normal(size=(2, 6))
-        bias = np.random.normal(size=(2,))
-        pred = np.matmul(np.array(weights), data) + bias
-        return pred
+        if self.body.active:
+
+            # Reward distance traveled.
+            vel = self.body.linearVelocity
+            time_step = 0.0167
+            score = time_step * (vel.x**2 + vel.y**2) ** 0.5
+            self.score += score
+
+            # Reward distance to obstacles.
+            # eta = 4.0
+            # phi = 0.5
+            # score = 1.0
+            # for cb in self.callbacks:
+            #     diff = cb.point - self.body.position
+            #     dist = (diff.x**2 + diff.y**2) ** 0.5
+            #     if dist < eta * self.collision_threshold:
+            #         score = 0.0
+            #         break
+            # self.score += phi * score
+
+    def detect_collision(self):
+        """Detects collision with objects.
+        We use the raycast information here and speak of a collision
+        when an imaginary circle with the total diameter of the drone
+        touches another object.
+        """
+        distance_booster_ground = 1
+        if self.body.active:
+            if distance_booster_ground < 0:
+                self.body.active = False
+                self.forces = self.num_engines * [0.0]
+
+    def comp_action(self) -> None:
+        """Computes next section of actions applied to engines.
+        Next steps of action are computed by feeding obstacle data coming
+        from ray casting to the drone's neural network which then returns
+        a set of actions (forces) to be applied to the drone's engines.
+        """
+        if self.body.active:
+            force_pred = self.model(self.data)
+            self.forces = self.max_force * force_pred
+
+    def apply_action(self) -> None:
+        """Applies force to engines predicted by neural network.
+
+        """
+        if self.body.active:
+            f_main, f_left, f_right = self.forces
+
+            # Main engine
+            f = self.body.GetWorldVector(localVector=b2Vec2(0.0, f_main))
+            p = self.body.GetWorldPoint(localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height)))
+            self.body.ApplyForce(f, p, True)
+
+            # Left cold gas thruster
+            f = self.body.GetWorldVector(localVector=b2Vec2(f_left, 0.0))
+            p = self.body.GetWorldPoint(localPoint=b2Vec2(-0.5 * self.hull.width, 0.5 * self.hull.height))
+            self.body.ApplyForce(f, p, True)
+
+            # Right cold gas thruster
+            f = self.body.GetWorldVector(localVector=b2Vec2(-f_right, 0.0))
+            p = self.body.GetWorldPoint(localPoint=b2Vec2(0.5 * self.hull.width, 0.5 * self.hull.height))
+            self.body.ApplyForce(f, p, True)
+
+    # def apply_action(
+    #     self,
+    #     force_merlin_engine: tuple = (0.0, 0.0),
+    #     force_cold_gas_engine: tuple = ((0.0, 0.0), (0.0, 0.0)),
+    # ):
+    #     """
+    #     NOTE: This is from the old implementation.
+
+
+    #     Applies action coming from neural network.
+
+    #     Network returns for merlin engines
+
+    #         F'x, F'y in the range [0, 1] (sigmoid)
+
+    #     The following transformation is used to avoid exceeding engine's max thrust
+
+    #         F_x = F_max * F'_x / sqrt(2)
+    #         F_y = F_max * F'_y / sqrt(2)
+
+    #     Taking into account the engine's maximum deflection
+
+    #         F_x = min(F_x_max, F_x) = min(sin(alpha), F_x)
+    #         F_y = min(F_y_max, F_y) = min(cos(alpha), F_y)
+
+    #     TODO: Shouldn't this be part of Booster class? Booster's networks
+    #     computes set of actions and Booster's control system method executes
+    #     actions.
+    #     """
+    #     # comp_actions() predicts which forces to apply
+    #     # The predictions are a vector for each booster with F_x and F_y
+    #     f_x_max = self.config.env.booster.engine.main.max_force
+    #     f_y_max = self.config.env.booster.engine.main.max_force
+
+    #     self.force_merlin_engine = [
+    #         (random.uniform(-1, 1) * f_x_max, random.uniform(0, 1) * f_y_max)
+    #         for _ in self.boosters
+    #     ]  # some fake data
+
+    #     f_max = self.config.env.booster.engine.cold_gas.max_force
+    #     self.force_cold_gas_engine_left = [
+    #         (random.random() * f_max, 0.0) for _ in self.boosters
+    #     ]  # some fake data
+    #     self.force_cold_gas_engine_right = [
+    #         (-random.random() * f_max, 0.0) for _ in self.boosters
+    #     ]  # some fake data
+
+    #     for booster, force_merlin, force_cold_gas_left, force_cold_gas_right in zip(
+    #         self.boosters,
+    #         self.force_merlin_engine,
+    #         self.force_cold_gas_engine_left,
+    #         self.force_cold_gas_engine_right,
+    #     ):
+
+    #         #####################################
+    #         # Apply force coming from main engine
+    #         #####################################
+    #         f = booster.body.GetWorldVector(
+    #             localVector=force_merlin
+    #         )  # Get the world coordinates of a vector given the local coordinates.
+
+    #         local_point_merlin = b2Vec2(
+    #             0.0, -(0.5 * booster.hull.height + booster.engines.height)
+    #         )
+    #         local_point_merlin = b2Vec2(
+    #             0.0, -(0.5 * booster.hull.height + booster.engines.height)
+    #         )
+
+    #         p = booster.body.GetWorldPoint(localPoint=local_point_merlin)
+    #         # Apply force f to point p of booster.
+    #         booster.body.ApplyForce(f, p, True)
+
+    #         ###########################################
+    #         # Apply force coming from cold gas thruster
+    #         ###########################################
+    #         # Left
+    #         local_point_cold_gas_left = b2Vec2(
+    #             -0.5 * booster.hull.width, 0.5 * booster.hull.height
+    #         )
+    #         f = booster.body.GetWorldVector(
+    #             localVector=force_cold_gas_left
+    #         )  # Get the world coordinates of a vector given the local coordinates.
+    #         p = booster.body.GetWorldPoint(
+    #             localPoint=local_point_cold_gas_left
+    #         )  # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
+    #         booster.body.ApplyForce(f, p, True)
+
+    #         # Right
+    #         local_point_cold_gas_right = b2Vec2(
+    #             0.5 * booster.hull.width, 0.5 * booster.hull.height
+    #         )
+    #         f = booster.body.GetWorldVector(
+    #             localVector=force_cold_gas_right
+    #         )  # Get the world coordinates of a vector given the local coordinates.
+    #         p = booster.body.GetWorldPoint(
+    #             localPoint=local_point_cold_gas_right
+    #         )  # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
+    #         booster.body.ApplyForce(f, p, True)
+
+    def _print_booster_info(self) -> None:
+        """Prints booster data."""
+        print(f"{self.body.transform = }")
+        print(f"{self.body.position = }")
+        print(f"{self.body.angle = }")
+        print(f"{self.body.localCenter = }")
+        print(f"{self.body.worldCenter = }")
+        print(f"{self.body.massData = }")
+        print(f"{self.body.linearVelocity = }")
+        print(f"{self.body.angularVelocity = }\n")
