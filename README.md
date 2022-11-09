@@ -1,6 +1,9 @@
-# BoosterLanding / LandingBooster 
+# BoosterLanding
+# LandingBooster
+# RocketLanding
+# BoosterLander
 
-tl;dr: Learning to land a booster.
+tl;dr: Simulation framework for propulsive booster landing.
 
 ---
 ## TODOs

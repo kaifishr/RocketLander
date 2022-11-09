@@ -1,0 +1,121 @@
+# optimizer:
+#   n_simulation_steps: 10000
+#   n_boosters: 4
+# env: 
+#   gravity: 
+#     x: 0.0                           # [m / s^2]
+#     y: -9.81                         # [m / s^2]
+#   booster: 
+#     init_pos: 
+#       x: 0.0                       # [m]
+#       y: 50.0                      # [m]
+#     init_linear_vel: 
+#       x: 0.0                       # [m / s]
+#       y: -10.0                     # [m / s]
+#     init_angular_vel: 0.0            # [rad / s]
+#     init_angle: 0.0                   # deg 
+#     engine:  # merlin
+#       merlin: # main
+#         max_force: 1000.0        # [N]
+#         angle_max: 0.0     # [deg] 
+#       cold_gas: 
+#         max_force: 1000.0        # [N]
+#     noise: 
+#       position: 
+#         x: 5.0                       # Standard deviation [m]
+#         y: .0                       # Standard deviation [m]
+#       linear_velocity: 
+#         x: .0                        # Standard deviation [m / s]
+#         y: .0                        # Standard deviation [m / s]
+#       angular_velocity: .0             # Standard deviation [rad / s]
+#       angle: .0                      # Standard deviation [deg]
+# render: 
+#   force_scaling: 0.01
+###############################################################
+
+
+# Genetic optimization configuration for BoosterLanding 
+random_seed: 192837465
+
+# Directory to save the frames to create a video.
+dirs:
+  frames: "frames"
+
+# Parameters to save the booster's neural network.
+checkpoints:
+  load_model: false
+  save_model: false
+  model_path: "weights"
+
+#
+optimizer:
+  num_boosters: 8
+  num_max_steps: 2000
+  mutation_probability: 0.01
+  mutation_rate: 0.01
+  lib: "numpy"    # numpy, torch
+
+env: 
+
+  gravity: 
+    x: 0.0
+    y: -9.81
+
+  domain:
+    limit:
+      x_min: -20.0
+      x_max: 20.0
+      y_min: -20.0
+      y_max: 20.0
+    map: "block"  # empty, block, track, locks, blade, smile
+
+  booster:
+    density: 1.0  # Average body density.
+
+    engine:
+      main: # merlin
+        density: 1.0  # Average engine density
+        max_force: 10.0
+        max_angle: 20.0
+      coldgas:  # cold gas propulsion system (cgps)
+        max_force: 1.0
+        # max_angle: 20.0
+
+    init:
+      position: 
+        x: 15.0
+        y: -15.0
+      linear_velocity: 
+        x: 0.0
+        y: 0.0
+      angular_velocity: 0.0
+      angle: 0.0
+
+     noise: 
+       position: 
+         x: 5.0                       # Standard deviation [m]
+         y: .0                       # Standard deviation [m]
+       linear_velocity: 
+         x: .0                        # Standard deviation [m / s]
+         y: .0                        # Standard deviation [m / s]
+       angular_velocity: .0             # Standard deviation [rad / s]
+       angle: .0                      # Standard deviation [deg]
+
+    neural_network: # model
+      num_dim_in: 8       # Kinematic information, distance to ground, GPS position.
+      num_dim_out: 4      # Actions for three engines.
+      num_dim_hidden: 8
+      num_hidden_layers: 2
+
+
+framework:
+  screen:
+    width: 640
+    height: 640
+  target_fps: 60
+  velocity_iterations: 10   # Number of iterations to compute next velocity.
+  position_iterations: 10   # Number of iterations to compute next position.
+
+renderer:
+  scale_force: 0.5
+  ppm: 15     # Pixels per meter / zoom
