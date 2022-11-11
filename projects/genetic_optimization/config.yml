@@ -11,6 +11,9 @@ checkpoints:
   save_model: false
   model_path: "weights"
 
+trainer:
+  num_generations: 10000 # not used yet
+
 optimizer:
   num_boosters: 4
   num_max_steps: 1000
@@ -19,6 +22,10 @@ optimizer:
   lib: "numpy"    # numpy, torch
 
 env: 
+  landing:
+    v_max: 
+      x: 1.0
+      y: -10.0
 
   domain:
     x_min: -80.0
@@ -35,7 +42,7 @@ env:
     init:
       position: 
         x: 0.0
-        y: 60.0
+        y: 28.0
       linear_velocity: 
         x: 0.0
         y: 0.0
@@ -47,7 +54,7 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 10.0
+        max_force: 0.0
         # max_angle: 20.0
       coldgas:  # cold gas propulsion system (cgps)
         max_force: 1.0
@@ -82,4 +89,4 @@ framework:
 
 renderer:
   scale_force: 1.0
-  ppm: 2     # Pixels per meter / zoom
+  ppm: 10     # Pixels per meter / zoom

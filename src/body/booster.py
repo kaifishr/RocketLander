@@ -39,7 +39,7 @@ class Booster2D:    # BoosterBody
         Adds engines to booster.
         """
 
-        # Parameters for engine
+        # Parameters of booster's hull.
         density = 1.0
         height = 44.0
         width = 3.7
@@ -331,11 +331,32 @@ class Booster(Booster2D):
         TODO: Move to environment?
 
         Deactivates booster in case of impact.
+
         An impact has occurred when a booster has contact to
-        the ground at a velocity higher than $v_landing_max$.
+        the ground at a higher than defined velocity.
         """
-        # Compute distance to ground
+        v_max_x = self.config.env.landing.v_max.x
+        v_max_y = self.config.env.landing.v_max.y
         # print(self.body.position, self.body.linearVelocity)
+
+        # Compute distance to ground
+        pos_x, pos_y = self.body.position
+        dist = 1.0
+        has_contact = True if dist < 1.0 else False
+
+        # Check for impact
+        vel_x, vel_y = self.body.linearVelocity
+        if has_contact:
+            if vel_y < v_max_y:
+                print("y impact")
+                # self.body.active = False
+                # self.forces = self.num_engines * [0.0]
+                return
+            elif abs(vel_x) > v_max_x:
+                print("x impact")
+                # self.body.active = False
+                # self.forces = self.num_engines * [0.0]
+
 
     def _is_outside(self):
         # Get domain boundary

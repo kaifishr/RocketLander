@@ -4,6 +4,7 @@ For more information about frameworks see also:
 https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends
 
 """
+import time
 import pygame
 from Box2D.b2 import world
 
@@ -67,6 +68,23 @@ class Framework:
         else:
             self.is_rendering = True
 
+    def _pause_program(self) -> None:
+        """Pauses visualization and optimization."""
+        print("PAUSED. Press 'p' to continue.")
+        is_pausing = True
+        while is_pausing:
+            time.sleep(0.1)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_p:
+                        is_pausing = False
+                    elif event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        exit()
+
     def step(self) -> None:
         """Catches events, performs simulation step, and renders world."""
 
@@ -80,9 +98,12 @@ class Framework:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self._set_rendering()
-                if event.key == pygame.K_ESCAPE:
+                elif event.key == pygame.K_p:
+                    self._pause_program()
+                elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     exit()
+
 
         # Step the world.
         self.world.Step(self.time_step, self.velocity_iters, self.position_iters)

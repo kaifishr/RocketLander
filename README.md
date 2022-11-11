@@ -14,6 +14,7 @@ Boosters are equipped with neural networks for thrust control.
 - Use trainer from src that uses project specific optimizer
 - Use neural network for thruster control
 - Update renderer to move point of view
+- Add pause option to framework
 - Create version of code that can be used for genetic optimization as well as for reinforcement learning.
     - Restrict deflection of engine to defined number of degrees.
         - Test engines
