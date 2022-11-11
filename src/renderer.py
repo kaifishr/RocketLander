@@ -40,15 +40,13 @@ class Renderer:
         self.screen = screen
         self.config = config
 
-        self.ppm = self.config.renderer.ppm
-        screen_width = self.config.framework.screen.width
-        screen_height = self.config.framework.screen.height
+        self.ppm = config.renderer.ppm
+        screen_width = config.framework.screen.width
+        screen_height = config.framework.screen.height
 
         # TODO: Add offset to config
-        offset_x = -0.2 * screen_width
-        offset_y = -0.01 * screen_height
-        offset_x = -0.5 * screen_width
-        offset_y = -0.5 * screen_height
+        offset_x = config.renderer.screen.shift.x * screen_width
+        offset_y = config.renderer.screen.shift.y * screen_height
         self.screen_offset = b2Vec2(offset_x, offset_y)
         self.screen_size = b2Vec2(screen_width, screen_height)
 
@@ -118,7 +116,11 @@ class Renderer:
         scale_force = self.config.renderer.scale_force
         color = self.color_force_line
 
-        f_main, f_left, f_right = booster.forces
+        f_main, f_left, f_right = booster.pred_forces
+
+        f_main *= booster.max_force_main
+        f_left *= booster.max_force_cold_gas
+        f_right *= booster.max_force_cold_gas
 
         # Main engine
         local_point_down = b2Vec2(
@@ -136,7 +138,7 @@ class Renderer:
         p2 = p1 + booster.body.GetWorldVector(force_direction)
         self._draw_segment(self._to_screen(p1), self._to_screen(p2), color)
 
-        # Right cold gas thruster
+        # # Right cold gas thruster
         local_point_right = b2Vec2(0.5 * booster.hull.width, 0.5 * booster.hull.height)
         force_direction = (scale_force * f_right, 0.0)
         p1 = booster.body.GetWorldPoint(localPoint=local_point_right)

@@ -3,6 +3,8 @@ import copy
 import math
 import random
 
+import numpy as np
+
 from Box2D import b2FixtureDef, b2PolygonShape, b2Filter, b2Vec2
 from Box2D.Box2D import b2World, b2Body
 
@@ -264,10 +266,9 @@ class Booster(Booster2D):
 
         # Forces predicted by neural network.
         # Initialized with 0 for each engine.
-        self.forces = [0.0 for _ in range(self.num_engines)]
-
-        self.max_force = config.env.booster.engine.main.max_force
-        # self.max_force = config.env.booster.engine.coldgas.max_force # TODO
+        self.pred_forces = [0.0 for _ in range(self.num_engines)]
+        self.max_force_main = config.env.booster.engine.main.max_force
+        self.max_force_cold_gas = config.env.booster.engine.cold_gas.max_force
 
         # Input data for neural network
         self.data = []
@@ -400,13 +401,26 @@ class Booster(Booster2D):
         a set of actions (forces) to be applied to the drone's engines.
         """
         if self.body.active:
-            force_pred = self.model(self.data)
-            self.forces = self.max_force * force_pred
+            self.pred_forces = self.model(self.data)
+            # DEBUG:
+            max_force = 0.05*self.max_force_main
+            self.forces = np.array([max_force * random.random() for _ in range(self.num_engines)])
 
     def apply_action(self) -> None:
-        """Applies force to engines predicted by neural network."""
+        """Applies force to engines predicted by neural network.
+
+        TODO: Add second force component to main engine.
+        """
         if self.body.active:
-            f_main, f_left, f_right = self.forces
+
+            # f_main_x, f_main_y, f_left, f_right = self.pred_forces
+            # f_main_x *= self.max_force_main
+            # f_main_y *= self.max_force_main
+
+            f_main, f_left, f_right = self.pred_forces
+            f_main *= self.max_force_main
+            f_left *= self.max_force_cold_gas
+            f_right *= self.max_force_cold_gas
 
             # Main engine
             f = self.body.GetWorldVector(localVector=b2Vec2(0.0, f_main))
