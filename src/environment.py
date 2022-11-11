@@ -67,15 +67,20 @@ class Environment(Framework):
             # Reactivate booster after collision in last generation.
             booster.body.active = True
 
+    def impact_detection(self) -> None:
+        """Calls impact detection method of each booster."""
+        for booster in self.boosters:
+            booster.detect_impact()
+
+    def escape_detection(self) -> None:
+        """Calls escape detection method of each booster."""
+        for booster in self.boosters:
+            booster.detect_escape()
+
     def fetch_data(self) -> None:
         """Fetches data for neural network of booster"""
         for booster in self.boosters:
             booster.fetch_data()
-
-    def collision_detection(self) -> None:
-        """Detects collision with ground."""
-        for booster in self.boosters:
-            booster.detect_collision()
 
     def comp_score(self) -> None:
         """Computes fitness score of each boosters."""

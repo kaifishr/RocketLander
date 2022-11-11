@@ -325,15 +325,55 @@ class Booster(Booster2D):
             #         break
             # self.score += phi * score
 
-    def detect_collision(self):
-        """Detects collision with objects.
-        We use the raycast information here and speak of a collision
-        when an imaginary circle with the total diameter of the drone
-        touches another object.
+    def detect_impact(self):
+        """Detects impact with ground.
+
+        TODO: Move to environment?
+
+        Deactivates booster in case of impact.
+        An impact has occurred when a booster has contact to
+        the ground at a velocity higher than $v_landing_max$.
         """
-        distance_booster_ground = 1
+        # Compute distance to ground
+        # print(self.body.position, self.body.linearVelocity)
+
+    def _is_outside(self):
+        # Get domain boundary
+        x_min = self.config.env.domain.x_min
+        x_max = self.config.env.domain.x_max
+        y_min = self.config.env.domain.y_min
+        y_max = self.config.env.domain.y_max
+
+        # Compute distance to all four domain boundaries.
+        pos_x, pos_y = self.body.position
+
+        # Option 1
+        # if pos_x < x_min:
+        #     return True
+        # elif pos_y < y_min:
+        #     return True
+        # elif pos_x > x_max:
+        #     return True
+        # elif pos_y > y_max:
+        #     return True
+        # else:
+        #     return False
+
+        # Option 2
+        if (x_min < pos_x < x_max) and (y_min < pos_y < y_max):
+            return False
+        return True
+
+    def detect_escape(self):
+        """Detects the escape from the domain boundary.
+
+        TODO: Move to environment?
+
+        Deactivates booster if center of gravity crosses the
+        domain boundary.
+        """
         if self.body.active:
-            if distance_booster_ground < 0:
+            if self._is_outside():
                 self.body.active = False
                 self.forces = self.num_engines * [0.0]
 

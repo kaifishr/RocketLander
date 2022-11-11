@@ -12,7 +12,7 @@ checkpoints:
   model_path: "weights"
 
 optimizer:
-  num_boosters: 8
+  num_boosters: 4
   num_max_steps: 1000
   mutation_probability: 0.01
   mutation_rate: 0.01
@@ -20,11 +20,28 @@ optimizer:
 
 env: 
 
+  domain:
+    x_min: -80.0
+    x_max: 80.0
+    y_max: 100.0
+    y_min: -20.0
+
   gravity: 
     x: 0.0
     y: -9.81
 
   booster:
+
+    init:
+      position: 
+        x: 0.0
+        y: 60.0
+      linear_velocity: 
+        x: 0.0
+        y: 0.0
+      angular_velocity: 0.0
+      angle: 0.0
+
     density: 1.0  # Average density of hull.
  
     engine:
@@ -35,16 +52,6 @@ env:
       coldgas:  # cold gas propulsion system (cgps)
         max_force: 1.0
         # max_angle: 20.0
-
-    init:
-      position: 
-        x: 10.0
-        y: 40.0
-      linear_velocity: 
-        x: 0.0
-        y: 0.0
-      angular_velocity: 0.0
-      angle: 0.0
 
     noise: 
       position: 
@@ -65,11 +72,14 @@ env:
 framework:
   screen:
     width: 640
-    height: 640
+    height: 1024
+  # offset:
+  #   x: 0
+  #   y: 0
   target_fps: 60
   velocity_iterations: 10   # Number of iterations to compute next velocity.
   position_iterations: 10   # Number of iterations to compute next position.
 
 renderer:
-  scale_force: 0.5
-  ppm: 15     # Pixels per meter / zoom
+  scale_force: 1.0
+  ppm: 2     # Pixels per meter / zoom

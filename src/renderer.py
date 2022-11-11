@@ -44,7 +44,12 @@ class Renderer:
         screen_width = self.config.framework.screen.width
         screen_height = self.config.framework.screen.height
 
-        self.screen_offset = b2Vec2(-0.5 * screen_width, -0.5 * screen_height)
+        # TODO: Add offset to config
+        offset_x = -0.2 * screen_width
+        offset_y = -0.01 * screen_height
+        offset_x = -0.5 * screen_width
+        offset_y = -0.5 * screen_height
+        self.screen_offset = b2Vec2(offset_x, offset_y)
         self.screen_size = b2Vec2(screen_width, screen_height)
 
         self.flip_x = False
@@ -135,94 +140,6 @@ class Renderer:
         p1 = booster.body.GetWorldPoint(localPoint=local_point_right)
         p2 = p1 + booster.body.GetWorldVector(force_direction)
         self._draw_segment(self._to_screen(p1), self._to_screen(p2), color)
-
-    ###########################################################################################
-
-    # def _render_force(self):
-    #     """
-    #     NOTE: This is from the old implementation.
-    #       
-    #     Displays force applied to the booster coming from the engines.
-
-    #     Purely cosmetic but helps with debugging. Arrows point towards
-    #     direction the force is coming from.
-
-    #     TODO: Make part of renderer
-    #     """
-    #     alpha = self.config.render.force_scaling  # Scaling factor
-    #     self.line_color = (0, 1, 0)
-
-    #     for booster, force_merlin, force_cold_gas_left, force_cold_gas_right in zip(
-    #         self.boosters,
-    #         self.force_merlin_engine,
-    #         self.force_cold_gas_engine_left,
-    #         self.force_cold_gas_engine_right,
-    #     ):
-
-    #         force_x, force_y = force_merlin
-
-    #         # Engines
-    #         local_point_merlin = b2Vec2(
-    #             0.0, -(0.5 * booster.hull.height + booster.engines.height)
-    #         )
-    #         p1 = booster.body.GetWorldPoint(localPoint=local_point_merlin)
-
-    #         force_length = force_x  # should be linear function of force
-    #         force_direction = (-alpha * force_length, 0.0)
-    #         p2 = p1 + booster.body.GetWorldVector(force_direction)
-    #         self.renderer.DrawSegment(
-    #             self.renderer.to_screen(p1),
-    #             self.renderer.to_screen(p2),
-    #             b2Color(*self.line_color),
-    #         )
-
-    #         force_length = force_y  # should be linear function of force
-    #         force_direction = (0.0, -alpha * force_length)
-    #         p2 = p1 + booster.body.GetWorldVector(force_direction)
-    #         self.renderer.DrawSegment(
-    #             self.renderer.to_screen(p1),
-    #             self.renderer.to_screen(p2),
-    #             b2Color(*self.line_color),
-    #         )
-
-    #         force_direction = alpha * b2Vec2(-force_x, -force_y)
-    #         p2 = p1 + booster.body.GetWorldVector(force_direction)
-    #         self.renderer.DrawSegment(
-    #             self.renderer.to_screen(p1),
-    #             self.renderer.to_screen(p2),
-    #             b2Color(1, 0, 0),
-    #         )
-
-    #         # Cold gas thruster
-
-    #         # Left
-    #         force_x, _ = force_cold_gas_left  # Thruster has no force_y component.
-    #         local_point_cold_gas_left = b2Vec2(
-    #             -0.5 * booster.hull.width, 0.5 * booster.hull.height
-    #         )
-    #         p1 = booster.body.GetWorldPoint(localPoint=local_point_cold_gas_left)
-    #         force_direction = (-alpha * force_x, 0.0)
-    #         p2 = p1 + booster.body.GetWorldVector(force_direction)
-    #         self.renderer.DrawSegment(
-    #             self.renderer.to_screen(p1),
-    #             self.renderer.to_screen(p2),
-    #             b2Color(*self.line_color),
-    #         )
-
-    #         # Right
-    #         force_x, _ = force_cold_gas_right  # Thruster has no force_y component.
-    #         local_point_cold_gas_right = b2Vec2(
-    #             0.5 * booster.hull.width, 0.5 * booster.hull.height
-    #         )
-    #         p1 = booster.body.GetWorldPoint(localPoint=local_point_cold_gas_right)
-    #         force_direction = (-alpha * force_x, 0.0)
-    #         p2 = p1 + booster.body.GetWorldVector(force_direction)
-    #         self.renderer.DrawSegment(
-    #             self.renderer.to_screen(p1),
-    #             self.renderer.to_screen(p2),
-    #             b2Color(*self.line_color),
-    #         )
-    ###########################################################################################
 
     def _draw_polygon(self, body, fixture):
         """Draws polygon to screen."""

@@ -7,8 +7,13 @@ tl;dr: Simulation framework for propulsive booster landing.
 
 The booster's goal is to reach the landing pad at height $0$ at a velocity smaller or equal to $v_{\text{max}}$.
 
+Boosters are equipped with neural networks for thrust control.
+
 ---
 ## TODOs
+- Use trainer from src that uses project specific optimizer
+- Use neural network for thruster control
+- Update renderer to move point of view
 - Create version of code that can be used for genetic optimization as well as for reinforcement learning.
     - Restrict deflection of engine to defined number of degrees.
         - Test engines
@@ -28,7 +33,7 @@ The booster's goal is to reach the landing pad at height $0$ at a velocity small
 Inspired by SpaceX's incredible progress, I set up a simple environment in PyBox2D
 that allows to use different methods to land a booster in a physical simulation.
 
-The booster's physics is modeled using pybox2d, a 2D physics library for simple simulations. The booster consists of three sections. A long and low density section (the booster's hull containing mostly empty fuel tanks) connected to a short high density section (the booster's engines). On top of that there are the landing legs which are modeled as medium density sticks attached to the lower part of the rocket in a 45 degree angle.
+The booster's physics is modeled using PyBox2D, a 2D physics library for simple simulations. The booster consists of three sections. A long and low density section (the booster's hull containing mostly empty fuel tanks) connected to a short high density section (the booster's engines). On top of that there are the landing legs which are modeled as medium density sticks attached to the lower part of the rocket in a 45 degree angle.
 
 The landing of the booster is learned using a genetic algorithm to optimize a small neural network, the booster's brain. The network's input are the booster's current height (x, y), speed (vx, vy), acceleration (ax, ay) and remaining fuel (maybe in a later stage).
 
