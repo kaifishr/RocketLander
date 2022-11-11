@@ -42,7 +42,7 @@ env:
     init:
       position: 
         x: 0.0
-        y: 40.0
+        y: 30.0
       linear_velocity: 
         x: 0.0
         y: 0.0
@@ -54,7 +54,7 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 0.0
+        max_force: 10.0
         # max_angle: 20.0
       coldgas:  # cold gas propulsion system (cgps)
         max_force: 1.0
@@ -62,8 +62,8 @@ env:
 
     noise: 
       position: 
-        x: 1.0                       # Standard deviation [m]
-        y: 1.0                       # Standard deviation [m]
+        x: 3.0                       # Standard deviation [m]
+        y: 3.0                       # Standard deviation [m]
       linear_velocity: 
         x: 0.0                        # Standard deviation [m / s]
         y: 0.0                        # Standard deviation [m / s]
@@ -89,4 +89,4 @@ framework:
 
 renderer:
   scale_force: 1.0
-  ppm: 10     # Pixels per meter / zoom
+  ppm: 5     # Pixels per meter / zoom

@@ -52,7 +52,7 @@ class Optimizer:
             self.env.step()
 
             # Detect collision with ground. 
-            self.env.impact_detection()
+            # self.env.impact_detection()
 
             # Detect leaving the domain. 
             self.env.escape_detection()

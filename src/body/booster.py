@@ -300,35 +300,28 @@ class Booster(Booster2D):
     def comp_score(self) -> None:
         """Computes current fitness score.
 
-        Accumulates drone's linear velocity over one generation.
-        This effectively computes the distance traveled by the
-        drone over time divided by the simulation's step size.
-
+        Accumulates defined rewards for booster.
         """
         if self.body.active:
 
-            # Reward distance traveled.
-            vel = self.body.linearVelocity
-            time_step = 0.0167
-            score = time_step * (vel.x**2 + vel.y**2) ** 0.5
-            self.score += score
+            # Reward proximity to landing pad
+            pad_x, pad_y = b2Vec2(0.0, 0.0)     # Center of landing pad.
+            pos_x, pos_y = self.body.position
+            eta = 1.0 / 60.0
+            pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
+            distance_booster_pad = ((pad_x - pos_x)**2 + (pad_y - pos_y)**2)**0.5
+            self.score = 1.0 / (1.0 + distance_booster_pad)
+            print(self.score)
 
-            # Reward distance to obstacles.
-            # eta = 4.0
-            # phi = 0.5
-            # score = 1.0
-            # for cb in self.callbacks:
-            #     diff = cb.point - self.body.position
-            #     dist = (diff.x**2 + diff.y**2) ** 0.5
-            #     if dist < eta * self.collision_threshold:
-            #         score = 0.0
-            #         break
-            # self.score += phi * score
+            # Reward soft touchdown of the booster
+            # TODO
+
 
     def detect_impact(self):
         """Detects impact with ground.
 
         TODO: Move to environment?
+        TODO: Move threshold computation to __init__()
 
         Deactivates booster in case of impact.
 
@@ -339,36 +332,27 @@ class Booster(Booster2D):
         threshold) around the rocket is assumed. The rocket has 'contact' if the 
         vertical distance from the center of mass to the ground is smaller than R.
         """
-        # TODO: Do this only for active boosters
-        v_max_x = self.config.env.landing.v_max.x
-        v_max_y = self.config.env.landing.v_max.y
-        print(self.body.position, self.body.linearVelocity)
+        if self.body.active:
+            v_max_x = self.config.env.landing.v_max.x
+            v_max_y = self.config.env.landing.v_max.y
 
-        # Compute distance from center of mass to ground
-        eta = 1.0 / 60.0 # 0.0167 # ~ 1.0 / 60.0
-        ### distance_center_mass_legs = 0.5 * self.hull.height - self.legs.y_ground + eta
-        a = self.legs.x_ground_high
-        b = 0.5 * self.hull.height - self.legs.y_ground + eta
-        contact_threshold = (a**2+b**2)**0.5
+            # Compute distance from center of mass to ground
+            eta = 1.0 / 60.0 # 0.0167 # ~ 1.0 / 60.0
+            a = self.legs.x_ground_high
+            b = 0.5 * self.hull.height - self.legs.y_ground + eta
+            contact_threshold = (a**2+b**2)**0.5
 
-        has_contact = False
-        if self.body.position.y < contact_threshold:
-            has_contact = True
-            print("has contact")
+            has_contact = False
+            if self.body.position.y < contact_threshold:
+                has_contact = True
+                print("has contact")
 
-        # Check for impact
-        if has_contact:
-            vel_x, vel_y = self.body.linearVelocity
-            if vel_y < v_max_y:
-                print("y impact")
-                # self.body.active = False
-                # self.forces = self.num_engines * [0.0]
-                return
-            elif abs(vel_x) > v_max_x:
-                print("x impact")
-                # self.body.active = False
-                # self.forces = self.num_engines * [0.0]
-
+            # Check for impact
+            if has_contact:
+                vel_x, vel_y = self.body.linearVelocity
+                if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
+                    self.body.active = False
+                    self.forces = self.num_engines * [0.0]
 
     def _is_outside(self):
         # Get domain boundary
