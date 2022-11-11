@@ -42,7 +42,7 @@ env:
     init:
       position: 
         x: 0.0
-        y: 28.0
+        y: 40.0
       linear_velocity: 
         x: 0.0
         y: 0.0

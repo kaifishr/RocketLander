@@ -334,19 +334,31 @@ class Booster(Booster2D):
 
         An impact has occurred when a booster has contact to
         the ground at a higher than defined velocity.
+
+        For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
+        threshold) around the rocket is assumed. The rocket has 'contact' if the 
+        vertical distance from the center of mass to the ground is smaller than R.
         """
+        # TODO: Do this only for active boosters
         v_max_x = self.config.env.landing.v_max.x
         v_max_y = self.config.env.landing.v_max.y
-        # print(self.body.position, self.body.linearVelocity)
+        print(self.body.position, self.body.linearVelocity)
 
-        # Compute distance to ground
-        pos_x, pos_y = self.body.position
-        dist = 1.0
-        has_contact = True if dist < 1.0 else False
+        # Compute distance from center of mass to ground
+        eta = 1.0 / 60.0 # 0.0167 # ~ 1.0 / 60.0
+        ### distance_center_mass_legs = 0.5 * self.hull.height - self.legs.y_ground + eta
+        a = self.legs.x_ground_high
+        b = 0.5 * self.hull.height - self.legs.y_ground + eta
+        contact_threshold = (a**2+b**2)**0.5
+
+        has_contact = False
+        if self.body.position.y < contact_threshold:
+            has_contact = True
+            print("has contact")
 
         # Check for impact
-        vel_x, vel_y = self.body.linearVelocity
         if has_contact:
+            vel_x, vel_y = self.body.linearVelocity
             if vel_y < v_max_y:
                 print("y impact")
                 # self.body.active = False
