@@ -72,7 +72,7 @@ class Environment(Framework):
         for booster in self.boosters:
             booster.detect_impact()
 
-    def escape_detection(self) -> None:
+    def detect_escape(self) -> None:
         """Calls escape detection method of each booster."""
         for booster in self.boosters:
             booster.detect_escape()

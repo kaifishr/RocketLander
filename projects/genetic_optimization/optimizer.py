@@ -23,7 +23,7 @@ class Optimizer:
     def __init__(self, config: Config) -> None:
         """Initializes Optimizer"""
         self.config = config
-        self.writer = SummaryWriter()   # move to trainer
+        self.writer = SummaryWriter()  # move to trainer
 
         # Create UUID for PyGame window.
         self.config.id = self.writer.log_dir.split("/")[-1]
@@ -51,11 +51,11 @@ class Optimizer:
             # Physics and rendering
             self.env.step()
 
-            # Detect collision with ground. 
+            # Detect collision with ground.
             # self.env.impact_detection()
 
-            # Detect leaving the domain. 
-            self.env.escape_detection()
+            # Detect leaving the domain.
+            self.env.detect_escape()
 
             # Compute current fitness / score of booster
             self.env.comp_score()

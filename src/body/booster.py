@@ -10,7 +10,7 @@ from src.config import Config
 from src.body.model import ModelLoader
 
 
-class Booster2D:    # BoosterBody
+class Booster2D:  # BoosterBody
     """Rocket booster class.
 
     Rocket booster consits of three main parts:
@@ -287,15 +287,15 @@ class Booster(Booster2D):
         ]
 
     def mutate(self, model: object) -> None:
-            """Mutates drone's neural network.
+        """Mutates drone's neural network.
 
-            TODO: Move to genetic optimizer. This is only for genetic optimization relevant.
+        TODO: Move to genetic optimizer. This is only for genetic optimization relevant.
 
-            Args:
-                model: The current best model.
-            """
-            self.model = copy.deepcopy(model)
-            self.model.mutate_weights()
+        Args:
+            model: The current best model.
+        """
+        self.model = copy.deepcopy(model)
+        self.model.mutate_weights()
 
     def comp_score(self) -> None:
         """Computes current fitness score.
@@ -305,17 +305,16 @@ class Booster(Booster2D):
         if self.body.active:
 
             # Reward proximity to landing pad
-            pad_x, pad_y = b2Vec2(0.0, 0.0)     # Center of landing pad.
+            pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
             pos_x, pos_y = self.body.position
             eta = 1.0 / 60.0
-            pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
-            distance_booster_pad = ((pad_x - pos_x)**2 + (pad_y - pos_y)**2)**0.5
-            self.score = 1.0 / (1.0 + distance_booster_pad)
-            print(self.score)
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            distance_booster_pad = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
+            reward = 1.0 / (1.0 + distance_booster_pad)
+            self.score += reward
 
             # Reward soft touchdown of the booster
             # TODO
-
 
     def detect_impact(self):
         """Detects impact with ground.
@@ -329,7 +328,7 @@ class Booster(Booster2D):
         the ground at a higher than defined velocity.
 
         For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
-        threshold) around the rocket is assumed. The rocket has 'contact' if the 
+        threshold) around the rocket is assumed. The rocket has 'contact' if the
         vertical distance from the center of mass to the ground is smaller than R.
         """
         if self.body.active:
@@ -337,10 +336,10 @@ class Booster(Booster2D):
             v_max_y = self.config.env.landing.v_max.y
 
             # Compute distance from center of mass to ground
-            eta = 1.0 / 60.0 # 0.0167 # ~ 1.0 / 60.0
+            eta = 1.0 / 60.0  # 0.0167 # ~ 1.0 / 60.0
             a = self.legs.x_ground_high
             b = 0.5 * self.hull.height - self.legs.y_ground + eta
-            contact_threshold = (a**2+b**2)**0.5
+            contact_threshold = (a**2 + b**2) ** 0.5
 
             has_contact = False
             if self.body.position.y < contact_threshold:
@@ -405,25 +404,29 @@ class Booster(Booster2D):
             self.forces = self.max_force * force_pred
 
     def apply_action(self) -> None:
-        """Applies force to engines predicted by neural network.
-
-        """
+        """Applies force to engines predicted by neural network."""
         if self.body.active:
             f_main, f_left, f_right = self.forces
 
             # Main engine
             f = self.body.GetWorldVector(localVector=b2Vec2(0.0, f_main))
-            p = self.body.GetWorldPoint(localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height)))
+            p = self.body.GetWorldPoint(
+                localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height))
+            )
             self.body.ApplyForce(f, p, True)
 
             # Left cold gas thruster
             f = self.body.GetWorldVector(localVector=b2Vec2(f_left, 0.0))
-            p = self.body.GetWorldPoint(localPoint=b2Vec2(-0.5 * self.hull.width, 0.5 * self.hull.height))
+            p = self.body.GetWorldPoint(
+                localPoint=b2Vec2(-0.5 * self.hull.width, 0.5 * self.hull.height)
+            )
             self.body.ApplyForce(f, p, True)
 
             # Right cold gas thruster
             f = self.body.GetWorldVector(localVector=b2Vec2(-f_right, 0.0))
-            p = self.body.GetWorldPoint(localPoint=b2Vec2(0.5 * self.hull.width, 0.5 * self.hull.height))
+            p = self.body.GetWorldPoint(
+                localPoint=b2Vec2(0.5 * self.hull.width, 0.5 * self.hull.height)
+            )
             self.body.ApplyForce(f, p, True)
 
     # def apply_action(
@@ -433,7 +436,6 @@ class Booster(Booster2D):
     # ):
     #     """
     #     NOTE: This is from the old implementation.
-
 
     #     Applies action coming from neural network.
 

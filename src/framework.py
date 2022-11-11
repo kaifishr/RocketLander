@@ -104,7 +104,6 @@ class Framework:
                     pygame.quit()
                     exit()
 
-
         # Step the world.
         self.world.Step(self.time_step, self.velocity_iters, self.position_iters)
         self.world.ClearForces()

@@ -15,10 +15,10 @@ trainer:
   num_generations: 10000 # not used yet
 
 optimizer:
-  num_boosters: 4
-  num_max_steps: 1000
-  mutation_probability: 0.01
-  mutation_rate: 0.01
+  num_boosters: 8
+  num_max_steps: 200
+  mutation_probability: 0.5
+  mutation_rate: 0.5
   lib: "numpy"    # numpy, torch
 
 env: 
@@ -41,8 +41,8 @@ env:
 
     init:
       position: 
-        x: 0.0
-        y: 30.0
+        x: 50.0
+        y: 50.0
       linear_velocity: 
         x: 0.0
         y: 0.0

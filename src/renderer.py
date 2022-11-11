@@ -120,8 +120,10 @@ class Renderer:
 
         f_main, f_left, f_right = booster.forces
 
-        # Main engine 
-        local_point_down = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
+        # Main engine
+        local_point_down = b2Vec2(
+            0.0, -(0.5 * booster.hull.height + booster.engines.height)
+        )
         force_direction = (0.0, -scale_force * f_main)
         p1 = booster.body.GetWorldPoint(localPoint=local_point_down)
         p2 = p1 + booster.body.GetWorldVector(force_direction)
