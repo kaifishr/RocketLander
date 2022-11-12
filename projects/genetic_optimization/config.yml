@@ -11,21 +11,21 @@ checkpoints:
   save_model: false
   model_path: "weights"
 
-trainer:
-  num_generations: 10000 # not used yet
+# trainer:
+#   num_generations: 10000 # not used yet
 
 optimizer:
-  num_boosters: 1
+  num_boosters: 8
   num_max_steps: 2000
-  mutation_probability: 0.5
-  mutation_rate: 0.5
+  mutation_probability: 0.02
+  mutation_rate: 0.02
   lib: "numpy"    # numpy, torch
 
 env: 
   landing:
     v_max: 
       x: 1.0
-      y: -10.0
+      y: -1.0
 
   domain:
     x_min: -200.0
@@ -41,11 +41,11 @@ env:
 
     init:
       position: 
-        x: 70.0
-        y: 400.0
+        x: 0.0
+        y: 100.0
       linear_velocity: 
-        x: -20.0
-        y: -20.0
+        x: 0.0
+        y: -100.0
       angular_velocity: 0.0
       angle: 0.0
 
@@ -54,10 +54,10 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 50000.0
+        max_force: 0000.0
         # max_angle: 20.0
-      cold_gas:  # cold gas propulsion system (cgps)
-        max_force: 2000.0
+      cold_gas:  # Cold gas propulsion system.
+        max_force: 0.0
         # max_angle: 20.0
 
     noise: 
@@ -73,7 +73,7 @@ env:
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle
       num_dim_out: 3      # Actions for three engines.
-      num_dim_hidden: 16
+      num_dim_hidden: 8
       num_hidden_layers: 2
 
 framework:
@@ -89,5 +89,5 @@ renderer:
   screen:
     shift:
       x: -0.5
-      y: -0.1
+      y: -0.05
   ppm: 2     # Pixels per meter / zoom

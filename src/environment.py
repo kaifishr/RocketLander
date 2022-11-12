@@ -25,7 +25,6 @@ class Environment(Framework):
     to control the drones.
 
     Attributes:
-        landingpad: Domain walls.
         boosters:
     """
 
@@ -67,7 +66,7 @@ class Environment(Framework):
             # Reactivate booster after collision in last generation.
             booster.body.active = True
 
-    def impact_detection(self) -> None:
+    def detect_impact(self) -> None:
         """Calls impact detection method of each booster."""
         for booster in self.boosters:
             booster.detect_impact()

@@ -311,10 +311,20 @@ class Booster(Booster2D):
             eta = 1.0 / 60.0
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
             distance_booster_pad = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
-            reward = 1.0 / (1.0 + distance_booster_pad)
+            eta = 0.1
+            reward = 1.0 / (1.0 + eta * distance_booster_pad)
+            # print("proximity", reward)
             self.score += reward
 
             # Reward soft touchdown of the booster
+            # Touchdown at contact with small velocity.
+            # TODO
+
+            # Reward for verticality 
+            eta = 10.0
+            reward = 1.0 / (1.0 + eta * abs(self.body.angle))
+            # print("angle", reward)
+            self.score += reward
             # TODO
 
     def detect_impact(self):
@@ -332,6 +342,7 @@ class Booster(Booster2D):
         threshold) around the rocket is assumed. The rocket has 'contact' if the
         vertical distance from the center of mass to the ground is smaller than R.
         """
+        print(self.body.position, self.body.linearVelocity)
         if self.body.active:
             v_max_x = self.config.env.landing.v_max.x
             v_max_y = self.config.env.landing.v_max.y
@@ -342,17 +353,13 @@ class Booster(Booster2D):
             b = 0.5 * self.hull.height - self.legs.y_ground + eta
             contact_threshold = (a**2 + b**2) ** 0.5
 
-            has_contact = False
-            if self.body.position.y < contact_threshold:
-                has_contact = True
-                print("has contact")
-
             # Check for impact
-            if has_contact:
+            if self.body.position.y < contact_threshold:    # TODO: Use circle around booster coming with center at center of mass.
                 vel_x, vel_y = self.body.linearVelocity
                 if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
+                    print("Impact")
                     self.body.active = False
-                    self.forces = self.num_engines * [0.0]
+                    self.pred_forces = self.num_engines * [0.0]
 
     def _is_outside(self):
         # Get domain boundary
@@ -392,7 +399,7 @@ class Booster(Booster2D):
         if self.body.active:
             if self._is_outside():
                 self.body.active = False
-                self.forces = self.num_engines * [0.0]
+                self.pred_forces = self.num_engines * [0.0]
 
     def comp_action(self) -> None:
         """Computes next section of actions applied to engines.
@@ -403,8 +410,8 @@ class Booster(Booster2D):
         if self.body.active:
             self.pred_forces = self.model(self.data)
             # DEBUG:
-            max_force = 0.05*self.max_force_main
-            self.forces = np.array([max_force * random.random() for _ in range(self.num_engines)])
+            # max_force = 0.05*self.max_force_main
+            # self.forces = np.array([max_force * random.random() for _ in range(self.num_engines)])
 
     def apply_action(self) -> None:
         """Applies force to engines predicted by neural network.
@@ -413,6 +420,7 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
+            # TODO: Predict four forces
             # f_main_x, f_main_y, f_left, f_right = self.pred_forces
             # f_main_x *= self.max_force_main
             # f_main_y *= self.max_force_main

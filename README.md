@@ -11,20 +11,15 @@ Boosters are equipped with neural networks for thrust control.
 
 ---
 ## TODOs
+- Align domain borders with screen borders
 - Use trainer from src that uses project specific optimizer
-- Use neural network for thruster control
-- Update renderer to move point of view
-- Add pause option to framework
 - Create version of code that can be used for genetic optimization as well as for reinforcement learning.
-    - Restrict deflection of engine to defined number of degrees.
-        - Test engines
-    - Move simulation / optimization loop to Optimizer class.
-    - Equip booster with descent neural network (genetic: jax/numpy, reinforcement learning jax/pytorch).
-- Reinforcement learning
-    - Action space (do nothing, fire engine at discrete angles, )
-    - Observation space (position x, position y, velocity x, velocity y, angle, angular velocity, boolean if leg is in contact with landing pad)
+- Restrict deflection of engine to defined number of degrees.
+    - Test engines
 - Genetic optimization
     - Use award function that consist of $T$ terms standing for $T$ times a score based on certain criteria has been computed. Use a weighted sum to compute final score. $S = \gamma_0s_0 + \gamma_1s_1 + ... + \gamma_Ts_T$ where $\gamma$ weights earlier awards less. Award $s$ can be sum of distance to center of landing pad and horizontal / vertical velocity.
+- Reinforcement learning
+    - Action space (do nothing, fire engine at discrete angles, )
 ---
 
 ## Introduction
