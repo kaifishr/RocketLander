@@ -25,7 +25,7 @@ env:
   landing:
     v_max: 
       x: 1.0
-      y: -1.0
+      y: -10.0
 
   domain:
     x_min: -200.0
@@ -42,10 +42,10 @@ env:
     init:
       position: 
         x: 0.0
-        y: 100.0
+        y: 30.0
       linear_velocity: 
         x: 0.0
-        y: -100.0
+        y: 0.0
       angular_velocity: 0.0
       angle: 0.0
 
@@ -54,16 +54,16 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 0000.0
+        max_force: 1000.0
         # max_angle: 20.0
       cold_gas:  # Cold gas propulsion system.
         max_force: 0.0
         # max_angle: 20.0
 
-    noise: 
+    noise:  # TODO: move this to env?
       position: 
-        x: 3.0                       # Standard deviation [m]
-        y: 3.0                       # Standard deviation [m]
+        x: 10.0                       # Standard deviation [m]
+        y: 0.0                       # Standard deviation [m]
       linear_velocity: 
         x: 0.0                        # Standard deviation [m / s]
         y: 0.0                        # Standard deviation [m / s]

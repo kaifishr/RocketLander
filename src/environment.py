@@ -7,6 +7,7 @@ and the landing pad.
 The Environment class also wraps the Framework class 
 that calls the physics engine and rendering engines.
 """
+import math
 import random
 import numpy as np
 
@@ -47,18 +48,49 @@ class Environment(Framework):
         # Index of current fittest agent
         self.idx_best = 0
 
-    def reset(self) -> None:
-        """Resets boosters' position and velocity.
+    def reset(self, add_noise: bool = True) -> None:
+        """Resets boosters in environment.
 
-        Uses the boosters' initial position and velocity
-        and adds some noise.
+        Resets kinematic variables as well as score
+        and activity state. If enabled, adds noise to 
+        kinematic variables.
+
+        Args:
+            use_noise: If true, adds noise to kinematic variables.
         """
         for booster in self.boosters:
 
-            booster.body.position = booster.init_position
-            booster.body.linearVelocity = booster.init_linear_velocity
-            booster.body.angularVelocity = booster.init_angular_velocity
-            booster.body.angle = booster.init_angle
+            # Kinematic variables
+            position = booster.init_position
+            linear_velocity = booster.init_linear_velocity
+            angular_velocity = booster.init_angular_velocity
+            angle = booster.init_angle
+
+            if add_noise:
+                noise = self.config.env.booster.noise
+
+                # Position
+                noise_x = random.gauss(mu=0.0, sigma=noise.position.x)
+                noise_y = random.gauss(mu=0.0, sigma=noise.position.y)
+                position += (noise_x, noise_y)
+
+                # Linear velocity
+                noise_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
+                noise_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
+                linear_velocity += (noise_x, noise_y)
+
+                # Angular velocity
+                noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
+                angular_velocity += noise_angular_velocity
+
+                # Angle
+                noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
+                angle += (noise_angle * math.pi) / 180.0
+
+            booster.body.position = position
+            booster.body.linearVelocity = linear_velocity
+            booster.body.angularVelocity = angular_velocity
+            booster.body.angle = angle
 
             # Reset fitness score for next generation.
             booster.score = 0.0

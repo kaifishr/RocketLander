@@ -218,40 +218,6 @@ class Booster2D:  # BoosterBody
             hull=self.hull,
         )
 
-    def reset(self, noise: bool = False) -> None:
-        """Resets booster to initial position and velocity."""
-        init_position = self.init_position
-        init_linear_velocity = self.init_linear_velocity
-        init_angular_velocity = self.init_angular_velocity
-        init_angle = self.init_angle
-
-        noise = self.config.env.booster.noise
-
-        if noise:
-            # Position
-            noise_x = random.gauss(mu=0.0, sigma=noise.position.x)
-            noise_y = random.gauss(mu=0.0, sigma=noise.position.y)
-            init_position += (noise_x, noise_y)
-
-            # Linear velocity
-            noise_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
-            noise_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
-            init_linear_velocity += (noise_x, noise_y)
-
-            # Angular velocity
-            noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
-            init_angular_velocity += noise_angular_velocity
-
-            # Angle
-            noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-            init_angle += (noise_angle * math.pi) / 180.0
-
-        self.body.position = init_position
-        self.body.linearVelocity = init_linear_velocity
-        self.body.angularVelocity = init_angular_velocity
-        self.body.angle = init_angle
-
-
 class Booster(Booster2D):
     """Booster class holds PyBox2D booster object as well
     as the booster logic"""
@@ -321,11 +287,11 @@ class Booster(Booster2D):
             # TODO
 
             # Reward for verticality 
+            # TODO
             eta = 10.0
             reward = 1.0 / (1.0 + eta * abs(self.body.angle))
             # print("angle", reward)
             self.score += reward
-            # TODO
 
     def detect_impact(self):
         """Detects impact with ground.
@@ -335,8 +301,9 @@ class Booster(Booster2D):
 
         Deactivates booster in case of impact.
 
-        An impact has occurred when a booster has contact to
-        the ground at a higher than defined velocity.
+        An impact has occurred when a booster is one
+        length unit above the ground at a higher than
+        defined velocity. 
 
         For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
         threshold) around the rocket is assumed. The rocket has 'contact' if the
@@ -351,10 +318,12 @@ class Booster(Booster2D):
             eta = 1.0 / 60.0  # 0.0167 # ~ 1.0 / 60.0
             a = self.legs.x_ground_high
             b = 0.5 * self.hull.height - self.legs.y_ground + eta
-            contact_threshold = (a**2 + b**2) ** 0.5
+            contact_threshold = (a**2 + b**2) ** 0.5 + 1.0
 
             # Check for impact
+            # print(self.body.position.y, self.body.linearVelocity, contact_threshold)
             if self.body.position.y < contact_threshold:    # TODO: Use circle around booster coming with center at center of mass.
+                print("Contact")
                 vel_x, vel_y = self.body.linearVelocity
                 if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
                     print("Impact")
