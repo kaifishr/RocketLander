@@ -53,7 +53,7 @@ class Optimizer:
 
             # Detect collision with ground.
             # Impacted boosters are deactivated.
-            self.env.detect_impact()
+            # self.env.detect_impact()
 
             # Detect leaving the domain.
             self.env.detect_escape()

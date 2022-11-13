@@ -13,7 +13,6 @@ Boosters are equipped with neural networks for thrust control.
 
 ---
 ## TODOs
-- Check force computation for cold gas thrusters
 - Add method to detect high stress (angular velocity)
 - Align domain borders with screen borders
 - Use trainer from src that uses project specific optimizer

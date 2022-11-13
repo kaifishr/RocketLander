@@ -274,25 +274,26 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
-            # Reward proximity to landing pad
-            pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
             pos_x, pos_y = self.body.position
-            eta = 1.0 / 60.0
-            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
-            distance_booster_pad = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
-            eta = 1.0
-            reward = 1.0 / (1.0 + eta * distance_booster_pad)
-            #print("proximity", reward)
-            self.score += reward
+            vel_x, vel_y = self.body.linearVelocity
+
+            # Reward proximity to landing pad if sink is negative.
+            if vel_y < 0.0:
+                pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
+                eta = 1.0 / 60.0
+                pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+                dist = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
+                eta = 1.0
+                reward = 1.0 / (1.0 + eta * dist)
+                #print("proximity", reward)
+                self.score += reward
 
             # Reward soft touchdown of the booster
             # Low speed at close proximity to landing pad.
             # Touchdown at contact with small velocity.
-            vel_x, vel_y = self.body.linearVelocity
-            vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
-            reward = 1.0 / (1.0 + (distance_booster_pad + vel))
-
-            # TODO
+            # vel_x, vel_y = self.body.linearVelocity
+            # vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
+            # reward = 1.0 / (1.0 + (distance_booster_pad * vel))
 
             # # Reward for verticality 
             # # TODO
@@ -392,7 +393,6 @@ class Booster(Booster2D):
         a set of actions (forces) to be applied to the drone's engines.
         """
         if self.body.active:
-
             # Raw network predictions
             pred = self.model(self.data)
 
@@ -435,19 +435,12 @@ class Booster(Booster2D):
         """
         p_main, phi_main, p_left, phi_left, p_right, phi_right = pred
 
-        # def comp_force(arg: float, force: float) -> tuple[float, float]:
-        #     """Computes force components f_x and f_y."""
-        #     f_x = math.sin(arg) * force
-        #     f_y = math.cos(arg) * force
-        #     return f_x, f_y
-
         # Main engine
         phi = 2.0 * phi_main - 1.0  # [-1, 1]
         arg = phi * self.max_angle_main * math.pi / 180.0
         force = p_main * self.max_force_main
         f_main_x = math.sin(arg) * force
         f_main_y = math.cos(arg) * force
-        # f_x_main, f_y_main = comp_force(arg, force)
 
         # Left engine
         phi = 2.0 * phi_left - 1.0  # [-1, 1]
