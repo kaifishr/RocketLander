@@ -7,6 +7,7 @@ and the landing pad.
 The Environment class also wraps the Framework class 
 that calls the physics engine and rendering engines.
 """
+import copy
 import math
 import random
 import numpy as np
@@ -61,10 +62,10 @@ class Environment(Framework):
         for booster in self.boosters:
 
             # Kinematic variables
-            position = booster.init_position
-            linear_velocity = booster.init_linear_velocity
-            angular_velocity = booster.init_angular_velocity
-            angle = booster.init_angle
+            position = copy.copy(booster.init_position)
+            linear_velocity = copy.copy(booster.init_linear_velocity)
+            angular_velocity = copy.copy(booster.init_angular_velocity)
+            angle = copy.copy(booster.init_angle)
 
             if add_noise:
                 noise = self.config.env.booster.noise

@@ -14,7 +14,7 @@ from src.utils.utils import capture_screen
 
 
 class Framework:
-    """A simple framework for PyBox2D with Pygame backend.
+    """A simple framework for PyBox2D with PyGame backend.
 
     Attributes:
         config:
@@ -29,28 +29,28 @@ class Framework:
         is_rendering:
     """
 
-    name = "SpaceDrones"
+    name = "BoosterLander"
 
     def __init__(self, config: Config) -> None:
         """Initializes Framework."""
         self.config = config
 
-        # Physics simulation parameters.
+        # Physics simulation parameters
         self.target_fps = self.config.framework.target_fps
         self.velocity_iters = self.config.framework.velocity_iterations
         self.position_iters = self.config.framework.position_iterations
         self.time_step = 1.0 / self.target_fps
 
-        # Instantiating world.
+        # Instantiating world
         self.world = world()
         self.world.CreateBody()
 
-        # Pygame initialization.
+        # Pygame initialization
         pygame.init()
         pygame.display.set_caption(f"{self.name} {self.config.id}")
         self.clock = pygame.time.Clock()
 
-        # Set screen properties.
+        # Set screen properties
         screen_width = self.config.framework.screen.width
         screen_height = self.config.framework.screen.height
         screen = pygame.display.set_mode((screen_width, screen_height))

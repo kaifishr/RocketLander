@@ -196,14 +196,16 @@ class Booster2D:  # BoosterBody
         )
         self.init_angular_velocity = config.env.booster.init.angular_velocity
         self.init_angle = (config.env.booster.init.angle * math.pi) / 180.0
+        self.fixed_rotation = config.env.booster.fixed_rotation
 
         self.body = self.world.CreateDynamicBody(
             bullet=True,
-            allowSleep=True,
+            allowSleep=False,
             position=self.init_position,
             linearVelocity=self.init_linear_velocity,
             angularVelocity=self.init_angular_velocity,
             angle=self.init_angle,
+            fixedRotation=self.fixed_rotation,
         )
 
         self.hull = self.Hull(body=self.body)
@@ -222,7 +224,8 @@ class Booster(Booster2D):
     """Booster class holds PyBox2D booster object as well
     as the booster logic"""
 
-    num_engines = 3
+    num_engines = 4 # TODO: Fix this. 3 Engines, but 4 force components.
+    # num_engines = 3 
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes Booster class."""
@@ -232,7 +235,8 @@ class Booster(Booster2D):
 
         # Forces predicted by neural network.
         # Initialized with 0 for each engine.
-        self.pred_forces = [0.0 for _ in range(self.num_engines)]
+        self.pred_forces = [0.0 for _ in range(self.num_engines)]   # TODO: Fix this
+        # self.pred_forces = [(0.0, 0.0) for _ in range(self.num_engines)]   # TODO: Fix this
         self.max_force_main = config.env.booster.engine.main.max_force
         self.max_force_cold_gas = config.env.booster.engine.cold_gas.max_force
 
@@ -277,21 +281,33 @@ class Booster(Booster2D):
             eta = 1.0 / 60.0
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
             distance_booster_pad = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
-            eta = 0.1
+            eta = 1.0
             reward = 1.0 / (1.0 + eta * distance_booster_pad)
-            # print("proximity", reward)
+            #print("proximity", reward)
             self.score += reward
 
             # Reward soft touchdown of the booster
+            # Low speed at close proximity to landing pad.
             # Touchdown at contact with small velocity.
+            vel_x, vel_y = self.body.linearVelocity
+            vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
+            reward = 1.0 / (1.0 + (distance_booster_pad + vel))
+
             # TODO
 
-            # Reward for verticality 
-            # TODO
-            eta = 10.0
-            reward = 1.0 / (1.0 + eta * abs(self.body.angle))
-            # print("angle", reward)
-            self.score += reward
+            # # Reward for verticality 
+            # # TODO
+            # eta = 20.0
+            # reward = 1.0 / (1.0 + eta * abs(self.body.angle))
+            # #print("angle", reward, self.body.angle)
+            # self.score += reward
+
+            # # Reward for low angular velocity 
+            # # TODO
+            # eta = 20.0
+            # reward = 1.0 / (1.0 + eta * abs(self.body.angularVelocity))
+            # # print("angular_velocity", reward, self.body.angularVelocity)
+            # self.score += reward
 
     def detect_impact(self):
         """Detects impact with ground.
@@ -309,7 +325,7 @@ class Booster(Booster2D):
         threshold) around the rocket is assumed. The rocket has 'contact' if the
         vertical distance from the center of mass to the ground is smaller than R.
         """
-        print(self.body.position, self.body.linearVelocity)
+        #print(self.body.position, self.body.linearVelocity)
         if self.body.active:
             v_max_x = self.config.env.landing.v_max.x
             v_max_y = self.config.env.landing.v_max.y
@@ -323,10 +339,10 @@ class Booster(Booster2D):
             # Check for impact
             # print(self.body.position.y, self.body.linearVelocity, contact_threshold)
             if self.body.position.y < contact_threshold:    # TODO: Use circle around booster coming with center at center of mass.
-                print("Contact")
+                #print("Contact")
                 vel_x, vel_y = self.body.linearVelocity
                 if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
-                    print("Impact")
+                    #print("Impact")
                     self.body.active = False
                     self.pred_forces = self.num_engines * [0.0]
 
@@ -389,18 +405,28 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
-            # TODO: Predict four forces
-            # f_main_x, f_main_y, f_left, f_right = self.pred_forces
-            # f_main_x *= self.max_force_main
-            # f_main_y *= self.max_force_main
+            # Get force prediction [0, 1]
+            f_main_x, f_main_y, f_left, f_right = self.pred_forces
 
-            f_main, f_left, f_right = self.pred_forces
-            f_main *= self.max_force_main
+            f_main_x = 2.0 * f_main_x - 1.0     # TODO: Hacky post-processing
+
+            # Scale force predictions according to engine's maximum power.
+            f_main_x *= self.max_force_main
+            f_main_y *= self.max_force_main
             f_left *= self.max_force_cold_gas
             f_right *= self.max_force_cold_gas
 
-            # Main engine
-            f = self.body.GetWorldVector(localVector=b2Vec2(0.0, f_main))
+            # TODO: point p of main is the same for both components.
+
+            # Main engine x-component
+            f = self.body.GetWorldVector(localVector=b2Vec2(f_main_x, 0.0))
+            p = self.body.GetWorldPoint(
+                localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height))
+            )
+
+            self.body.ApplyForce(f, p, True)
+            # Main engine y-component
+            f = self.body.GetWorldVector(localVector=b2Vec2(0.0, f_main_y))
             p = self.body.GetWorldPoint(
                 localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height))
             )
@@ -448,75 +474,6 @@ class Booster(Booster2D):
     #     computes set of actions and Booster's control system method executes
     #     actions.
     #     """
-    #     # comp_actions() predicts which forces to apply
-    #     # The predictions are a vector for each booster with F_x and F_y
-    #     f_x_max = self.config.env.booster.engine.main.max_force
-    #     f_y_max = self.config.env.booster.engine.main.max_force
-
-    #     self.force_merlin_engine = [
-    #         (random.uniform(-1, 1) * f_x_max, random.uniform(0, 1) * f_y_max)
-    #         for _ in self.boosters
-    #     ]  # some fake data
-
-    #     f_max = self.config.env.booster.engine.cold_gas.max_force
-    #     self.force_cold_gas_engine_left = [
-    #         (random.random() * f_max, 0.0) for _ in self.boosters
-    #     ]  # some fake data
-    #     self.force_cold_gas_engine_right = [
-    #         (-random.random() * f_max, 0.0) for _ in self.boosters
-    #     ]  # some fake data
-
-    #     for booster, force_merlin, force_cold_gas_left, force_cold_gas_right in zip(
-    #         self.boosters,
-    #         self.force_merlin_engine,
-    #         self.force_cold_gas_engine_left,
-    #         self.force_cold_gas_engine_right,
-    #     ):
-
-    #         #####################################
-    #         # Apply force coming from main engine
-    #         #####################################
-    #         f = booster.body.GetWorldVector(
-    #             localVector=force_merlin
-    #         )  # Get the world coordinates of a vector given the local coordinates.
-
-    #         local_point_merlin = b2Vec2(
-    #             0.0, -(0.5 * booster.hull.height + booster.engines.height)
-    #         )
-    #         local_point_merlin = b2Vec2(
-    #             0.0, -(0.5 * booster.hull.height + booster.engines.height)
-    #         )
-
-    #         p = booster.body.GetWorldPoint(localPoint=local_point_merlin)
-    #         # Apply force f to point p of booster.
-    #         booster.body.ApplyForce(f, p, True)
-
-    #         ###########################################
-    #         # Apply force coming from cold gas thruster
-    #         ###########################################
-    #         # Left
-    #         local_point_cold_gas_left = b2Vec2(
-    #             -0.5 * booster.hull.width, 0.5 * booster.hull.height
-    #         )
-    #         f = booster.body.GetWorldVector(
-    #             localVector=force_cold_gas_left
-    #         )  # Get the world coordinates of a vector given the local coordinates.
-    #         p = booster.body.GetWorldPoint(
-    #             localPoint=local_point_cold_gas_left
-    #         )  # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
-    #         booster.body.ApplyForce(f, p, True)
-
-    #         # Right
-    #         local_point_cold_gas_right = b2Vec2(
-    #             0.5 * booster.hull.width, 0.5 * booster.hull.height
-    #         )
-    #         f = booster.body.GetWorldVector(
-    #             localVector=force_cold_gas_right
-    #         )  # Get the world coordinates of a vector given the local coordinates.
-    #         p = booster.body.GetWorldPoint(
-    #             localPoint=local_point_cold_gas_right
-    #         )  # Get the world coordinates of a point given the local coordinates. Hence, p = booster.position + localPoint, with local coord. equals localPoint
-    #         booster.body.ApplyForce(f, p, True)
 
     def _print_booster_info(self) -> None:
         """Prints booster data."""

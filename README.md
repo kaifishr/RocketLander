@@ -1,3 +1,5 @@
+# RocketBooster
+# FalconBooster
 # BoosterLanding
 # LandingBooster
 # RocketLanding
@@ -11,6 +13,9 @@ Boosters are equipped with neural networks for thrust control.
 
 ---
 ## TODOs
+- Fixe engines
+    - each engine has two components
+- Add method to detect high stress (angular velocity)
 - Align domain borders with screen borders
 - Use trainer from src that uses project specific optimizer
 - Create version of code that can be used for genetic optimization as well as for reinforcement learning.
@@ -19,15 +24,14 @@ Boosters are equipped with neural networks for thrust control.
 - Genetic optimization
     - Use award function that consist of $T$ terms standing for $T$ times a score based on certain criteria has been computed. Use a weighted sum to compute final score. $S = \gamma_0s_0 + \gamma_1s_1 + ... + \gamma_Ts_T$ where $\gamma$ weights earlier awards less. Award $s$ can be sum of distance to center of landing pad and horizontal / vertical velocity.
 - Reinforcement learning
-    - Action space (do nothing, fire engine at discrete angles, )
+    - Discrete action space (do nothing, fire engine at discrete angles, )
 ---
 
 ## Introduction
 
 ![booster](./docs/booster.png)
 
-Inspired by SpaceX's incredible progress, I set up a simple environment in PyBox2D
-that allows to use different methods to land a booster in a physical simulation.
+Inspired by SpaceX's incredible progress, I set up a simple environment that uses PyBox2D for rigid physics simulation and PyGame for rendering and visualization, that allows to use different methods to land a booster in a physical simulation.
 
 The booster's physics is modeled using PyBox2D, a 2D physics library for simple simulations. The booster consists of three sections. A long and low density section (the booster's hull containing mostly empty fuel tanks) connected to a short high density section (the booster's engines). On top of that there are the landing legs which are modeled as medium density sticks attached to the lower part of the rocket in a 45 degree angle.
 
@@ -37,7 +41,7 @@ This project can also be tackled with deep reinforcement learning (e.g. deep Q-l
 
 ## Prepare environment for reinforcement learining
 
-Activate environment to install *pybox2d* and *pygame*.
+Activate environment to install *PyBox2D* and *PyGame*.
 
 ```console
 conda activate env

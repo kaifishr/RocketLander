@@ -116,15 +116,28 @@ class Renderer:
         scale_force = self.config.renderer.scale_force
         color = self.color_force_line
 
-        f_main, f_left, f_right = booster.pred_forces
+        # Get force prediction [0, 1]
+        f_main_x, f_main_y, f_left, f_right = booster.pred_forces
 
-        f_main *= booster.max_force_main
+        f_main_x = 2.0 * f_main_x - 1.0     # TODO: Hacky
+
+        # Scale force predictions according to engine's maximum power.
+        f_main_x *= booster.max_force_main
+        f_main_y *= booster.max_force_main
         f_left *= booster.max_force_cold_gas
         f_right *= booster.max_force_cold_gas
 
-        # Main engine
+        # TODO: point p of main is the same for both components.
+        # Main engine x-component
         local_point_down = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
-        force_direction = (0.0, -scale_force * f_main)
+        force_direction = (-scale_force * f_main_x, 0.0)
+        p1 = booster.body.GetWorldPoint(localPoint=local_point_down)
+        p2 = p1 + booster.body.GetWorldVector(force_direction)
+        self._draw_segment(self._to_screen(p1), self._to_screen(p2), color)
+
+        # Main engine y-component
+        local_point_down = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
+        force_direction = (0.0, -scale_force * f_main_y)
         p1 = booster.body.GetWorldPoint(localPoint=local_point_down)
         p2 = p1 + booster.body.GetWorldVector(force_direction)
         self._draw_segment(self._to_screen(p1), self._to_screen(p2), color)

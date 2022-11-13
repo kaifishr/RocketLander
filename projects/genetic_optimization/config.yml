@@ -15,7 +15,7 @@ checkpoints:
 #   num_generations: 10000 # not used yet
 
 optimizer:
-  num_boosters: 8
+  num_boosters: 16
   num_max_steps: 2000
   mutation_probability: 0.02
   mutation_rate: 0.02
@@ -25,7 +25,7 @@ env:
   landing:
     v_max: 
       x: 1.0
-      y: -10.0
+      y: -5.0
 
   domain:
     x_min: -200.0
@@ -38,14 +38,15 @@ env:
     y: -9.81
 
   booster:
+    fixed_rotation: true    # Fix rotation for faster learning.
 
     init:
       position: 
         x: 0.0
-        y: 30.0
+        y: 400.0
       linear_velocity: 
         x: 0.0
-        y: 0.0
+        y: -50.0
       angular_velocity: 0.0
       angle: 0.0
 
@@ -54,26 +55,26 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 1000.0
-        # max_angle: 20.0
+        max_force: 50000.0
+        max_angle: 15.0   # gimbal angle
       cold_gas:  # Cold gas propulsion system.
-        max_force: 0.0
-        # max_angle: 20.0
+        max_force: 1000.0
+        max_angle: 10.0
 
     noise:  # TODO: move this to env?
       position: 
-        x: 10.0                       # Standard deviation [m]
-        y: 0.0                       # Standard deviation [m]
+        x: 40.0                       # Standard deviation [m]
+        y: 40.0                       # Standard deviation [m]
       linear_velocity: 
-        x: 0.0                        # Standard deviation [m / s]
-        y: 0.0                        # Standard deviation [m / s]
+        x: 20.0                        # Standard deviation [m / s]
+        y: 20.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [rad / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle
-      num_dim_out: 3      # Actions for three engines.
-      num_dim_hidden: 8
+      num_dim_out: 4      # Actions for three engines.
+      num_dim_hidden: 16
       num_hidden_layers: 2
 
 framework:
