@@ -56,10 +56,10 @@ env:
       main: # merlin
         density: 1.0  # Average density of engines.
         max_force: 50000.0
-        max_angle: 15.0   # gimbal angle
+        max_angle: 20.0   # gimbal angle, Falcon 9: ~15 degrees
       cold_gas:  # Cold gas propulsion system.
         max_force: 1000.0
-        max_angle: 10.0
+        max_angle: 40.0
 
     noise:  # TODO: move this to env?
       position: 
@@ -72,8 +72,8 @@ env:
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
-      num_dim_in: 6       # Position, linear velocity, angular velocity, angle
-      num_dim_out: 4      # Actions for three engines.
+      num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
+      num_dim_out: 6      # Predictions of thrust and angle for three engines.
       num_dim_hidden: 16
       num_hidden_layers: 2
 

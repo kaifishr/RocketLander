@@ -1,21 +1,20 @@
 """Defines rocket booster in Box2d."""
 import copy
 import math
-import random
 
-import numpy as np
+import numpy
 
 from Box2D import b2FixtureDef, b2PolygonShape, b2Filter, b2Vec2
 from Box2D.Box2D import b2World, b2Body
 
-from src.config import Config
+from src.utils import Config
 from src.body.model import ModelLoader
 
 
 class Booster2D:  # BoosterBody
     """Rocket booster class.
 
-    Rocket booster consits of three main parts:
+    Rocket booster consists of three main parts:
         - Low density hull
         - Medium density landing legs
         - High density engines
@@ -224,8 +223,8 @@ class Booster(Booster2D):
     """Booster class holds PyBox2D booster object as well
     as the booster logic"""
 
-    num_engines = 4 # TODO: Fix this. 3 Engines, but 4 force components.
-    # num_engines = 3 
+    num_engines = 3
+    num_dims = 2
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes Booster class."""
@@ -234,11 +233,11 @@ class Booster(Booster2D):
         self.model = ModelLoader(config=config)()
 
         # Forces predicted by neural network.
-        # Initialized with 0 for each engine.
-        self.pred_forces = [0.0 for _ in range(self.num_engines)]   # TODO: Fix this
-        # self.pred_forces = [(0.0, 0.0) for _ in range(self.num_engines)]   # TODO: Fix this
+        self.predictions = [0.0 for _ in range(self.num_dims * self.num_engines)]
         self.max_force_main = config.env.booster.engine.main.max_force
+        self.max_angle_main = config.env.booster.engine.main.max_angle
         self.max_force_cold_gas = config.env.booster.engine.cold_gas.max_force
+        self.max_angle_cold_gas = config.env.booster.engine.cold_gas.max_angle
 
         # Input data for neural network
         self.data = []
@@ -344,7 +343,7 @@ class Booster(Booster2D):
                 if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
                     #print("Impact")
                     self.body.active = False
-                    self.pred_forces = self.num_engines * [0.0]
+                    self.predictions = self.num_dims * self.num_engines * [0.0]
 
     def _is_outside(self):
         # Get domain boundary
@@ -384,7 +383,7 @@ class Booster(Booster2D):
         if self.body.active:
             if self._is_outside():
                 self.body.active = False
-                self.pred_forces = self.num_engines * [0.0]
+                self.predictions = self.num_dims * self.num_engines * [0.0]
 
     def comp_action(self) -> None:
         """Computes next section of actions applied to engines.
@@ -393,87 +392,105 @@ class Booster(Booster2D):
         a set of actions (forces) to be applied to the drone's engines.
         """
         if self.body.active:
-            self.pred_forces = self.model(self.data)
-            # DEBUG:
-            # max_force = 0.05*self.max_force_main
-            # self.forces = np.array([max_force * random.random() for _ in range(self.num_engines)])
+
+            # Raw network predictions
+            pred = self.model(self.data)
+
+            # Post-processing
+            self.predictions = self._post_processing(pred)
+
+    def _post_processing(self, pred: numpy.ndarray) -> tuple:
+        """Applies post processing to raw network output.
+
+        Network predicts for each engine level of thrust and angle. Predictions are
+        between [0, 1]. From these predictions as well as from the maximum power of
+        the engines and gimbal angle, the force components f_x and f_y are computed
+        for each engine. Thus,
+
+        pred = [
+            p_main, 
+            phi_main, 
+            p_left, 
+            phi_left, 
+            p_right, 
+            phi_right
+        ]
+
+        is transformed to
+
+        predictions = [
+            f_x_main,
+            f_y_main,
+            f_x_left,
+            f_y_left,
+            f_x_right,
+            f_y_right
+        ]
+
+        Args:
+            pred: Raw network predictions.
+
+        Returns:
+            Array of force components f_x and f_y for each engine.
+        """
+        p_main, phi_main, p_left, phi_left, p_right, phi_right = pred
+
+        # def comp_force(arg: float, force: float) -> tuple[float, float]:
+        #     """Computes force components f_x and f_y."""
+        #     f_x = math.sin(arg) * force
+        #     f_y = math.cos(arg) * force
+        #     return f_x, f_y
+
+        # Main engine
+        phi = 2.0 * phi_main - 1.0  # [-1, 1]
+        arg = phi * self.max_angle_main * math.pi / 180.0
+        force = p_main * self.max_force_main
+        f_main_x = math.sin(arg) * force
+        f_main_y = math.cos(arg) * force
+        # f_x_main, f_y_main = comp_force(arg, force)
+
+        # Left engine
+        phi = 2.0 * phi_left - 1.0  # [-1, 1]
+        arg = phi * self.max_angle_cold_gas * math.pi / 180.0
+        force = p_left * self.max_force_cold_gas
+        f_left_x = math.cos(arg) * force
+        f_left_y = math.sin(arg) * force
+
+        # Right engine
+        phi = 2.0 * phi_right - 1.0  # [-1, 1]
+        arg = phi * self.max_angle_cold_gas * math.pi / 180.0
+        force = p_right * self.max_force_cold_gas
+        f_right_x = math.cos(arg) * force
+        f_right_y = math.sin(arg) * force
+
+        return f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y
 
     def apply_action(self) -> None:
-        """Applies force to engines predicted by neural network.
-
-        TODO: Add second force component to main engine.
-        """
+        """Applies force to engines predicted by neural network."""
         if self.body.active:
 
-            # Get force prediction [0, 1]
-            f_main_x, f_main_y, f_left, f_right = self.pred_forces
-
-            f_main_x = 2.0 * f_main_x - 1.0     # TODO: Hacky post-processing
-
-            # Scale force predictions according to engine's maximum power.
-            f_main_x *= self.max_force_main
-            f_main_y *= self.max_force_main
-            f_left *= self.max_force_cold_gas
-            f_right *= self.max_force_cold_gas
-
-            # TODO: point p of main is the same for both components.
+            f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y = self.predictions
 
             # Main engine x-component
-            f = self.body.GetWorldVector(localVector=b2Vec2(f_main_x, 0.0))
-            p = self.body.GetWorldPoint(
-                localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height))
-            )
-
-            self.body.ApplyForce(f, p, True)
-            # Main engine y-component
-            f = self.body.GetWorldVector(localVector=b2Vec2(0.0, f_main_y))
+            f = self.body.GetWorldVector(localVector=b2Vec2(f_main_x, f_main_y))
             p = self.body.GetWorldPoint(
                 localPoint=b2Vec2(0.0, -(0.5 * self.hull.height + self.engines.height))
             )
             self.body.ApplyForce(f, p, True)
 
             # Left cold gas thruster
-            f = self.body.GetWorldVector(localVector=b2Vec2(f_left, 0.0))
+            f = self.body.GetWorldVector(localVector=b2Vec2(f_left_x, f_left_y))
             p = self.body.GetWorldPoint(
                 localPoint=b2Vec2(-0.5 * self.hull.width, 0.5 * self.hull.height)
             )
             self.body.ApplyForce(f, p, True)
 
             # Right cold gas thruster
-            f = self.body.GetWorldVector(localVector=b2Vec2(-f_right, 0.0))
+            f = self.body.GetWorldVector(localVector=b2Vec2(-f_right_x, f_right_y))
             p = self.body.GetWorldPoint(
                 localPoint=b2Vec2(0.5 * self.hull.width, 0.5 * self.hull.height)
             )
             self.body.ApplyForce(f, p, True)
-
-    # def apply_action(
-    #     self,
-    #     force_merlin_engine: tuple = (0.0, 0.0),
-    #     force_cold_gas_engine: tuple = ((0.0, 0.0), (0.0, 0.0)),
-    # ):
-    #     """
-    #     NOTE: This is from the old implementation.
-
-    #     Applies action coming from neural network.
-
-    #     Network returns for merlin engines
-
-    #         F'x, F'y in the range [0, 1] (sigmoid)
-
-    #     The following transformation is used to avoid exceeding engine's max thrust
-
-    #         F_x = F_max * F'_x / sqrt(2)
-    #         F_y = F_max * F'_y / sqrt(2)
-
-    #     Taking into account the engine's maximum deflection
-
-    #         F_x = min(F_x_max, F_x) = min(sin(alpha), F_x)
-    #         F_y = min(F_y_max, F_y) = min(cos(alpha), F_y)
-
-    #     TODO: Shouldn't this be part of Booster class? Booster's networks
-    #     computes set of actions and Booster's control system method executes
-    #     actions.
-    #     """
 
     def _print_booster_info(self) -> None:
         """Prints booster data."""
