@@ -80,13 +80,15 @@ class Environment(Framework):
                 noise_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
                 linear_velocity += (noise_x, noise_y)
 
+                deg_to_rad = math.pi / 180.0
+
                 # Angular velocity
                 noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
-                angular_velocity += noise_angular_velocity
+                angular_velocity += deg_to_rad * noise_angular_velocity
 
                 # Angle
                 noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-                angle += (noise_angle * math.pi) / 180.0
+                angle += deg_to_rad * noise_angle
 
             booster.body.position = position
             booster.body.linearVelocity = linear_velocity
@@ -103,6 +105,11 @@ class Environment(Framework):
         """Calls impact detection method of each booster."""
         for booster in self.boosters:
             booster.detect_impact()
+
+    def detect_stress(self) -> None:
+        """Calls stress detection method of each booster."""
+        for booster in self.boosters:
+            booster.detect_excess_stress()
 
     def detect_escape(self) -> None:
         """Calls escape detection method of each booster."""

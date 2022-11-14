@@ -19,7 +19,7 @@ class TestObject(Framework):
             ]
         )
 
-        obj_vertices = [(1.0, 1.0), (-1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]
+        obj_vertices = [(2.0, 1.0), (-2.0, 1.0), (-2.0, -1.0), (2.0, -1.0)]
 
         # Create object
         pos1 = b2Vec2(0, 5.0) + (0, 0)
@@ -27,8 +27,8 @@ class TestObject(Framework):
         self.obj1 = self.world.CreateDynamicBody(
             position=pos1, 
             linearVelocity=velocity, 
-            angularVelocity=90.0 * math.pi / 180,  # 180 deg per second, counterclockwise for positive numbers
-            angle=0 * math.pi / 180.0,    # counterclockwise
+            angularVelocity=0.0 * math.pi / 180,  # 180 deg per second, counterclockwise for positive numbers
+            angle=170 * math.pi / 180.0,    # counterclockwise
             allowSleep=False
         )
 
@@ -51,8 +51,9 @@ class TestObject(Framework):
             self.obj1.angularVelocity,
             self.obj1.angle,
         ]
-        # print(data)
-        print(self.obj1.transform.angle, self.obj1.angle % (2.0 * math.pi))
+        # print(self.obj1.angularVelocity)
+        print(self.obj1.transform.angle)
+        # print(self.obj1.transform.angle, self.obj1.angle % (2.0 * math.pi))
 
 
 if __name__ == "__main__":

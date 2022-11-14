@@ -197,10 +197,8 @@ class Booster2D:  # BoosterBody
             init.linear_velocity.y,
         )
 
-        deg_to_rad = math.pi / 180.0
-
-        self.init_angular_velocity = init.angular_velocity * deg_to_rad
-        self.init_angle = init.angle * deg_to_rad
+        self.init_angular_velocity = self._deg_to_rad(init.angular_velocity)
+        self.init_angle = self._deg_to_rad(init.angle)
 
         self.fixed_rotation = config.env.booster.fixed_rotation
 
@@ -225,6 +223,19 @@ class Booster2D:  # BoosterBody
             body=self.body,
             hull=self.hull,
         )
+
+    @staticmethod
+    def _deg_to_rad(deg: float) -> float:
+        """Converts from degrees to radians.
+        
+        Args:
+            float: Number of degrees.
+            
+        Returns:
+            Radians.
+        """
+        rad = deg * math.pi / 180.0
+        return rad
 
 class Booster(Booster2D):
     """Booster class holds PyBox2D booster object as well
@@ -330,18 +341,16 @@ class Booster(Booster2D):
             pos_x, pos_y = self.body.position
             vel_x, vel_y = self.body.linearVelocity
 
-            # Reward proximity to landing pad if sink is negative.
+            # Reward proximity to landing pad if sink rate is negative.
             if vel_y <= 0.0:
                 pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
                 # eta = 1.0 / 60.0
                 pos_y -= 0.5 * self.hull.height - self.legs.y_ground #+ eta
                 dist = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
                 eta = 1.0
-                reward = 1.0 / (0.1 + eta * dist)
+                reward = 1.0 / (1.0 + eta * dist)
                 #print("proximity", reward)
                 self.score += reward
-            else:
-                self.body.active = False
 
             # Reward soft touchdown of the booster
             # Low speed at close proximity to landing pad.
@@ -350,19 +359,21 @@ class Booster(Booster2D):
             # vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
             # reward = 1.0 / (1.0 + (distance_booster_pad * vel))
 
-            # # Reward for verticality 
-            # # TODO
-            # eta = 20.0
-            # reward = 1.0 / (1.0 + eta * abs(self.body.angle))
-            # #print("angle", reward, self.body.angle)
-            # self.score += reward
+                # # Reward for verticality 
+                # eta = 1.0
+                # reward = 1.0 / (1.0 + eta * abs(self.body.transform.angle))
+                # #print("angle", reward, self.body.angle)
+                # self.score += reward
 
-            # # Reward for low angular velocity 
-            # # TODO
-            # eta = 20.0
-            # reward = 1.0 / (1.0 + eta * abs(self.body.angularVelocity))
-            # # print("angular_velocity", reward, self.body.angularVelocity)
-            # self.score += reward
+                # # Reward for low angular velocity 
+                # eta = 1.0
+                # reward = 1.0 / (1.0 + eta * abs(self.body.angularVelocity))
+                # # print("angular_velocity", reward, self.body.angularVelocity)
+                # self.score += reward
+
+            else:
+                self.body.active = False
+                self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
     def detect_impact(self):
         """Detects impact with ground.
@@ -389,27 +400,38 @@ class Booster(Booster2D):
             eta = 1.0 / 60.0  # 0.0167 # ~ 1.0 / 60.0
             a = self.legs.x_ground_high
             b = 0.5 * self.hull.height - self.legs.y_ground + eta
-            contact_threshold = (a**2 + b**2) ** 0.5 + 1.0
+            contact_threshold = (a**2 + b**2) ** 0.5 + 2.0
 
             # Check for impact
             # print(self.body.position.y, self.body.linearVelocity, contact_threshold)
-            if self.body.position.y < contact_threshold:    # TODO: Use circle around booster coming with center at center of mass.
+            if self.body.position.y < contact_threshold:    # TODO: Use circle around booster coming from center at center of mass.
                 #print("Contact")
                 vel_x, vel_y = self.body.linearVelocity
                 if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
                     #print("Impact")
                     self.body.active = False
-                    # self.predictions = self.num_dims * self.num_engines * [0.0]
                     self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
-    def detect_excess_stress(self):
+    def detect_excess_stress(self) -> None:
         """Detects excess stress on booster.
 
         Deactivates booster if stress limits are being exceeded.
         """
+        stress = self.config.env.booster.stress
+
+        max_angle = self._deg_to_rad(stress.max_angle)
+        max_angular_velocity = self._deg_to_rad(stress.max_angular_velocity)
+
         # Angle
+        if abs(self.body.transform.angle) > max_angle:
+            self.body.active = False
+            self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
+            return
         # Angular velocity
-        raise NotImplementedError
+        elif abs(self.body.angularVelocity) > max_angular_velocity:
+            self.body.active = False
+            self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
+            return
 
     def _is_outside(self):
         # Get domain boundary
@@ -527,36 +549,6 @@ class Booster(Booster2D):
         f_right_y = math.sin(arg) * force
 
         return f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y
-
-    # def _post_processing_(self, pred: numpy.ndarray) -> tuple:
-    #     """Applies post processing to raw network output.
-
-    #     Network predicts for each engine level of thrust and angle. Predictions are
-    #     between [0, 1]. From these predictions as well as from the maximum power of
-    #     the engines and gimbal angle, the force components f_x and f_y are computed
-    #     for each engine.
-
-    #     Args:
-    #         pred: Raw network predictions.
-
-    #     Returns:
-    #         Array of force components f_x and f_y for each engine.
-    #     """
-    #     p_main_x, p_main_y, p_left_x, p_left_y, p_right_x, p_right_y = pred
-
-    #     # Main engine
-    #     f_main_x = 0.25 * (2.0 * p_main_x - 1.0) * self.max_force_main
-    #     f_main_y = p_main_y * self.max_force_main
-
-    #     # Left engine
-    #     f_left_x = p_left_x * self.max_force_cold_gas
-    #     f_left_y = 0.25 * (2.0 * p_left_y - 1.0) * self.max_force_cold_gas
-
-    #     # Right engine
-    #     f_right_x = p_right_x * self.max_force_cold_gas
-    #     f_right_y = 0.25 * (2.0 * p_right_y - 1.0) * self.max_force_cold_gas
-
-    #     return f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y
 
     def apply_action(self) -> None:
         """Applies force to engines predicted by neural network."""

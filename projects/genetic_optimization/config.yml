@@ -16,16 +16,16 @@ checkpoints:
 
 optimizer:
   num_boosters: 8
-  num_max_steps: 2000
-  mutation_probability: 0.04
+  num_max_steps: 500
+  mutation_probability: 0.02
   mutation_rate: 0.04
   lib: "numpy"    # numpy, torch
 
 env: 
   landing:
     v_max: 
-      x: 30.0
-      y: -30.0
+      x: 50.0
+      y: -10.0
 
   domain:
     x_min: -200.0
@@ -40,13 +40,17 @@ env:
   booster:
     fixed_rotation: false    # Fix rotation for faster learning.
 
+    stress:
+      max_angle: 30   # [deg]
+      max_angular_velocity: 90    # [deg / s]
+
     init:
       position: 
-        x: 50.0
-        y: 200.0
+        x: 0.0
+        y: 400.0
       linear_velocity: 
         x: 0.0
-        y: 0.0
+        y: -100.0
       angular_velocity: 0.0   # [deg / second], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
@@ -55,26 +59,26 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 10000.0
-        max_angle: 15.0   # gimbal angle, Falcon 9: ~15 degrees
+        max_force: 40000.0
+        max_angle: 45.0   # gimbal angle, Falcon 9: ~15 degrees
       cold_gas:  # Cold gas propulsion system.
-        max_force: 100.0
+        max_force: 2000.0
         max_angle: 10.0
 
     noise:  # TODO: move this to env?
       position: 
-        x: 0.0                       # Standard deviation [m]
+        x: 50.0                       # Standard deviation [m]
         y: 0.0                       # Standard deviation [m]
       linear_velocity: 
         x: 0.0                        # Standard deviation [m / s]
         y: 0.0                        # Standard deviation [m / s]
-      angular_velocity: 0.0             # Standard deviation [rad / s]
+      angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 16
+      num_dim_hidden: 4
       num_hidden_layers: 2
 
 framework:
