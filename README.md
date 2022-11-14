@@ -13,6 +13,7 @@ Boosters are equipped with neural networks for thrust control.
 
 ---
 ## TODOs
+- Pre-process data
 - Add method to detect high stress (angular velocity)
 - Align domain borders with screen borders
 - Use trainer from src that uses project specific optimizer

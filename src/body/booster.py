@@ -186,20 +186,26 @@ class Booster2D:  # BoosterBody
         self.config = config
         self.world = world
 
+        init = config.env.booster.init
+
         self.init_position = b2Vec2(
-            config.env.booster.init.position.x,
-            config.env.booster.init.position.y,
+            init.position.x,
+            init.position.y,
         )
         self.init_linear_velocity = b2Vec2(
-            config.env.booster.init.linear_velocity.x,
-            config.env.booster.init.linear_velocity.y,
+            init.linear_velocity.x,
+            init.linear_velocity.y,
         )
-        self.init_angular_velocity = config.env.booster.init.angular_velocity
-        self.init_angle = (config.env.booster.init.angle * math.pi) / 180.0
+
+        deg_to_rad = math.pi / 180.0
+
+        self.init_angular_velocity = init.angular_velocity * deg_to_rad
+        self.init_angle = init.angle * deg_to_rad
+
         self.fixed_rotation = config.env.booster.fixed_rotation
 
         self.body = self.world.CreateDynamicBody(
-            bullet=True,
+            bullet=False,
             allowSleep=False,
             position=self.init_position,
             linearVelocity=self.init_linear_velocity,
@@ -255,40 +261,51 @@ class Booster(Booster2D):
             self.body.linearVelocity.x,
             self.body.linearVelocity.y,
             self.body.angularVelocity,
-            self.body.angle,
+            self.body.transform.angle, 
         ]
 
     def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
         """Applies pre-processing to fetched data.
 
+        TODO: Use online method to compute running mean and standard deviation
+              for data normalization.
+
         Normalizes fetched data.
-        
+
         Args:
             data: Array holding fetched data.
 
         Returns:
             Array with normalized data.
         """
-        # Position
-        pos_x_min = self.config.env.domain.x_min
-        pos_x_max = self.config.env.domain.x_max
-        pos_y_min = self.config.env.domain.y_min
-        pos_y_max = self.config.env.domain.y_max
-
         pos_x, pos_y = data[0], data[1]
+        vel_x, vel_y = data[2], data[3]
+        angular_vel = data[4]
+        angle = data[5]
+
+        # Position
+        pos_x_min, pos_x_max = -200.0, 200.0
+        pos_y_min, pos_y_max = -5.0, 300.0
         pos_x = 2.0 * (pos_x - pos_x_min) / (pos_x_max - pos_x_min) - 1.0
         pos_y = 2.0 * (pos_y - pos_y_min) / (pos_y_max - pos_y_min) - 1.0
         data[0], data[1] = pos_x, pos_y
 
         # Velocity
-        vel_x_min = -50.0
-        vel_x_max = 50.0
-        vel_y_min = 0.0
-        vel_y_max = (2.0 * 9.81 * self.config.env.booster.init.position.y) ** 0.5
-        vel_x, vel_y = data[2], data[3]
+        vel_x_min, vel_x_max = -50.0, 50.0
+        vel_y_min, vel_y_max = 0.0, 100.0
         vel_x = 2.0 * (vel_x - vel_x_min) / (vel_x_max - vel_x_min) - 1.0
         vel_y = 2.0 * (vel_y - vel_y_min) / (vel_y_max - vel_y_min) - 1.0
         data[2], data[3] = vel_x, vel_y
+
+        # Angular velocity
+        angular_vel_min, angular_vel_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad / s]
+        angular_vel = 2.0 * (angular_vel - angular_vel_min) / (angular_vel_max - angular_vel_min) - 1.0
+        data[4] = angular_vel
+
+        # Angle
+        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad]
+        angle = 2.0 * (angle - angle_min) / (angle_max - angle_min) - 1.0
+        data[5] = angle
 
         return data
 
@@ -314,15 +331,17 @@ class Booster(Booster2D):
             vel_x, vel_y = self.body.linearVelocity
 
             # Reward proximity to landing pad if sink is negative.
-            if vel_y < 0.0:
+            if vel_y <= 0.0:
                 pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
                 # eta = 1.0 / 60.0
                 pos_y -= 0.5 * self.hull.height - self.legs.y_ground #+ eta
                 dist = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
                 eta = 1.0
-                reward = 1.0 / (1.0 + eta * dist)
+                reward = 1.0 / (0.1 + eta * dist)
                 #print("proximity", reward)
                 self.score += reward
+            else:
+                self.body.active = False
 
             # Reward soft touchdown of the booster
             # Low speed at close proximity to landing pad.
@@ -383,6 +402,15 @@ class Booster(Booster2D):
                     # self.predictions = self.num_dims * self.num_engines * [0.0]
                     self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
+    def detect_excess_stress(self):
+        """Detects excess stress on booster.
+
+        Deactivates booster if stress limits are being exceeded.
+        """
+        # Angle
+        # Angular velocity
+        raise NotImplementedError
+
     def _is_outside(self):
         # Get domain boundary
         x_min = self.config.env.domain.x_min
@@ -421,7 +449,6 @@ class Booster(Booster2D):
         if self.body.active:
             if self._is_outside():
                 self.body.active = False
-                # self.predictions = self.num_dims * self.num_engines * [0.0]
                 self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
     def comp_action(self) -> None:
@@ -431,8 +458,13 @@ class Booster(Booster2D):
         a set of actions (forces) to be applied to the drone's engines.
         """
         if self.body.active:
+
+            # Pre-processing
+            # data = self._pre_process(self.data)
+            data = self.data
+
             # Raw network predictions
-            pred = self.model(self.data)
+            pred = self.model(data)
 
             # Post-processing
             self.predictions = self._post_process(pred)

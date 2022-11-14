@@ -16,7 +16,7 @@ checkpoints:
 
 optimizer:
   num_boosters: 8
-  num_max_steps: 1000
+  num_max_steps: 2000
   mutation_probability: 0.04
   mutation_rate: 0.04
   lib: "numpy"    # numpy, torch
@@ -24,47 +24,47 @@ optimizer:
 env: 
   landing:
     v_max: 
-      x: 50.0
-      y: -50.0
+      x: 30.0
+      y: -30.0
 
   domain:
     x_min: -200.0
     x_max: 200.0
     y_max: 500.0
-    y_min: -10.0
+    y_min: -5.0
 
   gravity: 
     x: 0.0
     y: -9.81
 
   booster:
-    fixed_rotation: true    # Fix rotation for faster learning.
+    fixed_rotation: false    # Fix rotation for faster learning.
 
     init:
       position: 
         x: 50.0
-        y: 300.0
+        y: 200.0
       linear_velocity: 
         x: 0.0
-        y: -20.0
-      angular_velocity: 0.0
-      angle: 0.0
+        y: 0.0
+      angular_velocity: 0.0   # [deg / second], counterclockwise for positive numbers
+      angle: 0.0              # [deg] counterclockwise
 
     density: 1.0  # Average density of hull.
  
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 20000.0
+        max_force: 10000.0
         max_angle: 15.0   # gimbal angle, Falcon 9: ~15 degrees
       cold_gas:  # Cold gas propulsion system.
-        max_force: 1000.0
+        max_force: 100.0
         max_angle: 10.0
 
     noise:  # TODO: move this to env?
       position: 
-        x: 20.0                       # Standard deviation [m]
-        y: 20.0                       # Standard deviation [m]
+        x: 0.0                       # Standard deviation [m]
+        y: 0.0                       # Standard deviation [m]
       linear_velocity: 
         x: 0.0                        # Standard deviation [m / s]
         y: 0.0                        # Standard deviation [m / s]
