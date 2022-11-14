@@ -15,17 +15,17 @@ checkpoints:
 #   num_generations: 10000 # not used yet
 
 optimizer:
-  num_boosters: 16
-  num_max_steps: 2000
-  mutation_probability: 0.01
-  mutation_rate: 0.02
+  num_boosters: 8
+  num_max_steps: 1000
+  mutation_probability: 0.04
+  mutation_rate: 0.04
   lib: "numpy"    # numpy, torch
 
 env: 
   landing:
     v_max: 
-      x: 1.0
-      y: -25.0
+      x: 50.0
+      y: -50.0
 
   domain:
     x_min: -200.0
@@ -42,11 +42,11 @@ env:
 
     init:
       position: 
-        x: 20.0
-        y: 400.0
+        x: 50.0
+        y: 300.0
       linear_velocity: 
         x: 0.0
-        y: -50.0
+        y: -20.0
       angular_velocity: 0.0
       angle: 0.0
 
@@ -55,26 +55,26 @@ env:
     engine:
       main: # merlin
         density: 1.0  # Average density of engines.
-        max_force: 30000.0
+        max_force: 20000.0
         max_angle: 15.0   # gimbal angle, Falcon 9: ~15 degrees
       cold_gas:  # Cold gas propulsion system.
-        max_force: 2000.0
-        max_angle: 20.0
+        max_force: 1000.0
+        max_angle: 10.0
 
     noise:  # TODO: move this to env?
       position: 
         x: 20.0                       # Standard deviation [m]
         y: 20.0                       # Standard deviation [m]
       linear_velocity: 
-        x: 20.0                        # Standard deviation [m / s]
-        y: 20.0                        # Standard deviation [m / s]
+        x: 0.0                        # Standard deviation [m / s]
+        y: 0.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [rad / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 32
+      num_dim_hidden: 16
       num_hidden_layers: 2
 
 framework:

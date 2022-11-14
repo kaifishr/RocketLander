@@ -3,6 +3,7 @@ import copy
 import math
 
 import numpy
+import numpy as np
 
 from Box2D import b2FixtureDef, b2PolygonShape, b2Filter, b2Vec2
 from Box2D.Box2D import b2World, b2Body
@@ -233,7 +234,8 @@ class Booster(Booster2D):
         self.model = ModelLoader(config=config)()
 
         # Forces predicted by neural network.
-        self.predictions = [0.0 for _ in range(self.num_dims * self.num_engines)]
+        # self.predictions = [0.0 for _ in range(self.num_dims * self.num_engines)]
+        self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
         self.max_force_main = config.env.booster.engine.main.max_force
         self.max_angle_main = config.env.booster.engine.main.max_angle
         self.max_force_cold_gas = config.env.booster.engine.cold_gas.max_force
@@ -255,6 +257,40 @@ class Booster(Booster2D):
             self.body.angularVelocity,
             self.body.angle,
         ]
+
+    def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
+        """Applies pre-processing to fetched data.
+
+        Normalizes fetched data.
+        
+        Args:
+            data: Array holding fetched data.
+
+        Returns:
+            Array with normalized data.
+        """
+        # Position
+        pos_x_min = self.config.env.domain.x_min
+        pos_x_max = self.config.env.domain.x_max
+        pos_y_min = self.config.env.domain.y_min
+        pos_y_max = self.config.env.domain.y_max
+
+        pos_x, pos_y = data[0], data[1]
+        pos_x = 2.0 * (pos_x - pos_x_min) / (pos_x_max - pos_x_min) - 1.0
+        pos_y = 2.0 * (pos_y - pos_y_min) / (pos_y_max - pos_y_min) - 1.0
+        data[0], data[1] = pos_x, pos_y
+
+        # Velocity
+        vel_x_min = -50.0
+        vel_x_max = 50.0
+        vel_y_min = 0.0
+        vel_y_max = (2.0 * 9.81 * self.config.env.booster.init.position.y) ** 0.5
+        vel_x, vel_y = data[2], data[3]
+        vel_x = 2.0 * (vel_x - vel_x_min) / (vel_x_max - vel_x_min) - 1.0
+        vel_y = 2.0 * (vel_y - vel_y_min) / (vel_y_max - vel_y_min) - 1.0
+        data[2], data[3] = vel_x, vel_y
+
+        return data
 
     def mutate(self, model: object) -> None:
         """Mutates drone's neural network.
@@ -280,8 +316,8 @@ class Booster(Booster2D):
             # Reward proximity to landing pad if sink is negative.
             if vel_y < 0.0:
                 pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
-                eta = 1.0 / 60.0
-                pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+                # eta = 1.0 / 60.0
+                pos_y -= 0.5 * self.hull.height - self.legs.y_ground #+ eta
                 dist = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
                 eta = 1.0
                 reward = 1.0 / (1.0 + eta * dist)
@@ -344,7 +380,8 @@ class Booster(Booster2D):
                 if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
                     #print("Impact")
                     self.body.active = False
-                    self.predictions = self.num_dims * self.num_engines * [0.0]
+                    # self.predictions = self.num_dims * self.num_engines * [0.0]
+                    self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
     def _is_outside(self):
         # Get domain boundary
@@ -384,7 +421,8 @@ class Booster(Booster2D):
         if self.body.active:
             if self._is_outside():
                 self.body.active = False
-                self.predictions = self.num_dims * self.num_engines * [0.0]
+                # self.predictions = self.num_dims * self.num_engines * [0.0]
+                self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
     def comp_action(self) -> None:
         """Computes next section of actions applied to engines.
@@ -397,10 +435,10 @@ class Booster(Booster2D):
             pred = self.model(self.data)
 
             # Post-processing
-            self.predictions = self._post_processing(pred)
-
-    def _post_processing(self, pred: numpy.ndarray) -> tuple:
-        """Applies post processing to raw network output.
+            self.predictions = self._post_process(pred)
+ 
+    def _post_process(self, pred: numpy.ndarray) -> tuple:
+        """Applies post-processing to raw network output.
 
         Network predicts for each engine level of thrust and angle. Predictions are
         between [0, 1]. From these predictions as well as from the maximum power of
@@ -457,6 +495,36 @@ class Booster(Booster2D):
         f_right_y = math.sin(arg) * force
 
         return f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y
+
+    # def _post_processing_(self, pred: numpy.ndarray) -> tuple:
+    #     """Applies post processing to raw network output.
+
+    #     Network predicts for each engine level of thrust and angle. Predictions are
+    #     between [0, 1]. From these predictions as well as from the maximum power of
+    #     the engines and gimbal angle, the force components f_x and f_y are computed
+    #     for each engine.
+
+    #     Args:
+    #         pred: Raw network predictions.
+
+    #     Returns:
+    #         Array of force components f_x and f_y for each engine.
+    #     """
+    #     p_main_x, p_main_y, p_left_x, p_left_y, p_right_x, p_right_y = pred
+
+    #     # Main engine
+    #     f_main_x = 0.25 * (2.0 * p_main_x - 1.0) * self.max_force_main
+    #     f_main_y = p_main_y * self.max_force_main
+
+    #     # Left engine
+    #     f_left_x = p_left_x * self.max_force_cold_gas
+    #     f_left_y = 0.25 * (2.0 * p_left_y - 1.0) * self.max_force_cold_gas
+
+    #     # Right engine
+    #     f_right_x = p_right_x * self.max_force_cold_gas
+    #     f_right_y = 0.25 * (2.0 * p_right_y - 1.0) * self.max_force_cold_gas
+
+    #     return f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y
 
     def apply_action(self) -> None:
         """Applies force to engines predicted by neural network."""
