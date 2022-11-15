@@ -36,7 +36,7 @@ class Environment(Framework):
 
         self.world.gravity = b2Vec2(config.env.gravity.x, config.env.gravity.y)
 
-        LandingPad(self.world)
+        self.landing_pad = LandingPad(world=self.world, config=config)
 
         self.num_boosters = config.optimizer.num_boosters
         self.boosters = [
@@ -48,6 +48,52 @@ class Environment(Framework):
 
         # Index of current fittest agent
         self.idx_best = 0
+
+    def _is_outside(self, booster: Booster) -> bool:
+        """Checks if center of mass of booster is outside domain."""
+
+        # Get domain boundaries
+        x_min = self.config.env.domain.x_min
+        x_max = self.config.env.domain.x_max
+        y_min = self.config.env.domain.y_min
+        y_max = self.config.env.domain.y_max
+
+        # Compare booster position to all four domain boundaries
+        pos_x, pos_y = booster.body.position
+
+        # Option 1
+        if pos_x < x_min:
+            return True
+        elif pos_y < y_min:
+            return True
+        elif pos_x > x_max:
+            return True
+        elif pos_y > y_max:
+            return True
+        return False
+
+        # Option 2
+        # if (pos_x < x_min) or (pos_y < y_min) or (pos_x > x_max) or (pos_y > y_max):
+        #     return True
+        # return False
+
+        # Option 3
+        # if (x_min < pos_x < x_max) and (y_min < pos_y < y_max):
+        #     return False
+        # return True
+
+    def detect_escape(self) -> None:
+        """Detects when booster escapes from the domain.
+
+        Deactivates booster if center of gravity crosses the
+        domain boundary.
+        """
+        for booster in self.boosters:
+            if booster.body.active:
+                if self._is_outside(booster):
+                    booster.body.active = False
+                    booster.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
+
 
     def reset(self, add_noise: bool = True) -> None:
         """Resets boosters in environment.
@@ -111,10 +157,10 @@ class Environment(Framework):
         for booster in self.boosters:
             booster.detect_excess_stress()
 
-    def detect_escape(self) -> None:
-        """Calls escape detection method of each booster."""
-        for booster in self.boosters:
-            booster.detect_escape()
+    # def detect_escape(self) -> None:
+    #     """Calls escape detection method of each booster."""
+    #     for booster in self.boosters:
+    #         booster.detect_escape()
 
     def fetch_data(self) -> None:
         """Fetches data for neural network of booster"""

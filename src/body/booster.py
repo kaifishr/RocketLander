@@ -11,6 +11,13 @@ from Box2D.Box2D import b2World, b2Body
 from src.utils import Config
 from src.body.model import ModelLoader
 
+# class ControlSystem:
+# 
+#     def __init__(self):
+# 
+#         model = Model()
+#         data_processing = DataProcessing()
+
 
 class Booster2D:  # BoosterBody
     """Rocket booster class.
@@ -42,7 +49,7 @@ class Booster2D:  # BoosterBody
         """
 
         # Parameters of booster's hull.
-        density = 1.0
+        density = 1.0   # Average density of hull. (~465 kg / m)
         height = 44.0
         width = 3.7
         vertices = [(0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), (0.5, -0.5)]
@@ -71,7 +78,7 @@ class Booster2D:  # BoosterBody
         """
 
         # Parameters for engine
-        density = 100.0
+        density = 18.0 # Average density of engines, (~2820 kg / m), times 3 to account for real merlin size
         height = 0.8
         width_min = 0.5
         width_max = 1.0
@@ -203,7 +210,7 @@ class Booster2D:  # BoosterBody
         self.fixed_rotation = config.env.booster.fixed_rotation
 
         self.body = self.world.CreateDynamicBody(
-            bullet=False,
+            bullet=True,
             allowSleep=False,
             position=self.init_position,
             linearVelocity=self.init_linear_velocity,
@@ -343,21 +350,22 @@ class Booster(Booster2D):
 
             # Reward proximity to landing pad if sink rate is negative.
             if vel_y <= 0.0:
-                pad_x, pad_y = b2Vec2(0.0, 0.0)  # Center of landing pad.
+                pos_pad = self.config.env.landing_pad.position
                 # eta = 1.0 / 60.0
                 pos_y -= 0.5 * self.hull.height - self.legs.y_ground #+ eta
-                dist = ((pad_x - pos_x) ** 2 + (pad_y - pos_y) ** 2) ** 0.5
+                dist = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
                 eta = 1.0
                 reward = 1.0 / (1.0 + eta * dist)
+                # reward = 1.0 / (1.0 + eta * dist + abs(vel_y))
+                # reward = 1.0 / (1.0 + (eta * dist + abs(vel_y))**2)
+                # reward = math.exp(-(eta * dist + abs(vel_y)) ** 2)
                 #print("proximity", reward)
                 self.score += reward
 
-            # Reward soft touchdown of the booster
-            # Low speed at close proximity to landing pad.
-            # Touchdown at contact with small velocity.
-            # vel_x, vel_y = self.body.linearVelocity
-            # vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
-            # reward = 1.0 / (1.0 + (distance_booster_pad * vel))
+                # Reward for soft touchdown 
+                # vel_x, vel_y = self.body.linearVelocity
+                # vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
+                # reward = 1.0 / (1.0 + (distance_booster_pad * vel))
 
                 # # Reward for verticality 
                 # eta = 1.0
@@ -432,46 +440,6 @@ class Booster(Booster2D):
             self.body.active = False
             self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
             return
-
-    def _is_outside(self):
-        # Get domain boundary
-        x_min = self.config.env.domain.x_min
-        x_max = self.config.env.domain.x_max
-        y_min = self.config.env.domain.y_min
-        y_max = self.config.env.domain.y_max
-
-        # Compute distance to all four domain boundaries.
-        pos_x, pos_y = self.body.position
-
-        # Option 1
-        # if pos_x < x_min:
-        #     return True
-        # elif pos_y < y_min:
-        #     return True
-        # elif pos_x > x_max:
-        #     return True
-        # elif pos_y > y_max:
-        #     return True
-        # else:
-        #     return False
-
-        # Option 2
-        if (x_min < pos_x < x_max) and (y_min < pos_y < y_max):
-            return False
-        return True
-
-    def detect_escape(self):
-        """Detects the escape from the domain boundary.
-
-        TODO: Move to environment?
-
-        Deactivates booster if center of gravity crosses the
-        domain boundary.
-        """
-        if self.body.active:
-            if self._is_outside():
-                self.body.active = False
-                self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
     def comp_action(self) -> None:
         """Computes next section of actions applied to engines.
