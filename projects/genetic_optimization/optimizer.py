@@ -51,6 +51,10 @@ class Optimizer:
             # Physics and rendering
             self.env.step()
 
+            # Detect landing 
+            # Turns off engines
+            # self.env.detect_landing()
+
             # Detect high stresses
             self.env.detect_stress()
 

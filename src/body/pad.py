@@ -1,6 +1,9 @@
 """Defines landing pad."""
-from Box2D import b2EdgeShape
-from Box2D.Box2D import b2World, b2Vec2
+from Box2D import (
+    b2EdgeShape,
+    b2Vec2,
+    b2World,
+)
 
 from src.utils.config import Config
 
@@ -13,8 +16,7 @@ class LandingPad:
     Attributes:
         body: Static body object.
     """
-
-    landing_pad_diameter = 86   # [m]
+    diameter = 86   # [m]
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes landing pad."""
@@ -23,8 +25,8 @@ class LandingPad:
         position = config.env.landing_pad.position
 
         vertices = [
-            (-0.5 * self.landing_pad_diameter, 0.0),
-            (0.5 * self.landing_pad_diameter, 0.0),
+            (-0.5 * self.diameter, 0.0),
+            (0.5 * self.diameter, 0.0),
         ]
 
         self.body = world.CreateStaticBody(

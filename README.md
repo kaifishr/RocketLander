@@ -35,6 +35,16 @@ The landing of the booster is learned using a genetic algorithm to optimize a sm
 
 This project can also be tackled with deep reinforcement learning (e.g. deep Q-learning).
 
+## Method
+
+### Reward Function
+
+- Number of simulation steps (time restriction) acts as an implicit fuel restriction. Thus, the booster is rewarded for landing quickly.
+
+### Genetic Optimization
+
+### Reinforcement Learning
+
 ## Prepare environment for reinforcement learining
 
 Activate environment to install *PyBox2D* and *PyGame*.

@@ -16,7 +16,7 @@ from Box2D.Box2D import b2Vec2
 
 from src.utils.config import Config
 from src.framework import Framework
-from src.body.booster import Booster
+from src.body.booster.booster import Booster
 from src.body.pad import LandingPad
 
 
@@ -38,9 +38,9 @@ class Environment(Framework):
 
         self.landing_pad = LandingPad(world=self.world, config=config)
 
-        self.num_boosters = config.optimizer.num_boosters
+        num_boosters = config.optimizer.num_boosters
         self.boosters = [
-            Booster(world=self.world, config=config) for _ in range(self.num_boosters)
+            Booster(world=self.world, config=config) for _ in range(num_boosters)
         ]
 
         # Add reference of boosters to world class for easier rendering handling.
@@ -81,7 +81,7 @@ class Environment(Framework):
             if booster.body.active:
                 if self._is_outside(booster):
                     booster.body.active = False
-                    booster.predictions = np.zeros_like(booster.predictions)
+                    booster.predictions.fill(0.0)
 
     def detect_impact(self):
         """Detects impact with landing pad.
@@ -107,7 +107,7 @@ class Environment(Framework):
                     v_max_y = self.config.env.landing.v_max.y
                     if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
                         booster.body.active = False
-                        booster.predictions = np.zeros_like(booster.predictions)
+                        booster.predictions.fill(0.0)
 
     def reset(self, add_noise: bool = True) -> None:
         """Resets boosters in environment.
