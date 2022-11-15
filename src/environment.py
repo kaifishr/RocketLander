@@ -61,7 +61,6 @@ class Environment(Framework):
         # Compare booster position to all four domain boundaries
         pos_x, pos_y = booster.body.position
 
-        # Option 1
         if pos_x < x_min:
             return True
         elif pos_y < y_min:
@@ -71,16 +70,6 @@ class Environment(Framework):
         elif pos_y > y_max:
             return True
         return False
-
-        # Option 2
-        # if (pos_x < x_min) or (pos_y < y_min) or (pos_x > x_max) or (pos_y > y_max):
-        #     return True
-        # return False
-
-        # Option 3
-        # if (x_min < pos_x < x_max) and (y_min < pos_y < y_max):
-        #     return False
-        # return True
 
     def detect_escape(self) -> None:
         """Detects when booster escapes from the domain.
@@ -92,8 +81,33 @@ class Environment(Framework):
             if booster.body.active:
                 if self._is_outside(booster):
                     booster.body.active = False
-                    booster.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
+                    booster.predictions = np.zeros_like(booster.predictions)
 
+    def detect_impact(self):
+        """Detects impact with landing pad.
+
+        TODO: Move threshold computation to __init__()
+
+        Deactivates booster in case of impact.
+
+        An impact has occurred when a booster is one
+        length unit above the ground at a higher than
+        defined velocity. 
+
+        For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
+        threshold) around the rocket is assumed. The rocket has 'contact' if the
+        vertical distance from the center of mass to the ground is smaller than R.
+        """
+        for booster in self.boosters:
+            if booster.body.active:
+                pad = self.config.env.landing_pad.position
+                if (booster.body.position.y - pad.y) < booster.contact_threshold:
+                    vel_x, vel_y = booster.body.linearVelocity
+                    v_max_x = self.config.env.landing.v_max.x
+                    v_max_y = self.config.env.landing.v_max.y
+                    if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
+                        booster.body.active = False
+                        booster.predictions = np.zeros_like(booster.predictions)
 
     def reset(self, add_noise: bool = True) -> None:
         """Resets boosters in environment.
@@ -147,20 +161,10 @@ class Environment(Framework):
             # Reactivate booster after collision in last generation.
             booster.body.active = True
 
-    def detect_impact(self) -> None:
-        """Calls impact detection method of each booster."""
-        for booster in self.boosters:
-            booster.detect_impact()
-
     def detect_stress(self) -> None:
         """Calls stress detection method of each booster."""
         for booster in self.boosters:
             booster.detect_excess_stress()
-
-    # def detect_escape(self) -> None:
-    #     """Calls escape detection method of each booster."""
-    #     for booster in self.boosters:
-    #         booster.detect_escape()
 
     def fetch_data(self) -> None:
         """Fetches data for neural network of booster"""

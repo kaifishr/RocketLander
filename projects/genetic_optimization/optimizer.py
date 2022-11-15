@@ -51,18 +51,19 @@ class Optimizer:
             # Physics and rendering
             self.env.step()
 
-            # Detect collision with ground.
-            # Impacted boosters are deactivated.
+            # Detect high stresses
             self.env.detect_stress()
+
+            # Detect collision with ground
             self.env.detect_impact()
 
-            # Detect leaving the domain.
+            # Detect leaving the domain
             self.env.detect_escape()
 
             # Compute current fitness / score of booster
             self.env.comp_score()
 
-            # Fetch data of each booster used for neural network.
+            # Fetch data of each booster used for neural network
             self.env.fetch_data()
 
             # Run neural network prediction

@@ -56,7 +56,6 @@ class Booster2D:  # BoosterBody
 
         def __init__(self, body: b2Body) -> None:
             """Initializes hull class."""
-            self.body = body
             self._add_hull(body=body)
 
         def _add_hull(self, body) -> None:
@@ -69,7 +68,7 @@ class Booster2D:  # BoosterBody
                 density=self.density,
                 filter=b2Filter(groupIndex=-1),  # negative groups never collide
             )
-            hull_fixture = body.CreateFixture(hull_fixture_def)
+            _ = body.CreateFixture(hull_fixture_def)
 
     class Engines:
         """Engine class.
@@ -231,6 +230,12 @@ class Booster2D:  # BoosterBody
             hull=self.hull,
         )
 
+        # Compute contact sphere for impact detection
+        eta = 2.0 * (1.0 / 60.0)  # step_size = 0.0167 # ~ 1.0 / 60.0
+        a = self.legs.x_ground_high + 0.5 * self.hull.width
+        b = 0.5 * self.hull.height - self.legs.y_ground
+        self.contact_threshold = (a**2 + b**2) ** 0.5 + eta
+
     @staticmethod
     def _deg_to_rad(deg: float) -> float:
         """Converts from degrees to radians.
@@ -382,43 +387,6 @@ class Booster(Booster2D):
             else:
                 self.body.active = False
                 self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
-
-    def detect_impact(self):
-        """Detects impact with ground.
-
-        TODO: Move to environment?
-        TODO: Move threshold computation to __init__()
-
-        Deactivates booster in case of impact.
-
-        An impact has occurred when a booster is one
-        length unit above the ground at a higher than
-        defined velocity. 
-
-        For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
-        threshold) around the rocket is assumed. The rocket has 'contact' if the
-        vertical distance from the center of mass to the ground is smaller than R.
-        """
-        #print(self.body.position, self.body.linearVelocity)
-        if self.body.active:
-            v_max_x = self.config.env.landing.v_max.x
-            v_max_y = self.config.env.landing.v_max.y
-
-            # Compute distance from center of mass to ground
-            eta = 1.0 / 60.0  # 0.0167 # ~ 1.0 / 60.0
-            a = self.legs.x_ground_high
-            b = 0.5 * self.hull.height - self.legs.y_ground + eta
-            contact_threshold = (a**2 + b**2) ** 0.5 + 2.0
-
-            # Check for impact
-            # print(self.body.position.y, self.body.linearVelocity, contact_threshold)
-            if self.body.position.y < contact_threshold:    # TODO: Use circle around booster coming from center at center of mass.
-                #print("Contact")
-                vel_x, vel_y = self.body.linearVelocity
-                if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
-                    #print("Impact")
-                    self.body.active = False
-                    self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
 
     def detect_excess_stress(self) -> None:
         """Detects excess stress on booster.

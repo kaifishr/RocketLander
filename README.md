@@ -2,6 +2,7 @@
 # BoosterLander
 # FalconBooster
 # PropulsiveLander
+# Falcon9
 
 tl;dr: Simulation framework for propulsive booster landing.
 
@@ -11,9 +12,10 @@ Boosters are equipped with neural networks for thrust control.
 
 ---
 ## TODOs
+- Restructure code structure
+    - Refactor booster structure.
+        - Split classes to different scripts.
 - Use trainer from src that uses project specific optimizer
-- Move methods from Booster to Environment
-- Align domain borders with screen borders
 - Create version of code that can be used for genetic optimization as well as for reinforcement learning.
 - Genetic optimization
     - Use award function that consist of $T$ terms standing for $T$ times a score based on certain criteria has been computed. Use a weighted sum to compute final score. $S = \gamma_0s_0 + \gamma_1s_1 + ... + \gamma_Ts_T$ where $\gamma$ weights earlier awards less. Award $s$ can be sum of distance to center of landing pad and horizontal / vertical velocity.
