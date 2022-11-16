@@ -7,6 +7,10 @@ from Box2D import (
     b2Vec2,
 )
 
+from src.utils import Config
+
+from .hull import Hull
+
 
 class Engines:
     """Engines class.
@@ -23,10 +27,11 @@ class Engines:
     mass = 9 * 470  # [kg]
     density = mass / (width_hull * height)  # [kg / m^2]
 
-    def __init__(self, body: b2Body, hull) -> None:
+    def __init__(self, body: b2Body, hull: Hull, config: Config) -> None:
         """Initializes engines class."""
         self.body = body
         self.hull = hull
+        self.friction = config.env.friction
         self._add_engines()
 
     def _engine_nozzle(self, mount_point: b2Vec2):
@@ -55,6 +60,7 @@ class Engines:
             engine_fixture_def = b2FixtureDef(
                 shape=engine_polygon,
                 density=self.density,
+                friction=self.friction,
                 filter=b2Filter(groupIndex=-1),  # negative groups never collide
             )
 

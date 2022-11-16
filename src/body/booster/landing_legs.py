@@ -8,6 +8,10 @@ from Box2D import (
     b2Vec2, 
 )
 
+from src.utils import Config
+
+from .hull import Hull
+
 
 class LandingLegs:
     """Landing legs class.
@@ -35,10 +39,11 @@ class LandingLegs:
     mass = num_legs * mass_leg  # [kg]
     density = mass / area  # [kg / m^2]
 
-    def __init__(self, body: b2Body, hull) -> None:
+    def __init__(self, body: b2Body, hull: Hull, config: Config) -> None:
         """Initializes engines class."""
         self.body = body
         self.hull = hull
+        self.friction = config.env.friction
         self._add_legs()
 
     def _add_legs(self) -> None:
@@ -58,9 +63,8 @@ class LandingLegs:
         left_leg_fixture = b2FixtureDef(
             shape=left_leg_polygon,
             density=self.density,
-            filter=b2Filter(
-                groupIndex=-1
-            ),  # no interactions with any part of other boosters
+            friction=self.friction,
+            filter=b2Filter(groupIndex=-1),  # no interactions with other boosters
         )
 
         left_leg_fixture = self.body.CreateFixture(left_leg_fixture)
@@ -79,9 +83,8 @@ class LandingLegs:
         right_leg_fixture = b2FixtureDef(
             shape=right_leg_polygon,
             density=self.density,
-            filter=b2Filter(
-                groupIndex=-1
-            ),  # no interactions with any part of other boosters
+            friction=self.friction,
+            filter=b2Filter(groupIndex=-1), # no interactions with other boosters
         )
 
-        right_leg_fixture = self.body.CreateFixture(right_leg_fixture)
+        _ = self.body.CreateFixture(right_leg_fixture)

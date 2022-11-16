@@ -6,6 +6,8 @@ from Box2D import (
     b2PolygonShape, 
 )
 
+from src.utils import Config
+
 
 class Hull:
     """Booster hull."""
@@ -25,8 +27,9 @@ class Hull:
 
     vertices = [(0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), (0.5, -0.5)]
 
-    def __init__(self, body: b2Body) -> None:
+    def __init__(self, body: b2Body, config: Config) -> None:
         """Initializes hull class."""
+        self.friction = config.env.friction
         self._add_hull(body=body)
 
     def _add_hull(self, body) -> None:
@@ -37,6 +40,7 @@ class Hull:
         hull_fixture_def = b2FixtureDef(
             shape=b2PolygonShape(vertices=self.vertices),
             density=self.density,
+            friction=self.friction,
             filter=b2Filter(groupIndex=-1),  # negative groups never collide
         )
         _ = body.CreateFixture(hull_fixture_def)

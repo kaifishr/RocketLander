@@ -1,8 +1,10 @@
 """The booster's body."""
 import math
 
-from Box2D import b2Vec2
-from Box2D.Box2D import b2World
+from Box2D import (
+    b2Vec2,
+    b2World,
+)
 
 from src.utils import Config
 
@@ -66,16 +68,21 @@ class Booster2D:
             fixedRotation=self.fixed_rotation,
         )
 
-        self.hull = Hull(body=self.body)
+        self.hull = Hull(
+            body=self.body, 
+            config=config
+        )
 
         self.engines = Engines(
             body=self.body,
             hull=self.hull,
+            config=config,
         )
 
         self.legs = LandingLegs(
             body=self.body,
             hull=self.hull,
+            config=config,
         )
 
         # Compute contact sphere for impact detection
