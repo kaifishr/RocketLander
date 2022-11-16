@@ -22,7 +22,9 @@ Boosters are equipped with neural networks for thrust control.
 
 ## Introduction
 
-![booster](./docs/booster.png)
+<p align="center">
+    <img src="docs/booster.png" width="420" height=""/>
+</p>
 
 Inspired by SpaceX's incredible progress, I set up a simple environment that uses PyBox2D for rigid physics simulation and PyGame for rendering and visualization, that allows to use different methods to land a booster in a physical simulation.
 

@@ -15,7 +15,7 @@ checkpoints:
 #   num_generations: 10000 # not used yet
 
 optimizer:
-  num_boosters: 8
+  num_boosters: 1
   num_max_steps: 1000
   mutation_probability: 0.09
   mutation_rate: 0.03
@@ -37,7 +37,7 @@ env:
 
   landing_pad:
     position: # [m]
-      x: -80.0
+      x: 0.0
       y: 0.0
 
   landing:
@@ -54,17 +54,17 @@ env:
 
     init:
       position: # [m]
-        x: 80.0
-        y: 400.0
+        x: 0.0
+        y: 30.0
       linear_velocity: # [m/s]
         x: 0.0
-        y: -50.0
+        y: 0.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
     engine:
       main: # Merlin engine
-        max_force: 854000.0  # [N] 854 kN at sea level
+        max_force: 800000.0  # [N] 854 kN at sea level
         max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 10000.0  # [N]
@@ -89,7 +89,7 @@ env:
 framework:
   screen:
     width: 640
-    height: 1024
+    height: 1000
   target_fps: 60
   velocity_iterations: 10   # Number of iterations to compute next velocity.
   position_iterations: 10   # Number of iterations to compute next position.
@@ -100,4 +100,4 @@ renderer:
     shift:
       x: -0.5
       y: -0.05
-  ppm: 2     # Pixels per meter (zoom)
+  ppm: 15     # Pixels per meter / zoom
