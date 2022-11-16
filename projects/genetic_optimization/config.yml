@@ -16,12 +16,14 @@ checkpoints:
 
 optimizer:
   num_boosters: 8
-  num_max_steps: 600
-  mutation_probability: 0.02
-  mutation_rate: 0.02
+  num_max_steps: 1000
+  mutation_probability: 0.09
+  mutation_rate: 0.03
   lib: "numpy"    # numpy, torch
 
 env:
+
+  friction: 2.0
 
   gravity: # [m / s^2]
     x: 0.0
@@ -52,25 +54,25 @@ env:
 
     init:
       position: # [m]
-        x: 70.0
-        y: 450.0
+        x: 80.0
+        y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
-        y: -20.0
+        y: -50.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
     engine:
-      main: # merlin
-        max_force: 800000.0 # [N]   , Merlin: 854 kN at sea level
-        max_angle: 25.0   # gimbal angle, Falcon 9: ~15 degrees
+      main: # Merlin engine
+        max_force: 854000.0  # [N] 854 kN at sea level
+        max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
-        max_force: 0.0
-        max_angle: 0.0
+        max_force: 10000.0  # [N]
+        max_angle: 20.0  # [deg]
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 10.0                       # Standard deviation [m]
+        x: 0.0                       # Standard deviation [m]
         y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
         x: 0.0                        # Standard deviation [m / s]

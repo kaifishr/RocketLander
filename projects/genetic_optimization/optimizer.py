@@ -53,7 +53,7 @@ class Optimizer:
 
             # Detect landing 
             # Turns off engines
-            # self.env.detect_landing()
+            self.env.detect_landing()
 
             # Detect high stresses
             self.env.detect_stress()

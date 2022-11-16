@@ -87,6 +87,7 @@ class Environment(Framework):
         """Detects impact with landing pad.
 
         TODO: Move threshold computation to __init__()
+        TODO: This should be part of stress on the vehicle method.
 
         Deactivates booster in case of impact.
 
@@ -160,6 +161,14 @@ class Environment(Framework):
 
             # Reactivate booster after collision in last generation.
             booster.body.active = True
+
+            # Turn engines back on
+            booster.engine_running = True
+
+    def detect_landing(self) -> None:
+        """Calls stress landing detection of each booster."""
+        for booster in self.boosters:
+            booster.detect_landing()
 
     def detect_stress(self) -> None:
         """Calls stress detection method of each booster."""

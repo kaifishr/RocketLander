@@ -41,6 +41,8 @@ class Booster(Booster2D):
         # Fitness score
         self.score = 0.0
 
+        self.engine_running = True
+
     def fetch_data(self):
         """Fetches data from booster that is fed into neural network."""
         self.data = [
@@ -154,6 +156,29 @@ class Booster(Booster2D):
                 self.body.active = False
                 self.predictions.fill(0.0)
 
+    def detect_landing(self) -> None:
+        """Detects successful landing of booster.
+
+        Turns off engines after successful landing. Turning off engines while
+        staying active, the booster can still get rewards.
+        """
+        # Define the maximum distance in x and y direction
+        # within engine can be turned off (safely).
+        dist_x_max = 10.0
+        dist_y_max = 1.0
+
+        pos_x, pos_y = self.body.position
+        eta = 1.0 / 60.0
+        pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
+
+        pos_pad = self.config.env.landing_pad.position
+
+        dist_x = abs(pos_pad.x - pos_x)
+        dist_y = abs(pos_pad.y - pos_y)
+
+        if (dist_x < dist_x_max) and (dist_y < dist_y_max):
+            self.engine_running = False
+
     def detect_excess_stress(self) -> None:
         """Detects excess stress on booster.
 
@@ -183,15 +208,20 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
-            # Pre-processing
-            # data = self._pre_process(self.data)
-            data = self.data
+            if self.engine_running:
 
-            # Raw network predictions
-            pred = self.model(data)
+                # Pre-processing
+                # data = self._pre_process(self.data)
+                data = self.data
 
-            # Post-processing
-            self.predictions = self._post_process(pred)
+                # Raw network predictions
+                pred = self.model(data)
+
+                # Post-processing
+                self.predictions = self._post_process(pred)
+
+            else:
+                self.predictions.fill(0.0)
  
     def _post_process(self, pred: numpy.ndarray) -> tuple:
         """Applies post-processing to raw network output.
