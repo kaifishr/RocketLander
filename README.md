@@ -19,7 +19,7 @@ The landing of the booster is learned using a genetic algorithm to optimize a sm
 
 This project can also be tackled with deep reinforcement learning (e.g. deep Q-learning).
 
-## Method
+## Methods
 
 ### Reward Function
 
@@ -41,6 +41,21 @@ This project can also be tackled with deep reinforcement learning (e.g. deep Q-l
 
 - As input, the network receives a number of states (pos, vel, omega, angle) and produces a set of actions as output (force_main, angle_main, ...)
 
+#### Deep Q-Learning
+
+- Deep Q-Learning is one of the core concepts in Reinforcement Learning (RL)
+
+- Deep Q-Learning, Policy Gradients are model-free learning algorithms as they do not use the transition probability distribution (and the reward function) associated with the Markov decision process (MDP), which, in RL, represents the problem to be solved. That means, RL algorithms do not learn a model of their environment's transition function to make predictions of future states and rewards.
+
+- Model-free RL always needs to take an action before it can make predictions about the next state and reward.
+
+- Model-free RL means, that the agent does not have access to a model of the environment. Here, the environment is a function used to predict state transition and rewards.
+
+- Deep Q-Learning uses a trial and error method to learn about the environment it interacts with. This is also called exploration. 
+
+- Q-Value is the maximum expected reward an agent can reach by taken a certain action $A$ in state $S$.
+
+#### Pseudo Code
 The following pseudo code illustrates the training procedure used for Deep Q-Learning:
 
 ```python
