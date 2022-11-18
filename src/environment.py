@@ -46,9 +46,6 @@ class Environment(Framework):
         # Add reference of boosters to world class for easier rendering handling.
         self.world.boosters = self.boosters
 
-        # Index of current fittest agent
-        self.idx_best = 0
-
     def _is_outside(self, booster: Booster) -> bool:
         """Checks if center of mass of booster is outside domain."""
 
@@ -131,7 +128,7 @@ class Environment(Framework):
 
         for booster in self.boosters:
 
-            # Kinematic variables
+            # Reset kinematic variables
             position = copy.copy(booster.init_position)
             linear_velocity = copy.copy(booster.init_linear_velocity)
             angular_velocity = copy.copy(booster.init_angular_velocity)
@@ -149,8 +146,8 @@ class Environment(Framework):
             booster.body.angularVelocity = angular_velocity
             booster.body.angle = angle
 
-            # Reset fitness score for next generation.
-            booster.score = 0.0
+            # Reset reward.
+            booster.reward = 0.0
 
             # Reactivate booster after collision in last generation.
             booster.body.active = True
@@ -168,15 +165,15 @@ class Environment(Framework):
         for booster in self.boosters:
             booster.detect_excess_stress()
 
-    def fetch_data(self) -> None:
+    def fetch_state(self) -> None:
         """Fetches data for neural network of booster"""
         for booster in self.boosters:
-            booster.fetch_data()
+            booster.fetch_state()
 
-    def comp_score(self) -> None:
-        """Computes fitness score of each boosters."""
+    def comp_reward(self) -> None:
+        """Computes reward for booster."""
         for booster in self.boosters:
-            booster.comp_score()
+            booster.comp_reward()
 
     def comp_action(self) -> None:
         """Computes next set of actions."""
@@ -195,17 +192,34 @@ class Environment(Framework):
                 return False
         return True
 
-    def select(self) -> float:
-        """Selects best agent for reproduction."""
-        scores = [booster.score for booster in self.boosters]
-        self.idx_best = np.argmax(scores)
-        return scores[self.idx_best]
+    def step_(self):
+        """Steps the environment.
 
-    def mutate(self) -> None:
-        """Mutates network parameters of each booster."""
-        # Get network of fittest booster to reproduce.
-        model = self.boosters[self.idx_best].model
+        TODO: If that stays here, make methods private. 
+        """
+        # Physics and (optional) rendering
+        self.step()
 
-        # Pass best model to other boosters and mutate their weights.
-        for booster in self.boosters:
-            booster.mutate(model)
+        # Detect high stresses
+        self.detect_stress()
+
+        # Detect collision with ground
+        self.detect_impact()
+
+        # Detect landing (Turns off engines)
+        self.detect_landing()
+
+        # Detect leaving the domain
+        self.detect_escape()
+
+        # Compute current fitness / score of booster
+        self.comp_reward()
+
+        # Fetch data of each booster used for neural network
+        self.fetch_state()
+
+        # Run neural network prediction for given state
+        self.comp_action()
+
+        # Apply network predictions to booster
+        self.apply_action()

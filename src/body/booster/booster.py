@@ -38,80 +38,23 @@ class Booster(Booster2D):
         # Input data for neural network
         self.data = []
 
-        # Fitness score
-        self.score = 0.0
+        # Booster's reward (or fitness score)
+        self.reward = 0.0
 
         self.engine_running = True
 
-    def fetch_data(self):
-        """Fetches data from booster that is fed into neural network."""
-        self.data = [
-            self.body.position.x,
-            self.body.position.y,
-            self.body.linearVelocity.x,
-            self.body.linearVelocity.y,
-            self.body.angularVelocity,
-            self.body.transform.angle, 
-        ]
+    # # TODO: Move to optimizer class
+    # def mutate(self, model: object) -> None:
+    #     """Mutates drone's neural network.
 
-    def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
-        """Applies pre-processing to fetched data.
+    #     Args:
+    #         model: The current best model.
+    #     """
+    #     self.model = copy.deepcopy(model)
+    #     self.model.mutate_weights()
 
-        TODO: Use online method to compute running mean and standard deviation
-              for data normalization.
-
-        Normalizes fetched data.
-
-        Args:
-            data: Array holding fetched data.
-
-        Returns:
-            Array with normalized data.
-        """
-        pos_x, pos_y = data[0], data[1]
-        vel_x, vel_y = data[2], data[3]
-        angular_vel = data[4]
-        angle = data[5]
-
-        # Position
-        pos_x_min, pos_x_max = -200.0, 200.0
-        pos_y_min, pos_y_max = -5.0, 300.0
-        pos_x = 2.0 * (pos_x - pos_x_min) / (pos_x_max - pos_x_min) - 1.0
-        pos_y = 2.0 * (pos_y - pos_y_min) / (pos_y_max - pos_y_min) - 1.0
-        data[0], data[1] = pos_x, pos_y
-
-        # Velocity
-        vel_x_min, vel_x_max = -50.0, 50.0
-        vel_y_min, vel_y_max = 0.0, 100.0
-        vel_x = 2.0 * (vel_x - vel_x_min) / (vel_x_max - vel_x_min) - 1.0
-        vel_y = 2.0 * (vel_y - vel_y_min) / (vel_y_max - vel_y_min) - 1.0
-        data[2], data[3] = vel_x, vel_y
-
-        # Angular velocity
-        angular_vel_min, angular_vel_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad / s]
-        angular_vel = 2.0 * (angular_vel - angular_vel_min) / (angular_vel_max - angular_vel_min) - 1.0
-        data[4] = angular_vel
-
-        # Angle
-        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad]
-        angle = 2.0 * (angle - angle_min) / (angle_max - angle_min) - 1.0
-        data[5] = angle
-
-        return data
-
-    def mutate(self, model: object) -> None:
-        """Mutates drone's neural network.
-
-        TODO: Move to genetic optimizer. This is only for genetic optimization relevant.
-
-        Args:
-            model: The current best model.
-        """
-        self.model = copy.deepcopy(model)
-        self.model.mutate_weights()
-
-    def comp_score(self) -> None:
-        """Computes current fitness score.
+    def comp_reward(self) -> None:
+        """Computes reward for current simulation step.
 
         Accumulates defined rewards for booster.
         """
@@ -132,8 +75,7 @@ class Booster(Booster2D):
                 # reward = 1.0 / (1.0 + (eta * dist + abs(vel_y))**2)
                 # reward = math.exp(-(eta * dist + abs(vel_y)) ** 2)
                 #print("proximity", reward)
-                self.score += reward
-                # TODO: Turn engines off after landing. Keep Booster active to collect rewards.
+                self.reward += reward
 
                 # Reward for soft touchdown 
                 # vel_x, vel_y = self.body.linearVelocity
@@ -144,13 +86,13 @@ class Booster(Booster2D):
                 # eta = 1.0
                 # reward = 1.0 / (1.0 + eta * abs(self.body.transform.angle))
                 # #print("angle", reward, self.body.angle)
-                # self.score += reward
+                # self.reward += reward
 
                 # # Reward for low angular velocity 
                 # eta = 1.0
                 # reward = 1.0 / (1.0 + eta * abs(self.body.angularVelocity))
                 # # print("angular_velocity", reward, self.body.angularVelocity)
-                # self.score += reward
+                # self.reward += reward
 
             else:
                 self.body.active = False
@@ -223,6 +165,62 @@ class Booster(Booster2D):
             else:
                 self.predictions.fill(0.0)
  
+    def fetch_state(self):
+        """Fetches data from booster that is fed into neural network."""
+        self.data = [
+            self.body.position.x,
+            self.body.position.y,
+            self.body.linearVelocity.x,
+            self.body.linearVelocity.y,
+            self.body.angularVelocity,
+            self.body.transform.angle, 
+        ]
+
+    def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
+        """Applies pre-processing to fetched data.
+
+        TODO: Use online method to compute running mean and standard deviation
+              for data normalization.
+
+        Normalizes fetched data.
+
+        Args:
+            data: Array holding fetched data.
+
+        Returns:
+            Array with normalized data.
+        """
+        pos_x, pos_y = data[0], data[1]
+        vel_x, vel_y = data[2], data[3]
+        angular_vel = data[4]
+        angle = data[5]
+
+        # Position
+        pos_x_min, pos_x_max = -200.0, 200.0
+        pos_y_min, pos_y_max = -5.0, 300.0
+        pos_x = 2.0 * (pos_x - pos_x_min) / (pos_x_max - pos_x_min) - 1.0
+        pos_y = 2.0 * (pos_y - pos_y_min) / (pos_y_max - pos_y_min) - 1.0
+        data[0], data[1] = pos_x, pos_y
+
+        # Velocity
+        vel_x_min, vel_x_max = -50.0, 50.0
+        vel_y_min, vel_y_max = 0.0, 100.0
+        vel_x = 2.0 * (vel_x - vel_x_min) / (vel_x_max - vel_x_min) - 1.0
+        vel_y = 2.0 * (vel_y - vel_y_min) / (vel_y_max - vel_y_min) - 1.0
+        data[2], data[3] = vel_x, vel_y
+
+        # Angular velocity
+        angular_vel_min, angular_vel_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad / s]
+        angular_vel = 2.0 * (angular_vel - angular_vel_min) / (angular_vel_max - angular_vel_min) - 1.0
+        data[4] = angular_vel
+
+        # Angle
+        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad]
+        angle = 2.0 * (angle - angle_min) / (angle_max - angle_min) - 1.0
+        data[5] = angle
+
+        return data
+    
     def _post_process(self, pred: numpy.ndarray) -> tuple:
         """Applies post-processing to raw network output.
 

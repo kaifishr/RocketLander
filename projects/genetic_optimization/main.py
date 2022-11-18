@@ -4,7 +4,7 @@ import pathlib
 from src.utils.config import init_config
 from src.utils.utils import set_random_seed
 
-from .optimizer import Optimizer
+from .trainer import Trainer
 
 
 if __name__ == "__main__":
@@ -15,5 +15,5 @@ if __name__ == "__main__":
     file_path = file_dir / file_name
     config = init_config(path=file_path)
     set_random_seed(seed=config.random_seed)
-    optimizer = Optimizer(config=config)
-    optimizer.run()
+    trainer = Trainer(config=config)
+    trainer.run()

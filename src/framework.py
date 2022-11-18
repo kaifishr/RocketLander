@@ -1,4 +1,4 @@
-"""Minimal pygame-based framework for Box2D.
+"""Minimal pygame-based framework for PyBox2D.
 
 For more information about frameworks see also:
 https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends
@@ -6,7 +6,7 @@ https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends
 """
 import time
 import pygame
-from Box2D.b2 import world
+from Box2D import b2World
 
 from src.renderer import Renderer
 from src.utils.config import Config
@@ -29,7 +29,7 @@ class Framework:
         is_rendering:
     """
 
-    name = "BoosterLander"
+    name = "RocketBooster"
 
     def __init__(self, config: Config) -> None:
         """Initializes Framework."""
@@ -42,7 +42,8 @@ class Framework:
         self.time_step = 1.0 / self.target_fps
 
         # Instantiating world
-        self.world = world()
+        self.world = b2World()
+        # self.world = world()
         self.world.CreateBody()
 
         # Pygame initialization
@@ -86,7 +87,7 @@ class Framework:
                         exit()
 
     def step(self) -> None:
-        """Catches events, performs simulation step, and renders world."""
+        """Catches events, performs physics simulation step, and renders world."""
 
         # Catch events.
         for event in pygame.event.get():

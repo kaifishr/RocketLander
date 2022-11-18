@@ -1,11 +1,11 @@
 # RocketBooster ✨🚀✨
 
-tl;dr: Simulation framework for propulsive landing of an orbital rocket booster.
+TL;DR: Simulation environment for learning propulsive landing of an orbital rocket booster.
 
 ## Introduction
 
 <p align="center">
-    <img src="docs/booster.png" width="420" height=""/>
+    <img src="docs/booster.png" width="240" height=""/>
 </p>
 
 - The booster's goal is to reach the landing pad at a velocity smaller or equal to $v_{\text{max}}$.
@@ -193,7 +193,6 @@ python -m projects.genetic_optimization.main
 
 ## TODOs
 
-- Split *optimizer.py* into optimizer and training class.
 - Add project with deep reinforcement learning.
 
 

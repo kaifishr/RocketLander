@@ -11,16 +11,24 @@ checkpoints:
   save_model: false
   model_path: "weights"
 
-# trainer:
-#   num_generations: 10000 # not used yet
+trainer:
+  num_generations: -1  # -1 for infinite generations or positive integer.
 
+# Genetic optimization
 optimizer:
-  num_boosters: 8
-  num_max_steps: 1000
-  mutation_probability: 0.5
-  mutation_rate: 0.02
+  num_boosters: 16
+  num_simulation_steps: 1000
+  mutation_probability: 0.03
+  mutation_rate: 0.05
   lib: "numpy"    # numpy, torch
 
+# Simulated annealing
+# TODO
+
+# Reinforcement learning
+# TODO
+
+# Simulation environment 
 env:
 
   friction: 5.0
@@ -33,20 +41,20 @@ env:
     x_min: -200.0
     x_max: 200.0
     y_max: 500.0
-    y_min: -5.0
+    y_min: -10.0
 
   landing_pad:
     position: # [m]
-      x: 0.0
+      x: -100.0
       y: 0.0
 
   landing:
     v_max: # [m / s]
-      x: 10.0
-      y: -10.0
+      x: 5.0
+      y: -5.0
 
   booster:
-    fixed_rotation: false    # Fix rotation for faster learning.
+    fixed_rotation: true    # Fix rotation for faster learning.
 
     stress:
       max_angle: 10  # [deg]
@@ -54,8 +62,8 @@ env:
 
     init:
       position: # [m]
-        x: 0.0
-        y: 400.0
+        x: 70.0
+        y: 450.0
       linear_velocity: # [m/s]
         x: 0.0
         y: -50.0
@@ -65,18 +73,18 @@ env:
     engine:
       main: # Merlin engine
         max_force: 854000.0  # [N] 854 kN at sea level
-        max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+        max_angle: 45.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
-        max_force: 100000.0  # [N]
+        max_force: 10000.0  # [N]
         max_angle: 0.0  # [deg]
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 50.0                       # Standard deviation [m]
+        x: 0.0                       # Standard deviation [m]
         y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 0.0                        # Standard deviation [m / s]
-        y: 0.0                        # Standard deviation [m / s]
+        x: 10.0                        # Standard deviation [m / s]
+        y: 10.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
@@ -84,7 +92,7 @@ env:
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
       num_dim_hidden: 16
-      num_hidden_layers: 2
+      num_hidden_layers: 3
 
 framework:
   screen:

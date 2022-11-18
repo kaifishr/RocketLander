@@ -1,110 +1,54 @@
-"""Optimizer class for genetic optimization."""
-import time
-from pathlib import Path
+"""Genetic optimization class."""
+import copy
 
-from torch.utils.tensorboard import SummaryWriter
+import numpy as np
 
 from src.utils.config import Config
-from src.utils.utils import save_checkpoint
 from src.environment import Environment
 
 
-class Optimizer:
-    """Optimizer class.
+class GeneticOptimizer:
 
-    Optimizer uses genetic optimization.
+    def __init__(self, environment: Environment, config: Config) -> None:
+        """Initializes optimizer"""
 
-    Attributes:
-        config:
-        env:
-        writer:
-    """
-
-    def __init__(self, config: Config) -> None:
-        """Initializes Optimizer"""
+        self.boosters = environment.boosters
         self.config = config
-        self.writer = SummaryWriter()  # move to trainer
 
-        # Create UUID for PyGame window.
-        self.config.id = self.writer.log_dir.split("/")[-1]
+        # Index of currently fittest agent (booster)
+        self.idx_best = 0
 
-        self.env = Environment(config=config)
+        # Maximum reward for current epoch.
+        self.reward = 0
 
-        # Save config file
-        file_path = Path(self.writer.log_dir) / "config.txt"
-        with open(file_path, "w") as file:
-            file.write(self.config.__str__())
+    def step(self) -> None:
+        """Runs single genetic optimization step."""
 
-    def run(self) -> None:
-        """Runs genetic optimization."""
+        # Select fittest agent based on distance traveled.
+        self._select()
 
-        num_max_steps = self.config.optimizer.num_max_steps
-        step = 0
-        generation = 0
-        best_score = 0.0
+        # Reproduce and mutate weights of best agent.
+        self._mutate()
 
-        is_running = True
-        t0 = time.time()
+    def _select(self) -> None:
+        """Selects best agent for reproduction."""
 
-        while is_running:
+        # Fetch rewards of each booster.
+        rewards = [booster.reward for booster in self.boosters]
 
-            # Physics and rendering
-            self.env.step()
+        # Select and store reward of best booster.
+        self.idx_best = np.argmax(rewards)
+        self.reward = rewards[self.idx_best]
 
-            # Detect landing 
-            # Turns off engines
-            self.env.detect_landing()
+    def _mutate(self) -> None:
+        """Mutates network parameters of each booster."""
 
-            # Detect high stresses
-            self.env.detect_stress()
+        # Get neural network of fittest booster to reproduce.
+        model = self.boosters[self.idx_best].model
 
-            # Detect collision with ground
-            self.env.detect_impact()
+        # Pass best model to other boosters and mutate their weights.
+        for booster in self.boosters:
 
-            # Detect leaving the domain
-            self.env.detect_escape()
-
-            # Compute current fitness / score of booster
-            self.env.comp_score()
-
-            # Fetch data of each booster used for neural network
-            self.env.fetch_data()
-
-            # Run neural network prediction
-            self.env.comp_action()
-
-            # Apply network predictions to drone
-            self.env.apply_action()
-
-            # Method that run at end of simulation.
-            if ((step + 1) % num_max_steps == 0) or self.env.is_active():
-
-                # Select fittest agent based on distance traveled.
-                score = self.env.select()
-
-                # Reproduce and mutate weights of best agent.
-                self.env.mutate()
-
-                # Reset drones to start over again.
-                self.env.reset()
-
-                step = 0
-                generation += 1
-
-                # Write stats to Tensorboard.
-                self.writer.add_scalar("score", score, generation)
-                self.writer.add_scalar("seconds", time.time() - t0, generation)
-                print(f"{generation = }")
-
-                # Save model
-                if self.config.checkpoints.save_model:
-                    if score > best_score:
-                        model = self.env.drones[self.env.idx_best].model
-                        save_checkpoint(
-                            model=model, config=self.config, generation=generation
-                        )
-                        best_score = score
-
-                t0 = time.time()
-
-            step += 1
+            # Assign best model to each booster and mutate weights.
+            booster.model = copy.deepcopy(model)
+            booster.model.mutate_weights()
