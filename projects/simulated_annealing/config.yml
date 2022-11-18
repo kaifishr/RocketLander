@@ -1,4 +1,4 @@
-# Genetic optimization configuration for BoosterLanding 
+# Configuration for Simulated Annealing 
 random_seed: 192837461
 
 # Directory to save the frames to create a video.
@@ -12,21 +12,15 @@ checkpoints:
   model_path: "weights"
 
 trainer:
-  num_generations: -1  # -1 for infinite generations or positive integer.
-
-# Genetic optimization
-optimizer:
-  num_boosters: 16
-  num_simulation_steps: 1000
-  mutation_probability: 0.02
-  mutation_rate: 0.02
-  lib: "numpy"    # numpy, torch
+  num_generations: -1  # -1 for infinite generations or positive integer. TODO: -> num_epochs?
 
 # Simulated annealing
-# TODO
-
-# Reinforcement learning
-# TODO
+optimizer:
+  num_boosters: 1  # TODO: This is fix. Hard-code this.
+  num_simulation_steps: 1000
+  mutation_probability: 0.20  # -> perturbation_probability
+  mutation_rate: 0.03  # -> perturbation_rate
+  lib: "numpy"    # numpy, torch
 
 # Simulation environment 
 env:
@@ -54,7 +48,7 @@ env:
       y: -5.0
 
   booster:
-    fixed_rotation: false    # Fix rotation for faster learning.
+    fixed_rotation: true    # Fix rotation for faster learning.
 
     stress:
       max_angle: 10  # [deg]
@@ -81,10 +75,10 @@ env:
     noise:  # TODO: move this to env?
       position: # [m] 
         x: 50.0                       # Standard deviation [m]
-        y: 20.0                       # Standard deviation [m]
+        y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 10.0                        # Standard deviation [m / s]
-        y: 10.0                        # Standard deviation [m / s]
+        x: 0.0                        # Standard deviation [m / s]
+        y: 0.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 

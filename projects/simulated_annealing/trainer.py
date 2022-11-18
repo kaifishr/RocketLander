@@ -8,7 +8,7 @@ from src.utils.config import Config
 from src.utils.utils import save_checkpoint
 from src.environment import Environment
 
-from .optimizer import GeneticOptimizer
+from .optimizer import SimulatedAnnealing 
 
 
 class Trainer:
@@ -31,7 +31,7 @@ class Trainer:
         self.config.id = self.writer.log_dir.split("/")[-1]
 
         self.env = Environment(config=config)
-        self.optimizer = GeneticOptimizer(environment=self.env, config=config)
+        self.optimizer = SimulatedAnnealing(environment=self.env, config=config)
 
         # Save config file
         file_path = Path(self.writer.log_dir) / "config.txt"
@@ -55,33 +55,6 @@ class Trainer:
 
             # Step the environment.
             self.env.step_()
-
-            # # Physics and (optional) rendering
-            # self.env.step()
-
-            # # Detect high stresses
-            # self.env.detect_stress()
-
-            # # Detect collision with ground
-            # self.env.detect_impact()
-
-            # # Detect landing (Turns off engines)
-            # self.env.detect_landing()
-
-            # # Detect leaving the domain
-            # self.env.detect_escape()
-
-            # # Compute current fitness / score of booster
-            # self.env.comp_reward()
-
-            # # Fetch data of each booster used for neural network
-            # self.env.fetch_state()
-
-            # # Run neural network prediction for given state
-            # self.env.comp_action()
-
-            # # Apply network predictions to booster
-            # self.env.apply_action()
 
             # Method that run at end of simulation epoch
             if ((step + 1) % num_simulation_steps == 0) or not self.env.is_active():

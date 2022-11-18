@@ -24,7 +24,7 @@ class GeneticOptimizer:
     def step(self) -> None:
         """Runs single genetic optimization step."""
 
-        # Select fittest agent based on distance traveled.
+        # Select fittest agent (booster) based on reward.
         self._select()
 
         # Reproduce and mutate weights of best agent.

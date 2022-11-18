@@ -1,5 +1,4 @@
 """Defines rocket booster in Box2d."""
-import copy
 import math
 
 import numpy
@@ -17,7 +16,7 @@ from .model import ModelLoader
 class Booster(Booster2D):
     """Booster class 
     
-    Inherits from Booster2D class. Holds booster's logic.
+    Inherits from Booster2D class. Contains booster's logic.
     """
     num_engines = 3
     num_dims = 2
@@ -43,16 +42,6 @@ class Booster(Booster2D):
 
         self.engine_running = True
 
-    # # TODO: Move to optimizer class
-    # def mutate(self, model: object) -> None:
-    #     """Mutates drone's neural network.
-
-    #     Args:
-    #         model: The current best model.
-    #     """
-    #     self.model = copy.deepcopy(model)
-    #     self.model.mutate_weights()
-
     def comp_reward(self) -> None:
         """Computes reward for current simulation step.
 
@@ -60,38 +49,35 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
-            pos_x, pos_y = self.body.position
-            vel_x, vel_y = self.body.linearVelocity
+            vel = self.body.linearVelocity
 
             # Reward proximity to landing pad if sink rate is negative.
-            if vel_y <= 0.0:
+            if vel.y <= 0.0:
+
+                pos_x, pos_y = self.body.position
                 pos_pad = self.config.env.landing_pad.position
-                # eta = 1.0 / 60.0
-                pos_y -= 0.5 * self.hull.height - self.legs.y_ground #+ eta
-                dist = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
-                eta = 1.0
-                reward = 1.0 / (1.0 + eta * dist)
-                # reward = 1.0 / (1.0 + eta * dist + abs(vel_y))
-                # reward = 1.0 / (1.0 + (eta * dist + abs(vel_y))**2)
-                # reward = math.exp(-(eta * dist + abs(vel_y)) ** 2)
-                #print("proximity", reward)
-                self.reward += reward
+                eta = 1.0 / 60.0
+                pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
 
-                # Reward for soft touchdown 
-                # vel_x, vel_y = self.body.linearVelocity
-                # vel = (vel_x ** 2 + vel_y ** 2) ** 0.5
-                # reward = 1.0 / (1.0 + (distance_booster_pad * vel))
+                distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
+                velocity = (vel.x**2 + vel.y**2)**0.5
 
-                # # Reward for verticality 
-                # eta = 1.0
-                # reward = 1.0 / (1.0 + eta * abs(self.body.transform.angle))
-                # #print("angle", reward, self.body.angle)
-                # self.reward += reward
+                alpha = 1.0
+                beta = 1.0 / 60.0
 
-                # # Reward for low angular velocity 
-                # eta = 1.0
-                # reward = 1.0 / (1.0 + eta * abs(self.body.angularVelocity))
-                # # print("angular_velocity", reward, self.body.angularVelocity)
+                # Reward proximity to landing pad
+                reward_pos = 1.0 / (1.0 + alpha * distance)
+
+                # Reward soft touchdown
+                reward_vel = 1.0 / (1.0 + beta * velocity)
+
+                # Only final reward at end of epoch.
+                #self.reward = reward_pos + reward_vel
+                self.reward = reward_pos * reward_vel
+                
+                # Accumulating the reward leads to softer touch down
+                # as the booster collects high rewards close to the
+                # landing zone.
                 # self.reward += reward
 
             else:
@@ -106,7 +92,7 @@ class Booster(Booster2D):
         """
         # Define the maximum distance in x and y direction
         # within engine can be turned off (safely).
-        dist_x_max = 10.0
+        dist_x_max = 5.0
         dist_y_max = 1.0
 
         pos_x, pos_y = self.body.position
@@ -166,15 +152,16 @@ class Booster(Booster2D):
                 self.predictions.fill(0.0)
  
     def fetch_state(self):
-        """Fetches data from booster that is fed into neural network."""
-        self.data = [
-            self.body.position.x,
-            self.body.position.y,
-            self.body.linearVelocity.x,
-            self.body.linearVelocity.y,
-            self.body.angularVelocity,
-            self.body.transform.angle, 
-        ]
+        """Fetches data (or state) from booster that is fed into neural network."""
+        self.data = np.array((
+                self.body.position.x,
+                self.body.position.y,
+                self.body.linearVelocity.x,
+                self.body.linearVelocity.y,
+                self.body.angularVelocity,
+                self.body.transform.angle
+            )
+        )
 
     def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
         """Applies pre-processing to fetched data.
@@ -278,8 +265,7 @@ class Booster(Booster2D):
         f_right_x = math.cos(arg) * force
         f_right_y = math.sin(arg) * force
 
-        # return f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y
-        return np.array([f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y])
+        return np.array((f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y))
 
     def apply_action(self) -> None:
         """Applies force to engines predicted by neural network."""

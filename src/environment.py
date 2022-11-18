@@ -106,6 +106,7 @@ class Environment(Framework):
                     if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
                         booster.body.active = False
                         booster.predictions.fill(0.0)
+                        # booster.reward = 0.0
 
     def reset(self, add_noise: bool = True) -> None:
         """Resets boosters in environment.
@@ -189,13 +190,14 @@ class Environment(Framework):
         """Checks if at least one booster is active."""
         for booster in self.boosters:
             if booster.body.active:
-                return False
-        return True
+                return True
+        return False
 
     def step_(self):
         """Steps the environment.
 
         TODO: If that stays here, make methods private. 
+        TODO: Move loop from trainer here?
         """
         # Physics and (optional) rendering
         self.step()
