@@ -17,13 +17,13 @@ checkpoints:
 optimizer:
   num_boosters: 8
   num_max_steps: 1000
-  mutation_probability: 0.09
-  mutation_rate: 0.03
+  mutation_probability: 0.5
+  mutation_rate: 0.02
   lib: "numpy"    # numpy, torch
 
 env:
 
-  friction: 2.0
+  friction: 5.0
 
   gravity: # [m / s^2]
     x: 0.0
@@ -37,24 +37,24 @@ env:
 
   landing_pad:
     position: # [m]
-      x: -80.0
+      x: 0.0
       y: 0.0
 
   landing:
     v_max: # [m / s]
-      x: 20.0
-      y: -20.0
+      x: 10.0
+      y: -10.0
 
   booster:
-    fixed_rotation: true    # Fix rotation for faster learning.
+    fixed_rotation: false    # Fix rotation for faster learning.
 
     stress:
-      max_angle: 30   # [deg]
-      max_angular_velocity: 90    # [deg / s]
+      max_angle: 10  # [deg]
+      max_angular_velocity: 180  # [deg / s]
 
     init:
       position: # [m]
-        x: 80.0
+        x: 0.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
@@ -67,12 +67,12 @@ env:
         max_force: 854000.0  # [N] 854 kN at sea level
         max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
-        max_force: 10000.0  # [N]
-        max_angle: 20.0  # [deg]
+        max_force: 100000.0  # [N]
+        max_angle: 0.0  # [deg]
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 0.0                       # Standard deviation [m]
+        x: 50.0                       # Standard deviation [m]
         y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
         x: 0.0                        # Standard deviation [m / s]

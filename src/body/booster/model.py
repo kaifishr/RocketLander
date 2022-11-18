@@ -2,6 +2,9 @@
 
 The booster's brain represented by a feedforward neural network.
 """
+import random
+from collections import deque
+
 import numpy
 import numpy as np
 import torch
@@ -154,9 +157,6 @@ class TorchNeuralNetwork(nn.Module):
         """Initializes NeuralNetwork class."""
         super().__init__()
 
-        self.mutation_prob = config.optimizer.mutation_probability
-        self.mutation_rate = config.optimizer.mutation_rate
-
         config = config.env.booster.neural_network
 
         in_features = config.num_dim_in
@@ -184,6 +184,23 @@ class TorchNeuralNetwork(nn.Module):
         self.net = nn.Sequential(*layers)
         self.apply(self._init_weights)
 
+        # <Genetic optimization>
+        self.mutation_prob = config.optimizer.mutation_probability
+        self.mutation_rate = config.optimizer.mutation_rate
+        # </Genetic optimization>
+
+        # <Reinforcement learning (Deep Q-Learning)>
+        self.epsilon = 1.0
+        self.gamma = 0.99
+        self.decay_rate = 0.005
+        self.epsilon_min = 0.05
+        self.memory_size = 1000
+        self.memory = deque()
+        self.num_states = 6     # State of booster (pos_x, pos_y, vel_x, vel_y, omega, angle)
+        self.num_actions = 9    # Three engines at maximum thrust at three angles
+        # </Reinforcement learning (Deep Q-Learning)>
+
+
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
             # torch.nn.init.normal_(module.weight, mean=0.0, std=0.5)
@@ -192,7 +209,9 @@ class TorchNeuralNetwork(nn.Module):
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
 
-    @torch.no_grad()  # TODO: add to NetLab as regularization tool if not used here.
+    # <Genetic optimization>
+
+    @torch.no_grad() 
     def _mutate_weights(self, module: nn.Module) -> None:
         """Mutates weights."""
         if isinstance(module, nn.Linear):
@@ -208,6 +227,80 @@ class TorchNeuralNetwork(nn.Module):
         """Mutates the network's weights."""
         self.apply(self._mutate_weights)
 
+    # </Genetic optimization>
+
+    # <Reinforcement learning (Deep Q-Learning)>
+
+    def _select_action(self, state: torch.Tensor, epsilon: float = 0.9) -> int:
+        """Selects action from a discrete action space.
+
+        Args:
+            epsilon: Probability of choosing a random action (epsilon-greedy value).
+
+        Returns:
+            Action to be performed by booster (Firing engine at certain angle).
+        """
+        if random.random() < epsilon:
+            # Choose a random action
+            action = random.randint(0, self.num_actions - 1)
+        else:
+            # Select action with highest predicted utility given state
+            with torch.no_grad():
+                self.eval()
+                pred = self.forward(state)
+                action = torch.argmax(pred)
+                self.train()
+
+        return action
+
+    def _memorize(self, state: torch.Tensor, action: int, reward: float, new_state: torch.Tensor, done) -> None:
+        """Stores past events."""
+        self.memory.append((
+            state, action, reward, new_state, done
+        ))
+        # Make sure that the memory is not exceeded.
+        if len(self.memory) > self.memory_size:
+            self.memory.popleft()
+
+    def _create_training_set(self, replay: deque):
+        """"""
+        # Select states and new states from replay
+        states = torch.Tensor([memory[0] for memory in self.replay])
+        new_states = torch.Tensor([memory[3] for memory in self.replay])
+
+        # Predict expected utility (Q-value) of current state and new state
+        with torch.no_grad():
+            self.eval()
+            expected_utility = self.forward(states)
+            expected_utility_new = self.forward(new_states)
+            self.train()
+
+        replay_length = len(replay)
+        x_data = torch.empty(size=(replay_length, self.num_states))
+        y_data = torch.empty(size=(replay_length, self.num_actions))
+
+        # Create training set
+        for i in range(replay_length):
+
+            # Unpack replay
+            state, action, reward, new_state, done = replay[i]
+
+            # Utility is the reward of performing an action a in state s.
+            target = expected_utility[i]
+            target[action] = reward
+
+            # Add expected maximum future reward if not done.
+            if not done:
+                target[action] += self.gamma * torch.amax(expected_utility_new[i])
+
+            x_data[i] = state
+            y_data[i] = target
+
+        return x_data, y_data
+ 
+    # </Reinforcement learning (Deep Q-Learning)>
+
+    @torch.no_grad()    # TODO: Test this
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net(x)
 
