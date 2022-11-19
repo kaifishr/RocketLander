@@ -59,8 +59,8 @@ class Booster(Booster2D):
                 eta = 1.0 / 60.0
                 pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
 
-                distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
-                velocity = (vel.x**2 + vel.y**2)**0.5
+                distance = ((pos_pad.x - pos_x)**2 + (pos_pad.y - pos_y)**2)
+                velocity = (vel.x**2 + vel.y**2)
 
                 alpha = 1.0
                 beta = 1.0 / 60.0
@@ -74,6 +74,7 @@ class Booster(Booster2D):
                 # Only final reward at end of epoch.
                 #self.reward = reward_pos + reward_vel
                 self.reward = reward_pos * reward_vel
+                # self.reward = math.exp(-(alpha*distance**2 + beta*velocity**2))
                 
                 # Accumulating the reward leads to softer touch down
                 # as the booster collects high rewards close to the

@@ -64,9 +64,6 @@ class NumpyNeuralNetwork:
     def __init__(self, config: Config) -> None:
         """Initializes NeuralNetwork."""
 
-        self.mutation_prob = config.optimizer.mutation_probability
-        self.mutation_rate = config.optimizer.mutation_rate
-
         config = config.env.booster.neural_network
 
         in_features = config.num_dim_in
@@ -74,9 +71,9 @@ class NumpyNeuralNetwork:
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
 
-        nonlinearity = "leaky_relu"
+        # nonlinearity = "leaky_relu"
         # nonlinearity = "sigmoid"
-        # nonlinearity = "tanh"
+        nonlinearity = "tanh"
 
         # Install activation function
         self.act_fun = self._install_activation_function(nonlinearity)

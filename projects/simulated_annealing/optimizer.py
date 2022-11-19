@@ -1,9 +1,8 @@
-"""Genetic optimization class."""
+"""Optimization class for simulated annealing."""
 import copy
 import math
+import numpy
 import random
-
-import numpy as np
 
 from src.utils.config import Config
 from src.environment import Environment
@@ -15,49 +14,45 @@ class SimulatedAnnealing:
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
 
-        self.boosters = environment.boosters
-        self.config = config
+        self.booster = environment.boosters[0]
 
-        self.model_old = copy.deepcopy(self.boosters[0].model)
+        self.config = config.optimizer
 
-        # Scheduler
-        self.gamma = 0.00001
-        self.temp_initial = 1.0
-        # self.temp_final = 0.01
-        # self.prob_perturbation = 1.0
-
-        self.iteration = 0
+        self.perturbation_probability_initial = self.config.perturbation_probability_initial
+        self.perturbation_probability_final = self.config.perturbation_probability_final
+        self.perturbation_rate = self.config.perturbation_rate
+        self.temp_initial = self.config.temp_initial
+        self.temp_final = self.config.temp_final
         self.temp = self.temp_initial
 
-        # Maximum reward for current epoch.
+        num_epochs = config.trainer.num_generations
+        self.gamma = (1.0 / num_epochs) * math.log(self.temp_initial / self.temp_final)
+
+        self.model_old = None
+        self.iteration = 0
+
+        # Maximum reward of current epoch.
         self.reward = 0.0
         self.reward_old = 0.0
-        # self.reward_best = 0.0
-
-        # Backup network
-        # self.model_tmp = None
 
     def step(self) -> None:
         """Runs single simulated annealing step."""
 
         # Get reward of booster.
-        self.reward = self.boosters[0].reward
+        self.reward = self.booster.reward
 
-        # delta_reward = self.reward - self.reward_old
-
-        if self.reward > self.reward_old:
+        delta_reward = self.reward - self.reward_old
+        if delta_reward > 0:
             # Save network if current reward is higher
-            # Use current weights as they yield a higher reward
-            pass
-        elif math.exp((self.reward - self.reward_old) / self.temp) > random.random():
+            self.model_old = copy.deepcopy(self.booster.model)
+            self.reward_old = self.reward
+        elif math.exp(delta_reward / self.temp) > random.random():
             # Keep current weights even though the reward is lower
-            pass
+            self.model_old = copy.deepcopy(self.booster.model)
+            self.reward_old = self.reward
         else:
-            self.boosters[0].model = copy.deepcopy(self.model_old)
-
-        # Save current model and reward
-        self.model_old = copy.deepcopy(self.boosters[0].model)  # TODO: Just copy the parameters
-        self.reward_old = self.reward
+            # Do not accept current state. Return to previous state.
+            self.booster.model = copy.deepcopy(self.model_old)
 
         # Reduce temperature according to scheduler
         self._scheduler()
@@ -67,14 +62,23 @@ class SimulatedAnnealing:
 
         self.iteration += 1
 
-        # print(f"{self.temp = }")
-
     def _scheduler(self) -> None:
+        """Decreases temperature according to exponential decay."""
         self.temp = self.temp_initial * math.exp(-self.gamma * self.iteration)
+        if self.temp < self.temp_final:
+            self.temp = self.temp_final
 
     def _perturb(self) -> None:
-        """Perturbs network parameters of each booster.
-        TODO: Move perturbation to optimizer
-        """
-        # Perturb parameters.
-        self.boosters[0].model.mutate_weights()
+        """Perturbs network weights."""
+
+        perturbation_probability = (self.temp / self.temp_initial) + self.temp_final
+
+        for weight, bias in self.booster.model.parameters:
+
+            mask = numpy.random.random(size=weight.shape) < perturbation_probability
+            mutation = self.perturbation_rate * numpy.random.normal(size=weight.shape)
+            weight += mask * mutation
+
+            mask = numpy.random.random(size=bias.shape) < perturbation_probability
+            mutation = self.perturbation_rate * numpy.random.normal(size=bias.shape)
+            bias += mask * mutation

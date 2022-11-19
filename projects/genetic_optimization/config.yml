@@ -1,4 +1,7 @@
-# Genetic optimization configuration for BoosterLanding 
+##########################################
+# Configuration for Genetic Optimization #
+##########################################
+
 random_seed: 192837461
 
 # Directory to save the frames to create a video.
