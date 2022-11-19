@@ -1,6 +1,6 @@
 # RocketBooster ✨🚀✨
 
-TL;DR: Simulation environment for learning propulsive landing of an orbital rocket booster.
+TL;DR: *RocketBooster* is a simple training environment equipped with optimization algorithms such as reinforcement learning, genetic optimization, and simulated annealing to learn to propulsively land an orbital rocket booster.
 
 ## Introduction
 
@@ -19,17 +19,30 @@ The landing of the booster is learned using a genetic algorithm to optimize a sm
 
 This project can also be tackled with deep reinforcement learning (e.g. deep Q-learning).
 
+## Run Examples
+
+```console
+cd rocketbooster
+python -m projects.genetic_optimization.main
+python -m projects.simulated_annealing.main
+python -m projects.reinforcement_learning.main
+```
+
 ## Methods
 
 ### Reward Function
 
 - Number of simulation steps (time restriction) acts as an implicit fuel restriction. Thus, the booster is rewarded for landing quickly.
+- Accumulate rewards vs. final reward
 
 ### Genetic Optimization
 
-#TODO
+- Uses simple mutation operation
 
 ### Simulated Annealing
+
+- Run neighbor states in parallel
+- Select best agent
 
 #TODO
 
@@ -203,6 +216,19 @@ python -m projects.genetic_optimization.main
 - PyBox2D [tutorial](https://github.com/pybox2d/cython-box2d/blob/master/docs/source/getting_started.md)
 - [Minimal PyBox2D examples](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples)
 - Box2D C++ [documentation](https://box2d.org/documentation/)
+
+## Citation
+
+If you find this project useful, please use BibTeX to cite it as:
+
+```bibtex
+@misc{fischer2022rocketbooster,
+  title={RocketBooster},
+  author={Fischer, Kai},
+  year={2022},
+  howpublished={\url{https://github.com/kaifishr/RocketBooster}}
+}
+```
 
 ## License
 

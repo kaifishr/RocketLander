@@ -15,16 +15,17 @@ checkpoints:
   model_path: "weights"
 
 trainer:
-  num_generations: 10000  # -1 for infinite generations or positive integer. TODO: -> num_epochs?
+  num_generations: -1  # -1 for infinite generations or positive integer. TODO: -> num_epochs?
 
 # Simulated annealing
 optimizer:
   num_boosters: 1  # TODO: This is fix.
+  num_iterations: 50000  # Decrease temperature for `num_iterations`
   num_simulation_steps: 1000
-  perturbation_probability_initial: 1.0   # NOTE: Not in use
-  perturbation_probability_final: 0.01    # NOTE: Not in use
-  perturbation_rate: 0.05
-  temp_initial: 2.0
+  perturbation_probability_initial: 1.0
+  perturbation_probability_final: 0.001
+  perturbation_rate: 0.04
+  temp_initial: 0.06
   temp_final: 1.0e-6
   lib: "numpy"    # NOTE: This is fix.
 
@@ -57,7 +58,7 @@ env:
     fixed_rotation: true    # Fix rotation for faster learning.
 
     stress:
-      max_angle: 20  # [deg]
+      max_angle: 10  # [deg]
       max_angular_velocity: 180  # [deg / s]
 
     init:
@@ -72,26 +73,26 @@ env:
 
     engine:
       main: # Merlin engine
-        max_force: 800000.0  # [N] 854 kN at sea level
-        max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+        max_force: 854000.0  # [N] 854 kN at sea level
+        max_angle: 20.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 100000.0  # [N]
-        max_angle: 0.0  # [deg]
+        max_angle: 10.0  # [deg]
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 10.0                       # Standard deviation [m]
-        y: 0.0                       # Standard deviation [m]
+        x: 1.0                       # Standard deviation [m]
+        y: 1.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 0.0                        # Standard deviation [m / s]
-        y: 0.0                        # Standard deviation [m / s]
+        x: 1.0                        # Standard deviation [m / s]
+        y: 1.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 32
+      num_dim_hidden: 64
       num_hidden_layers: 3
 
 framework:

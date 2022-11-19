@@ -25,8 +25,8 @@ class SimulatedAnnealing:
         self.temp_final = self.config.temp_final
         self.temp = self.temp_initial
 
-        num_epochs = config.trainer.num_generations
-        self.gamma = (1.0 / num_epochs) * math.log(self.temp_initial / self.temp_final)
+        num_iterations = config.optimizer.num_iterations
+        self.gamma = (1.0 / num_iterations) * math.log(self.temp_initial / self.temp_final)
 
         self.model_old = None
         self.iteration = 0
@@ -42,6 +42,7 @@ class SimulatedAnnealing:
         self.reward = self.booster.reward
 
         delta_reward = self.reward - self.reward_old
+
         if delta_reward > 0:
             # Save network if current reward is higher
             self.model_old = copy.deepcopy(self.booster.model)
@@ -71,14 +72,19 @@ class SimulatedAnnealing:
     def _perturb(self) -> None:
         """Perturbs network weights."""
 
-        perturbation_probability = (self.temp / self.temp_initial) + self.temp_final
+        pert_prob_init = self.perturbation_probability_initial 
+        pert_prob_final = self.perturbation_probability_final
+        eta = self.temp / self.temp_initial
+        perturbation_prob = (pert_prob_init - pert_prob_final) * eta + pert_prob_final
+        # perturbation_prob = pert_prob_init
+        # perturbation_rate = (pert_rate_init - pert_rate_final) * eta + pert_rate_final
 
         for weight, bias in self.booster.model.parameters:
 
-            mask = numpy.random.random(size=weight.shape) < perturbation_probability
+            mask = numpy.random.random(size=weight.shape) < perturbation_prob
             mutation = self.perturbation_rate * numpy.random.normal(size=weight.shape)
             weight += mask * mutation
 
-            mask = numpy.random.random(size=bias.shape) < perturbation_probability
+            mask = numpy.random.random(size=bias.shape) < perturbation_prob
             mutation = self.perturbation_rate * numpy.random.normal(size=bias.shape)
             bias += mask * mutation
