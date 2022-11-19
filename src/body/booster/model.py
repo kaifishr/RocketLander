@@ -2,6 +2,7 @@
 
 The booster's brain represented by a feedforward neural network.
 """
+import math
 import random
 from collections import deque
 
@@ -73,21 +74,48 @@ class NumpyNeuralNetwork:
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
 
+        nonlinearity = "leaky_relu"
+        # nonlinearity = "sigmoid"
+        # nonlinearity = "tanh"
+
+        # Install activation function
+        self.act_fun = self._install_activation_function(nonlinearity)
+
+        # Parameters
+        self.parameters = []
+
         # Input layer weights
         size = (hidden_features, in_features)
-        self.weights = [self._init_weights(size=size, nonlinearity="tanh")]
-        self.biases = [np.zeros(shape=(hidden_features, 1))]
+        self.parameters.append(
+            self._init_weights(size=size, nonlinearity=nonlinearity)
+        )
 
         # Hidden layer weights
         size = (hidden_features, hidden_features)
         for _ in range(num_hidden_layers):
-            self.weights += [self._init_weights(size=size, nonlinearity="tanh")]
-            self.biases += [np.zeros(shape=(hidden_features, 1))]
+            self.parameters.append(
+                self._init_weights(size=size, nonlinearity=nonlinearity)
+            )
 
         # Output layer weights
         size = (out_features, hidden_features)
-        self.weights += [self._init_weights(size=size, nonlinearity="sigmoid")]
-        self.biases += [np.zeros(shape=(out_features, 1))]
+        self.parameters.append(
+            self._init_weights(size=size, nonlinearity="sigmoid")
+        )
+
+    def _install_activation_function(self, nonlinearity: str):
+        """Installs activation function."""
+        if nonlinearity == "leaky_relu":
+            act_fun = lambda x: np.where(x > 0, x, 0.01 * x) 
+        elif nonlinearity == "sigmoid":
+            act_fun = expit 
+        elif nonlinearity == "tanh":
+            act_fun = np.tanh 
+        else:
+            raise NotImplementedError(
+                f"Initialization for '{nonlinearity}' not implemented."
+            )
+        return act_fun
 
     @staticmethod
     def _init_weights(size: tuple[int, int], nonlinearity: str) -> None:
@@ -100,45 +128,41 @@ class NumpyNeuralNetwork:
             std = gain * (2 / (fan_in + fan_out)) ** 0.5
 
         """
-        if nonlinearity == "tanh":
-            gain = 5.0 / 3.0
+        if nonlinearity == "leaky_relu":
+            gain = math.sqrt(2.0 / (1.0 + 0.01**2))
         elif nonlinearity == "sigmoid":
             gain = 1.0
+        elif nonlinearity == "tanh":
+            gain = 5.0 / 3.0
         else:
             raise NotImplementedError(
                 f"Initialization for '{nonlinearity}' not implemented."
             )
         std = gain * (2.0 / sum(size)) ** 0.5
-        return np.random.normal(loc=0.0, scale=std, size=size)
+
+        weights = np.random.normal(loc=0.0, scale=std, size=size)
+        biases = np.zeros(shape=(size[0], 1))
+
+        return weights, biases
 
     def __call__(self, x: numpy.ndarray):
         return self.forward(x)
-
-    def mutate_weights(self) -> None:
-        """Mutates the network's weights."""
-        for weight, bias in zip(self.weights, self.biases):
-            mask = numpy.random.random(size=weight.shape) < self.mutation_prob
-            mutation = self.mutation_rate * numpy.random.normal(size=weight.shape)
-            weight[:] = weight[:] + mask * mutation
-            # weight += mask * mutation
-
-            mask = numpy.random.random(size=bias.shape) < self.mutation_prob
-            mutation = self.mutation_rate * numpy.random.normal(size=bias.shape)
-            bias[:] = bias[:] + mask * mutation
-            # bias += mask * mutation
-
-    @staticmethod
-    def _sigmoid(x: numpy.ndarray) -> numpy.ndarray:
-        # return 1.0 / (1.0 + np.exp(-x))
-        return expit(x)  # Numerically stable sigmoid
 
     def eval(self):
         pass
 
     def forward(self, x: numpy.ndarray):
-        for weight, bias in zip(self.weights[:-1], self.biases[:-1]):
-            x = np.tanh(np.matmul(x, weight.T) + bias.T)
-        x = self._sigmoid(np.matmul(x, self.weights[-1].T) + self.biases[-1].T)[0, :]
+        """Feedforward state.
+        
+        Args:
+            x: State of booster.
+        """
+        for weight, bias in self.parameters[:-1]:
+            x = self.act_fun(np.matmul(x, weight.T) + bias.T)
+
+        weight, bias = self.parameters[-1]
+        x = expit(np.matmul(x, weight.T) + bias.T)[0, :]
+
         return x
 
 

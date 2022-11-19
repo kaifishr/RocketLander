@@ -18,12 +18,9 @@ trainer:
 optimizer:
   num_boosters: 16
   num_simulation_steps: 1000
-  mutation_probability: 0.02
-  mutation_rate: 0.02
+  mutation_probability: 0.05
+  mutation_rate: 0.05
   lib: "numpy"    # numpy, torch
-
-# Simulated annealing
-# TODO
 
 # Reinforcement learning
 # TODO
@@ -45,7 +42,7 @@ env:
 
   landing_pad:
     position: # [m]
-      x: 0.0
+      x: -100.0
       y: 0.0
 
   landing:
@@ -54,7 +51,7 @@ env:
       y: -5.0
 
   booster:
-    fixed_rotation: false    # Fix rotation for faster learning.
+    fixed_rotation: true    # Fix rotation for faster learning.
 
     stress:
       max_angle: 10  # [deg]
@@ -62,7 +59,7 @@ env:
 
     init:
       position: # [m]
-        x: 0.0
+        x: 90.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
@@ -75,16 +72,16 @@ env:
         max_force: 800000.0  # [N] 854 kN at sea level
         max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
-        max_force: 10000.0  # [N]
-        max_angle: 0.0  # [deg]
+        max_force: 100000.0  # [N]
+        max_angle: 30.0  # [deg]
 
     noise:  # TODO: move this to env?
       position: # [m] 
         x: 50.0                       # Standard deviation [m]
         y: 20.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 10.0                        # Standard deviation [m / s]
-        y: 10.0                        # Standard deviation [m / s]
+        x: 20.0                        # Standard deviation [m / s]
+        y: 20.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 

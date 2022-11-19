@@ -1,7 +1,7 @@
 """Genetic optimization class."""
 import copy
 
-import numpy as np
+import numpy
 
 from src.utils.config import Config
 from src.environment import Environment
@@ -13,7 +13,8 @@ class GeneticOptimizer:
         """Initializes optimizer"""
 
         self.boosters = environment.boosters
-        self.config = config
+        self.mutation_prob = config.optimizer.mutation_probability
+        self.mutation_rate = config.optimizer.mutation_rate
 
         # Index of currently fittest agent (booster)
         self.idx_best = 0
@@ -37,7 +38,7 @@ class GeneticOptimizer:
         rewards = [booster.reward for booster in self.boosters]
 
         # Select and store reward of best booster.
-        self.idx_best = np.argmax(rewards)
+        self.idx_best = numpy.argmax(rewards)
         self.reward = rewards[self.idx_best]
 
     def _mutate(self) -> None:
@@ -48,7 +49,20 @@ class GeneticOptimizer:
 
         # Pass best model to other boosters and mutate their weights.
         for booster in self.boosters:
-
             # Assign best model to each booster and mutate weights.
             booster.model = copy.deepcopy(model)
-            booster.model.mutate_weights()
+            self._mutate_weights(booster.model)
+            # booster.model.mutate_weights()
+
+    def _mutate_weights(self, model: object) -> None:
+        """Mutates the network's weights."""
+
+        for weight, bias in model.parameters:
+
+            mask = numpy.random.random(size=weight.shape) < self.mutation_prob
+            mutation = self.mutation_rate * numpy.random.normal(size=weight.shape)
+            weight += mask * mutation
+
+            mask = numpy.random.random(size=bias.shape) < self.mutation_prob
+            mutation = self.mutation_rate * numpy.random.normal(size=bias.shape)
+            bias += mask * mutation
