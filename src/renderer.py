@@ -145,7 +145,7 @@ class Renderer:
         transform = body.transform
         vertices = [transform * vertex for vertex in polygon.vertices]
         vertices = self._transform_vertices(vertices)
-        edge_color = [1.0 * c for c in self.colors[body.type]]
+        edge_color = [0.4 * c for c in self.colors[body.type]]
         pygame.draw.polygon(self.screen, edge_color, vertices, 0)  # edge
         pygame.draw.polygon(self.screen, self.colors[body.type], vertices, 1)  # face
 

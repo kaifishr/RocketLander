@@ -23,9 +23,9 @@ optimizer:
   num_iterations: 50000  # Decrease temperature for `num_iterations`
   num_simulation_steps: 1000
   perturbation_probability_initial: 1.0
-  perturbation_probability_final: 0.001
+  perturbation_probability_final: 0.0001
   perturbation_rate: 0.04
-  temp_initial: 0.06
+  temp_initial: 0.05
   temp_final: 1.0e-6
   lib: "numpy"    # NOTE: This is fix.
 
@@ -46,7 +46,7 @@ env:
 
   landing_pad:
     position: # [m]
-      x: -100.0
+      x: 0.0
       y: 0.0
 
   landing:
@@ -63,7 +63,7 @@ env:
 
     init:
       position: # [m]
-        x: 90.0
+        x: 0.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
@@ -81,18 +81,18 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 1.0                       # Standard deviation [m]
-        y: 1.0                       # Standard deviation [m]
+        x: 50.0                       # Standard deviation [m]
+        y: .0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 1.0                        # Standard deviation [m / s]
-        y: 1.0                        # Standard deviation [m / s]
+        x: .0                        # Standard deviation [m / s]
+        y: .0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 64
+      num_dim_hidden: 32
       num_hidden_layers: 3
 
 framework:
