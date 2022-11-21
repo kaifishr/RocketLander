@@ -25,11 +25,13 @@ class TestObject(Framework):
         pos1 = b2Vec2(0, 5.0) + (0, 0)
         velocity = (0.0, 0.0)
         self.obj1 = self.world.CreateDynamicBody(
-            position=pos1, 
-            linearVelocity=velocity, 
-            angularVelocity=0.0 * math.pi / 180,  # 180 deg per second, counterclockwise for positive numbers
-            angle=170 * math.pi / 180.0,    # counterclockwise
-            allowSleep=False
+            position=pos1,
+            linearVelocity=velocity,
+            angularVelocity=0.0
+            * math.pi
+            / 180,  # 180 deg per second, counterclockwise for positive numbers
+            angle=170 * math.pi / 180.0,  # counterclockwise
+            allowSleep=False,
         )
 
         # Upper part (central object)

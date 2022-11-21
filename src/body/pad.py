@@ -16,7 +16,8 @@ class LandingPad:
     Attributes:
         body: Static body object.
     """
-    diameter = 86   # [m]
+
+    diameter = 86  # [m]
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes landing pad."""

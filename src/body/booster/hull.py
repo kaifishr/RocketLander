@@ -1,9 +1,9 @@
 """The booster's hull."""
 from Box2D import (
     b2Body,
-    b2Filter, 
-    b2FixtureDef, 
-    b2PolygonShape, 
+    b2Filter,
+    b2FixtureDef,
+    b2PolygonShape,
 )
 
 from src.utils import Config
@@ -11,6 +11,7 @@ from src.utils import Config
 
 class Hull:
     """Booster hull."""
+
     # Mass of hull is the booster's dry mass (~25600 kg),
     # plus the mass for fuel (~3000 kg),
     # minus the mass of nine Merlin engines (~470 kg / engine).
@@ -34,9 +35,7 @@ class Hull:
 
     def _add_hull(self, body) -> None:
         """Adds hull to body."""
-        self.vertices = [
-            (self.width * x, self.height * y) for (x, y) in self.vertices
-        ]
+        self.vertices = [(self.width * x, self.height * y) for (x, y) in self.vertices]
         hull_fixture_def = b2FixtureDef(
             shape=b2PolygonShape(vertices=self.vertices),
             density=self.density,

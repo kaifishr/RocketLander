@@ -116,9 +116,16 @@ class Renderer:
         scale_force = self.config.renderer.scale_force
         color = self.color_force_line
 
-        f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y = booster.predictions
+        (
+            f_main_x,
+            f_main_y,
+            f_left_x,
+            f_left_y,
+            f_right_x,
+            f_right_y,
+        ) = booster.predictions
 
-        # Main engine 
+        # Main engine
         local_point = b2Vec2(0.0, -(0.5 * booster.hull.height + booster.engines.height))
         force_vector = (-scale_force * f_main_x, -scale_force * f_main_y)
         p1 = booster.body.GetWorldPoint(localPoint=local_point)

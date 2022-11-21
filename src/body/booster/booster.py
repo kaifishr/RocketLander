@@ -14,10 +14,11 @@ from .model import ModelLoader
 
 
 class Booster(Booster2D):
-    """Booster class 
-    
+    """Booster class
+
     Inherits from Booster2D class. Contains booster's logic.
     """
+
     num_engines = 3
     num_dims = 2
 
@@ -57,10 +58,10 @@ class Booster(Booster2D):
                 pos_x, pos_y = self.body.position
                 pos_pad = self.config.env.landing_pad.position
                 eta = 1.0 / 60.0
-                pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
+                pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
 
-                distance = ((pos_pad.x - pos_x)**2 + (pos_pad.y - pos_y)**2)**0.5
-                velocity = (vel.x**2 + vel.y**2)**0.5
+                distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
+                velocity = (vel.x**2 + vel.y**2) ** 0.5
 
                 alpha = 1.0
                 beta = 1.0 / 60.0
@@ -73,10 +74,10 @@ class Booster(Booster2D):
 
                 # Only final reward at end of epoch.
                 # NOTE: Landing detection with this reward function not necessary.
-                #self.reward = reward_pos + reward_vel
+                # self.reward = reward_pos + reward_vel
                 self.reward = reward_pos * reward_vel
                 # self.reward = math.exp(-(alpha*distance**2 + beta*velocity**2))
-                
+
                 # Accumulating the reward leads to softer touch down
                 # as the booster collects high rewards close to the
                 # landing zone.
@@ -99,7 +100,7 @@ class Booster(Booster2D):
 
         pos_x, pos_y = self.body.position
         eta = 1.0 / 60.0
-        pos_y -= (0.5 * self.hull.height - self.legs.y_ground + eta)
+        pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
 
         pos_pad = self.config.env.landing_pad.position
 
@@ -122,12 +123,12 @@ class Booster(Booster2D):
         # Angle
         if abs(self.body.transform.angle) > max_angle:
             self.body.active = False
-            self.predictions.fill(0.0) 
+            self.predictions.fill(0.0)
             return
         # Angular velocity
         elif abs(self.body.angularVelocity) > max_angular_velocity:
             self.body.active = False
-            self.predictions.fill(0.0) 
+            self.predictions.fill(0.0)
             return
 
     def comp_action(self) -> None:
@@ -152,16 +153,17 @@ class Booster(Booster2D):
 
             else:
                 self.predictions.fill(0.0)
- 
+
     def fetch_state(self):
         """Fetches data (or state) from booster that is fed into neural network."""
-        self.data = np.array((
+        self.data = np.array(
+            (
                 self.body.position.x,
                 self.body.position.y,
                 self.body.linearVelocity.x,
                 self.body.linearVelocity.y,
                 self.body.angularVelocity,
-                self.body.transform.angle
+                self.body.transform.angle,
             )
         )
 
@@ -199,17 +201,20 @@ class Booster(Booster2D):
         data[2], data[3] = vel_x, vel_y
 
         # Angular velocity
-        angular_vel_min, angular_vel_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad / s]
-        angular_vel = 2.0 * (angular_vel - angular_vel_min) / (angular_vel_max - angular_vel_min) - 1.0
+        angular_vel_min, angular_vel_max = -0.5 * math.pi, 0.5 * math.pi  # [pi rad / s]
+        angular_vel = (
+            2.0 * (angular_vel - angular_vel_min) / (angular_vel_max - angular_vel_min)
+            - 1.0
+        )
         data[4] = angular_vel
 
         # Angle
-        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi     # [pi rad]
+        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi  # [pi rad]
         angle = 2.0 * (angle - angle_min) / (angle_max - angle_min) - 1.0
         data[5] = angle
 
         return data
-    
+
     def _post_process(self, pred: numpy.ndarray) -> tuple:
         """Applies post-processing to raw network output.
 
@@ -219,11 +224,11 @@ class Booster(Booster2D):
         for each engine. Thus,
 
         pred = [
-            p_main, 
-            phi_main, 
-            p_left, 
-            phi_left, 
-            p_right, 
+            p_main,
+            phi_main,
+            p_left,
+            phi_left,
+            p_right,
             phi_right
         ]
 
@@ -273,7 +278,14 @@ class Booster(Booster2D):
         """Applies force to engines predicted by neural network."""
         if self.body.active:
 
-            f_main_x, f_main_y, f_left_x, f_left_y, f_right_x, f_right_y = self.predictions
+            (
+                f_main_x,
+                f_main_y,
+                f_left_x,
+                f_left_y,
+                f_right_x,
+                f_right_y,
+            ) = self.predictions
 
             # Main engine x-component
             f = self.body.GetWorldVector(localVector=b2Vec2(f_main_x, f_main_y))

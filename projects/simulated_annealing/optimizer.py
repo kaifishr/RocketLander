@@ -9,7 +9,7 @@ from src.environment import Environment
 
 
 class SimulatedAnnealing_:
-    """Optimizer class for simulated annealing."""
+    """Optimizer class for multi-agent simulated annealing."""
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
@@ -18,7 +18,9 @@ class SimulatedAnnealing_:
 
         self.config = config.optimizer
 
-        self.perturbation_probability_initial = self.config.perturbation_probability_initial
+        self.perturbation_probability_initial = (
+            self.config.perturbation_probability_initial
+        )
         self.perturbation_probability_final = self.config.perturbation_probability_final
         self.perturbation_rate = self.config.perturbation_rate
         self.temp_initial = self.config.temp_initial
@@ -27,7 +29,9 @@ class SimulatedAnnealing_:
 
         # Compute gamma to go from `temp_initial` to `temp_final` in `num_iterations`.
         num_iterations = config.optimizer.num_iterations
-        self.gamma = (1.0 / num_iterations) * math.log(self.temp_initial / self.temp_final)
+        self.gamma = (1.0 / num_iterations) * math.log(
+            self.temp_initial / self.temp_final
+        )
 
         self.params_old = copy.deepcopy(self.boosters[0].model.parameters)
         self.iteration = 0
@@ -51,7 +55,9 @@ class SimulatedAnnealing_:
         # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
         if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
             # Save network if current reward is higher
-            self.params_old = copy.deepcopy(self.boosters[self.idx_best].model.parameters)
+            self.params_old = copy.deepcopy(
+                self.boosters[self.idx_best].model.parameters
+            )
             self.reward_old = self.reward
 
         # Reduce temperature according to scheduler
@@ -77,7 +83,7 @@ class SimulatedAnnealing_:
     def _perturb_weights(self, model: object) -> None:
         """Perturbs the network's weights."""
 
-        pert_prob_init = self.perturbation_probability_initial 
+        pert_prob_init = self.perturbation_probability_initial
         pert_prob_final = self.perturbation_probability_final
         eta = self.temp / self.temp_initial
         perturbation_prob = (pert_prob_init - pert_prob_final) * eta + pert_prob_final
@@ -107,15 +113,21 @@ class SimulatedAnnealing:
 
         self.config = config.optimizer
 
-        self.perturbation_probability_initial = self.config.perturbation_probability_initial
+        self.perturbation_probability_initial = (
+            self.config.perturbation_probability_initial
+        )
         self.perturbation_probability_final = self.config.perturbation_probability_final
-        self.perturbation_rate = self.config.perturbation_rate
+        self.perturbation_rate_initial = self.config.perturbation_rate_initial
+        self.perturbation_rate_final = self.config.perturbation_rate_final
+        # self.perturbation_rate = self.config.perturbation_rate
         self.temp_initial = self.config.temp_initial
         self.temp_final = self.config.temp_final
         self.temp = self.temp_initial
 
         num_iterations = config.optimizer.num_iterations
-        self.gamma = (1.0 / num_iterations) * math.log(self.temp_initial / self.temp_final)
+        self.gamma = (1.0 / num_iterations) * math.log(
+            self.temp_initial / self.temp_final
+        )
 
         self.parameters_old = copy.deepcopy(self.model.parameters)
         self.iteration = 0
@@ -158,19 +170,22 @@ class SimulatedAnnealing:
     def _perturb(self) -> None:
         """Perturbs network weights."""
 
-        pert_prob_init = self.perturbation_probability_initial 
-        pert_prob_final = self.perturbation_probability_final
         eta = self.temp / self.temp_initial
+
+        pert_prob_init = self.perturbation_probability_initial
+        pert_prob_final = self.perturbation_probability_final
         perturbation_prob = (pert_prob_init - pert_prob_final) * eta + pert_prob_final
-        # perturbation_prob = pert_prob_init
-        # perturbation_rate = (pert_rate_init - pert_rate_final) * eta + pert_rate_final
+
+        pert_rate_init = self.perturbation_rate_initial
+        pert_rate_final = self.perturbation_rate_final
+        perturbation_rate = (pert_rate_init - pert_rate_final) * eta + pert_rate_final
 
         for weight, bias in self.model.parameters:
 
             mask = numpy.random.random(size=weight.shape) < perturbation_prob
-            mutation = self.perturbation_rate * numpy.random.normal(size=weight.shape)
+            mutation = perturbation_rate * numpy.random.normal(size=weight.shape)
             weight += mask * mutation
 
             mask = numpy.random.random(size=bias.shape) < perturbation_prob
-            mutation = self.perturbation_rate * numpy.random.normal(size=bias.shape)
+            mutation = perturbation_rate * numpy.random.normal(size=bias.shape)
             bias += mask * mutation

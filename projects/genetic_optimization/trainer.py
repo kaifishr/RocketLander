@@ -25,7 +25,7 @@ class Trainer:
     def __init__(self, config: Config) -> None:
         """Initializes Trainer."""
         self.config = config
-        self.writer = SummaryWriter() 
+        self.writer = SummaryWriter()
 
         # Create UUID for PyGame window.
         self.config.id = self.writer.log_dir.split("/")[-1]
@@ -108,12 +108,11 @@ class Trainer:
                         save_checkpoint(
                             model=model, config=self.config, generation=generation
                         )
-                        max_reward = reward 
+                        max_reward = reward
 
                 t0 = time.time()
 
                 if generation == num_generations:
                     is_running = False
-
 
             step += 1

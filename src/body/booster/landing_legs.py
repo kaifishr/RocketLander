@@ -2,10 +2,10 @@
 """
 from Box2D import (
     b2Body,
-    b2Filter, 
-    b2FixtureDef, 
-    b2PolygonShape, 
-    b2Vec2, 
+    b2Filter,
+    b2FixtureDef,
+    b2PolygonShape,
+    b2Vec2,
 )
 
 from src.utils import Config
@@ -18,12 +18,13 @@ class LandingLegs:
 
     Adds landing legs to booster.
     """
-    # Mass of four landing legs 
+
+    # Mass of four landing legs
     num_legs = 4
     mass_leg = 600
 
     # Define coordinates of polygon in shape of landing leg
-    y_hull_low = 2.0   # [m]
+    y_hull_low = 2.0  # [m]
     y_hull_high = 4.0  # [m]
     y_ground = -2.5  # [m]
     x_ground_low = 6.5  # [m]
@@ -84,7 +85,7 @@ class LandingLegs:
             shape=right_leg_polygon,
             density=self.density,
             friction=self.friction,
-            filter=b2Filter(groupIndex=-1), # no interactions with other boosters
+            filter=b2Filter(groupIndex=-1),  # no interactions with other boosters
         )
 
         _ = self.body.CreateFixture(right_leg_fixture)

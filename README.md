@@ -39,12 +39,14 @@ python -m projects.reinforcement_learning.main
 
 - Uses simple mutation operation
 
+### Evolution Strategies
+
+- Parameter centric reinforcement learning.
+
 ### Simulated Annealing
 
 - Run neighbor states in parallel
 - Select best agent
-
-#TODO
 
 ### Reinforcement Learning
 

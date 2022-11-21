@@ -13,7 +13,7 @@ from .hull import Hull
 from .landing_legs import LandingLegs
 
 
-class Booster2D: 
+class Booster2D:
     """Rocket booster class.
 
     Rocket booster consists of three main parts:
@@ -68,10 +68,7 @@ class Booster2D:
             fixedRotation=self.fixed_rotation,
         )
 
-        self.hull = Hull(
-            body=self.body, 
-            config=config
-        )
+        self.hull = Hull(body=self.body, config=config)
 
         self.engines = Engines(
             body=self.body,
@@ -94,10 +91,10 @@ class Booster2D:
     @staticmethod
     def _deg_to_rad(deg: float) -> float:
         """Converts from degrees to radians.
-        
+
         Args:
             float: Number of degrees.
-            
+
         Returns:
             Radians.
         """

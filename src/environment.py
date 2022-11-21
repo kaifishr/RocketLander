@@ -90,7 +90,7 @@ class Environment(Framework):
 
         An impact has occurred when a booster is one
         length unit above the ground at a higher than
-        defined velocity. 
+        defined velocity.
 
         For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
         threshold) around the rocket is assumed. The rocket has 'contact' if the
@@ -112,7 +112,7 @@ class Environment(Framework):
         """Resets boosters in environment.
 
         Resets kinematic variables as well as score
-        and activity state. If enabled, adds noise to 
+        and activity state. If enabled, adds noise to
         kinematic variables.
 
         Args:
@@ -196,7 +196,7 @@ class Environment(Framework):
     def step_(self):
         """Steps the environment.
 
-        TODO: If that stays here, make methods private. 
+        TODO: If that stays here, make methods private.
         TODO: Move loop from trainer here?
         """
         # Physics and (optional) rendering

@@ -83,9 +83,7 @@ class NumpyNeuralNetwork:
 
         # Input layer weights
         size = (hidden_features, in_features)
-        self.parameters.append(
-            self._init_weights(size=size, nonlinearity=nonlinearity)
-        )
+        self.parameters.append(self._init_weights(size=size, nonlinearity=nonlinearity))
 
         # Hidden layer weights
         size = (hidden_features, hidden_features)
@@ -96,18 +94,16 @@ class NumpyNeuralNetwork:
 
         # Output layer weights
         size = (out_features, hidden_features)
-        self.parameters.append(
-            self._init_weights(size=size, nonlinearity="sigmoid")
-        )
+        self.parameters.append(self._init_weights(size=size, nonlinearity="sigmoid"))
 
     def _install_activation_function(self, nonlinearity: str):
         """Installs activation function."""
         if nonlinearity == "leaky_relu":
-            act_fun = lambda x: np.where(x > 0, x, 0.01 * x) 
+            act_fun = lambda x: np.where(x > 0, x, 0.01 * x)
         elif nonlinearity == "sigmoid":
-            act_fun = expit 
+            act_fun = expit
         elif nonlinearity == "tanh":
-            act_fun = np.tanh 
+            act_fun = np.tanh
         else:
             raise NotImplementedError(
                 f"Initialization for '{nonlinearity}' not implemented."
@@ -150,7 +146,7 @@ class NumpyNeuralNetwork:
 
     def forward(self, x: numpy.ndarray):
         """Feedforward state.
-        
+
         Args:
             x: State of booster.
         """
@@ -217,10 +213,11 @@ class TorchNeuralNetwork(nn.Module):
         self.epsilon_min = 0.05
         self.memory_size = 1000
         self.memory = deque()
-        self.num_states = 6     # State of booster (pos_x, pos_y, vel_x, vel_y, omega, angle)
-        self.num_actions = 9    # Three engines at maximum thrust at three angles
+        self.num_states = (
+            6  # State of booster (pos_x, pos_y, vel_x, vel_y, omega, angle)
+        )
+        self.num_actions = 9  # Three engines at maximum thrust at three angles
         # </Reinforcement learning (Deep Q-Learning)>
-
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
@@ -232,7 +229,7 @@ class TorchNeuralNetwork(nn.Module):
 
     # <Genetic optimization>
 
-    @torch.no_grad() 
+    @torch.no_grad()
     def _mutate_weights(self, module: nn.Module) -> None:
         """Mutates weights."""
         if isinstance(module, nn.Linear):
@@ -274,11 +271,16 @@ class TorchNeuralNetwork(nn.Module):
 
         return action
 
-    def _memorize(self, state: torch.Tensor, action: int, reward: float, new_state: torch.Tensor, done) -> None:
+    def _memorize(
+        self,
+        state: torch.Tensor,
+        action: int,
+        reward: float,
+        new_state: torch.Tensor,
+        done,
+    ) -> None:
         """Stores past events."""
-        self.memory.append((
-            state, action, reward, new_state, done
-        ))
+        self.memory.append((state, action, reward, new_state, done))
         # Make sure that the memory is not exceeded.
         if len(self.memory) > self.memory_size:
             self.memory.popleft()
@@ -318,10 +320,10 @@ class TorchNeuralNetwork(nn.Module):
             y_data[i] = target
 
         return x_data, y_data
- 
+
     # </Reinforcement learning (Deep Q-Learning)>
 
-    @torch.no_grad()    # TODO: Test this
+    @torch.no_grad()  # TODO: Test this
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net(x)
 

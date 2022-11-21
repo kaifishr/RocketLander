@@ -2,8 +2,8 @@
 from Box2D import (
     b2Body,
     b2Filter,
-    b2FixtureDef, 
-    b2PolygonShape, 
+    b2FixtureDef,
+    b2PolygonShape,
     b2Vec2,
 )
 
@@ -17,6 +17,7 @@ class Engines:
 
     Defines booster's engines.
     """
+
     # Mass of nine Merlin engines
     num_engines = 9
     height = 0.8  # [m]

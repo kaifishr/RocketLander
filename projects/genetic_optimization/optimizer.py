@@ -8,7 +8,6 @@ from src.environment import Environment
 
 
 class GeneticOptimizer:
-
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
 
