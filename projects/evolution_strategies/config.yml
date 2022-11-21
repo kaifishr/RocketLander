@@ -20,10 +20,10 @@ trainer:
 # Evolution strategies 
 optimizer:
   num_boosters: 16
-  num_simulation_steps: 1000
-  learning_rate: 0.01
+  num_simulation_steps: 500
+  learning_rate: 0.1
   noise_probability: 1.0  # Allows for sparse noise.
-  standard_deviation: 0.01  # Standard deviation of samples around current parameters.
+  standard_deviation: 0.04  # Standard deviation of samples around current parameters.
   momentum: 0.99  # NOT IN USE
   lib: "numpy"    # numpy, torch
 
@@ -53,7 +53,7 @@ env:
       y: -5.0
 
   booster:
-    fixed_rotation: true    # Fix rotation for faster learning.
+    fixed_rotation: false    # Fix rotation for faster learning.
 
     stress:
       max_angle: 10  # [deg]
@@ -79,19 +79,19 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 50.0                       # Standard deviation [m]
-        y: 20.0                       # Standard deviation [m]
+        x: 20.0                       # Standard deviation [m]
+        y: 10.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 20.0                        # Standard deviation [m / s]
-        y: 20.0                        # Standard deviation [m / s]
+        x: 0.0                        # Standard deviation [m / s]
+        y: 5.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 16
-      num_hidden_layers: 2
+      num_dim_hidden: 8
+      num_hidden_layers: 3
 
 framework:
   screen:

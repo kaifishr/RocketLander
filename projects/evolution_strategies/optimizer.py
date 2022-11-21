@@ -50,39 +50,27 @@ class EvolutionStrategies:
         r_mean, r_std = rewards.mean(), rewards.std()
         rewards = (rewards - r_mean) / (r_std + 1e-6)
 
-        # OR:
-        # ... 2.2) Normalize rewards to be [0, 1].
-        # r_min, r_max = rewards.min(), rewards.max()
-        # rewards = (rewards - r_min) / (r_max - r_min)
-        # rewards /= rewards.sum()  # So rewards sum up to 1
-        # ... 2.3) Softmax?
-
         # ... 3) Compute estimated gradients
-        # ... 3.1) Weight parameters according to reward
-        # for booster, reward in zip(self.boosters, rewards):
-        #     for weight, bias in booster.model.parameters:
-        #         weight *= reward
-        #         bias *= reward
 
-        # ... 3.2) Compute weighted sum
-        # Zero gradients
+        # ... 3.1) Zero gradients
         for grad_w, grad_b in self.gradients:
             grad_w *= 0.0
             grad_b *= 0.0
 
+        # ... 3.2) Compute weighted sum
         for booster, reward in zip(self.boosters, rewards):
             for (grad_w, grad_b), (weight, bias) in zip(self.gradients, booster.model.parameters):
                 grad_w += reward * weight
                 grad_b += reward * bias
 
-        # ... 4) Update parameters and distribute new parameters across all agents
+        # ... 4) Update parameters 
         for (weight, bias), (grad_w, grad_b) in zip(self.parameters, self.gradients):
             weight += self.learning_rate * grad_w
             bias += self.learning_rate * grad_b
 
-        # Broadcast weights to agents. 
+        # ... 5) Broadcast weights to agents. 
         for booster in self.boosters:
-            booster.model = copy.deepcopy(self.parameters)
+            booster.model.parameters = copy.deepcopy(self.parameters)
 
         # Add gaussian noise.
         self._add_noise()
