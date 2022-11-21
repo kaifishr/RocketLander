@@ -32,7 +32,7 @@ class EvolutionStrategies:
         self.standard_deviation = config.optimizer.standard_deviation
         self.noise_probability = config.optimizer.noise_probability
 
-        self.model_old = copy.deepcopy(self.boosters[0].model.parameters)
+        self.parameters = copy.deepcopy(self.boosters[0].model.parameters)
         self.gradients = copy.deepcopy(self.boosters[0].model.parameters)
 
         # Maximum reward for current epoch.
@@ -76,13 +76,13 @@ class EvolutionStrategies:
                 grad_b += reward * bias
 
         # ... 4) Update parameters and distribute new parameters across all agents
-        for booster in self.boosters:
-            for (grad_w, grad_b), (weight, bias) in zip(self.gradients, booster.model.parameters):
-                weight += self.learning_rate * grad_w
-                bias += self.learning_rate * grad_b 
+        for (weight, bias), (grad_w, grad_b) in zip(self.parameters, self.gradients):
+            weight += self.learning_rate * grad_w
+            bias += self.learning_rate * grad_b
 
-        # ... 5) Save model.
-        self.model_old = copy.deepcopy(self.boosters[0].model.parameters)
+        # Broadcast weights to agents. 
+        for booster in self.boosters:
+            booster.model = copy.deepcopy(self.parameters)
 
         # Add gaussian noise.
         self._add_noise()

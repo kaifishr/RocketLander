@@ -21,7 +21,7 @@ trainer:
 optimizer:
   num_boosters: 16
   num_simulation_steps: 1000
-  learning_rate: 0.05
+  learning_rate: 0.01
   noise_probability: 1.0  # Allows for sparse noise.
   standard_deviation: 0.01  # Standard deviation of samples around current parameters.
   momentum: 0.99  # NOT IN USE
@@ -90,7 +90,7 @@ env:
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 4
+      num_dim_hidden: 16
       num_hidden_layers: 2
 
 framework:
