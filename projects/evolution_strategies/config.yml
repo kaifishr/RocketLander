@@ -19,13 +19,12 @@ trainer:
 
 # Evolution strategies 
 optimizer:
-  num_boosters: 2
+  num_boosters: 16
   num_simulation_steps: 1000
-  learning_rate: 0.01
-  momentum: 0.99
-  standard_deviation: 0.01  # Standard deviation of samples around current parameters.
+  learning_rate: 0.05
   noise_probability: 1.0  # Allows for sparse noise.
-  # noise_rate: 0.05
+  standard_deviation: 0.01  # Standard deviation of samples around current parameters.
+  momentum: 0.99  # NOT IN USE
   lib: "numpy"    # numpy, torch
 
 # Simulation environment 

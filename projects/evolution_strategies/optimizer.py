@@ -32,6 +32,9 @@ class EvolutionStrategies:
         self.standard_deviation = config.optimizer.standard_deviation
         self.noise_probability = config.optimizer.noise_probability
 
+        self.model_old = copy.deepcopy(self.boosters[0].model.parameters)
+        self.gradients = copy.deepcopy(self.boosters[0].model.parameters)
+
         # Maximum reward for current epoch.
         self.reward = 0.0
 
@@ -40,91 +43,66 @@ class EvolutionStrategies:
 
         # ... 1) Get rewards for each agent in population.
         rewards = numpy.array([booster.reward for booster in self.boosters])
+        idx_best = numpy.argmax(rewards)
+        self.reward = rewards[idx_best]
 
         # ... 2) Standardize rewards to be N(0, 1) gaussian.
         r_mean, r_std = rewards.mean(), rewards.std()
         rewards = (rewards - r_mean) / (r_std + 1e-6)
 
-        rewards = numpy.array([1, 1])
-
         # OR:
         # ... 2.2) Normalize rewards to be [0, 1].
         # r_min, r_max = rewards.min(), rewards.max()
         # rewards = (rewards - r_min) / (r_max - r_min)
+        # rewards /= rewards.sum()  # So rewards sum up to 1
         # ... 2.3) Softmax?
-        for reward in rewards:
-            print(f"{reward =}")
 
         # ... 3) Compute estimated gradients
-
-        # ... 3.1) Get all the parameters
-        for i, booster in enumerate(self.boosters):
-            print(f"booster {i+1}")
-            for weight, bias in booster.model.parameters:
-                print(f"{weight}")
-                print(f"{bias}")
-            print()
-
-        # Weight parameters according to reward
-        for booster, reward in zip(self.boosters, rewards):
-            for weight, bias in booster.model.parameters:
-                weight *= reward
-                bias *= reward
-
-        parameter_target = self.boosters[0].model.parameters
-        for booster in self.boosters[1:]:
-            for (weight_target, bias_target), (weight, bias) in zip(parameter_target, booster.model.parameters):
-                weight_target += weight
-                bias_target += bias
-
-        # Weight parameters according to reward
-        ## for weight, bias in self.boosters[0].model.parameters:
-        ##     weight *= rewards[0]
-        ##     bias *= rewards[0]
-
-        ## for booster, reward in zip(self.boosters[1:], rewards[1:]):
-        ##     for (weight_target, bias_target), (weight, bias) in zip(self.boosters[0].model.parameters, booster.model.parameters):
-        ##         weight_target += reward * weight
-        ##         bias_target += reward * bias
-
-        for i, booster in enumerate(self.boosters):
-            print(f"booster {i+1}")
-            for weight, bias in booster.model.parameters:
-                print(f"{weight}")
-                print(f"{bias}")
-            print()
-        exit(0)
+        # ... 3.1) Weight parameters according to reward
+        # for booster, reward in zip(self.boosters, rewards):
+        #     for weight, bias in booster.model.parameters:
+        #         weight *= reward
+        #         bias *= reward
 
         # ... 3.2) Compute weighted sum
+        # Zero gradients
+        for grad_w, grad_b in self.gradients:
+            grad_w *= 0.0
+            grad_b *= 0.0
 
-        # ... 4) Update parameters
+        for booster, reward in zip(self.boosters, rewards):
+            for (grad_w, grad_b), (weight, bias) in zip(self.gradients, booster.model.parameters):
+                grad_w += reward * weight
+                grad_b += reward * bias
 
-        # ... 5) Distribute parameters across all agents.
+        # ... 4) Update parameters and distribute new parameters across all agents
+        for booster in self.boosters:
+            for (grad_w, grad_b), (weight, bias) in zip(self.gradients, booster.model.parameters):
+                weight += self.learning_rate * grad_w
+                bias += self.learning_rate * grad_b 
+
+        # ... 5) Save model.
+        self.model_old = copy.deepcopy(self.boosters[0].model.parameters)
 
         # Add gaussian noise.
         self._add_noise()
 
-    def _get_reward(self) -> None:
-        """Collects rewards of agents."""
-        # Fetch rewards of each booster.
-        rewards = [booster.reward for booster in self.boosters]
-        # Get maximum reward of current population.
-        idx_best = numpy.argmax(rewards)
-        self.reward = rewards[idx_best]
+    # def _get_reward(self) -> None:
+    #     """Collects rewards of agents."""
+    #     # Fetch rewards of each booster.
+    #     rewards = [booster.reward for booster in self.boosters]
+    #     # Get maximum reward of current population.
+    #     idx_best = numpy.argmax(rewards)
+    #     self.reward = rewards[idx_best]
 
     def _add_noise(self) -> None:
         """Adds noise to network parameters of each booster."""
-        # Pass best model to other boosters and mutate their weights.
         for booster in self.boosters:
-            # Assign best model to each booster and mutate weights.
             self._noise(booster.model)
-            # booster.model.mutate_weights()
 
     def _noise(self, model: object) -> None:
         """Adds noise the network's weights."""
-
         for weight, bias in model.parameters:
-
             mask = numpy.random.random(size=weight.shape) < self.noise_probability
             noise = self.standard_deviation * numpy.random.normal(size=weight.shape)
             weight += mask * noise
