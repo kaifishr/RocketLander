@@ -23,9 +23,10 @@ This project can also be tackled with deep reinforcement learning (e.g. deep Q-l
 
 ```console
 cd rocketbooster
+python -m projects.evolution_strategies.main
 python -m projects.genetic_optimization.main
-python -m projects.simulated_annealing.main
 python -m projects.reinforcement_learning.main
+python -m projects.simulated_annealing.main
 ```
 
 ## Methods
@@ -41,24 +42,46 @@ python -m projects.reinforcement_learning.main
 
 ### Evolution Strategies
 
+The evolution strategies (ES) optimization estimates gradients
+
+- In the past, ES has achieved strong results on RL benchmarks.
+- ES is easy to implement and can be massively scaled.
+- In its core, the ES algorithm resembles simple hill-climbing in a high-dimensional space. 
+- ES uses *finite differences* along a few random directions at each optimization step to estimate the gradients. 
+- No need for backpropagation
 - Parameter centric reinforcement learning.
+- ES also allows to use a continuous action space.
 
 ### Simulated Annealing
 
-- Run neighbor states in parallel
+- Run neighbor state in parallel
+    - Only works for random starting point for each agent
 - Select best agent
 
 ### Reinforcement Learning
+
+Here we use Deep Q-Learning which is one of the core concepts in Reinforcement Learning (RL).
+
+The implemented Deep Q-Learning algorithm uses a batch of episodes to learn a policy that maximizes the reward.
+
+- NOTE: Run N agents in parallel and record their episodes.
+
+- We use a policy function (e.g. a neural network resembling the agent's brain), to compute what an agent is supposed to do in any given situation.
+
+- The neural network takes the current state of its environment (position, velocity, angle, angular velocity) as input and outputs the probability of taking one of the allowed actions. 
 
 - We can use Deep Q-Learning to learn a control policy to land our booster.
 
 - Using Deep Q-Learning, we use a deep neural network to predict the expected utility (also Q-value) of executing an action in a given state.
 
-- As input, the network receives a number of states (pos, vel, omega, angle) and produces a set of actions as output (force_main, angle_main, ...)
+- Training process
+    - We start the training process with a random initialization of the policy (the neural network)
+    - While the agent interacts with the environment, we record the produced data at each time step. These data are the current state, the agent's performed action, and the reward received.
+    - Given the set of state-action-reward pairs, we can use backpropagation to encourage state-actions pairs that resulted in a positive or high reward discourage pairs with negative or low reward.
+    - During the training process, we enforce a certain degree of exploration by injecting noise to the actions of the agent. Exploration is induced by sampling from the action distribution at each time step.
+
 
 #### Deep Q-Learning
-
-- Deep Q-Learning is one of the core concepts in Reinforcement Learning (RL)
 
 - Deep Q-Learning, Policy Gradients are model-free learning algorithms as they do not use the transition probability distribution (and the reward function) associated with the Markov decision process (MDP), which, in RL, represents the problem to be solved. That means, RL algorithms do not learn a model of their environment's transition function to make predictions of future states and rewards.
 

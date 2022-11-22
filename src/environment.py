@@ -118,15 +118,6 @@ class Environment(Framework):
         Args:
             use_noise: If true, adds noise to kinematic variables.
         """
-        if add_noise:
-            noise = self.config.env.booster.noise
-            noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
-            noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
-            noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
-            noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
-            noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
-            noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-
         for booster in self.boosters:
 
             # Reset kinematic variables
@@ -136,6 +127,17 @@ class Environment(Framework):
             angle = copy.copy(booster.init_angle)
 
             if add_noise:
+
+                # Create some noise
+                noise = self.config.env.booster.noise
+                noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
+                noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
+                noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
+                noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
+                noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
+                noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
+
+                # Add noise
                 position += (noise_pos_x, noise_pos_y)
                 linear_velocity += (noise_vel_x, noise_vel_y)
                 deg_to_rad = math.pi / 180.0
