@@ -70,6 +70,8 @@ The implemented Deep Q-Learning algorithm uses a batch of episodes to learn a po
 
 - NOTE: Run N agents in parallel and record their episodes.
 
+- In Deep Q-Learning, a NN maps input states to pairs of actions and Q-values.
+
 - We use a policy function (e.g. a neural network resembling the agent's brain), to compute what an agent is supposed to do in any given situation.
 
 - The neural network takes the current state of its environment (position, velocity, angle, angular velocity) as input and outputs the probability of taking one of the allowed actions. 
@@ -237,6 +239,7 @@ python -m projects.genetic_optimization.main
 
 - Add project with deep reinforcement learning.
 - Add fuel constraint.
+- Remove engines running detection with new final reward.
 
 
 ## References

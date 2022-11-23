@@ -69,7 +69,7 @@ class SimulatedAnnealing_:
         self.iteration += 1
 
     def _scheduler(self) -> None:
-        """Decreases temperature according to exponential decay."""
+        """Decreases temperature exponentially."""
         self.temp = self.temp_initial * math.exp(-self.gamma * self.iteration)
         if self.temp < self.temp_final:
             self.temp = self.temp_final

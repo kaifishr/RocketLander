@@ -1,0 +1,112 @@
+############################################
+# Configuration for Reinforcement Learning #
+############################################
+
+random_seed: 192837461
+
+# Directory to save the frames to create a video.
+dirs:
+  frames: "frames"
+
+# Parameters to save the booster's neural network.
+checkpoints:
+  load_model: false
+  save_model: false
+  model_path: "weights"
+
+trainer:
+  # num_epochs: -1
+  # num_episodes: -1
+  num_generations: -1  # -1 for infinite generations or positive integer
+
+# Deep Q-Learning 
+optimizer:
+  num_boosters: 2  # TODO: This is fix.
+  num_simulation_steps: 1000
+  epsilon: 0.99
+  gamma: 0.9
+  decay_rate: 0.002
+  epsilon_min: 0.01
+  lib: "torch"    # NOTE: This is fix.
+
+# Simulation environment 
+env:
+
+  friction: 5.0
+
+  gravity: # [m / s^2]
+    x: 0.0
+    y: -9.81
+
+  domain: # [m]
+    x_min: -200.0
+    x_max: 200.0
+    y_max: 500.0
+    y_min: -10.0
+
+  landing_pad:
+    position: # [m]
+      x: 0.0
+      y: 0.0
+
+  landing:
+    v_max: # [m / s]
+      x: 5.0
+      y: -5.0
+
+  booster:
+    fixed_rotation: true    # Fix rotation for faster learning.
+
+    stress:
+      max_angle: 10  # [deg]
+      max_angular_velocity: 180  # [deg / s]
+
+    init:
+      position: # [m]
+        x: 0.0
+        y: 400.0
+      linear_velocity: # [m/s]
+        x: 0.0
+        y: -30.0
+      angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
+      angle: 0.0              # [deg] counterclockwise
+
+    engine:
+      main: # Merlin engine
+        max_force: 854000.0  # [N] 854 kN at sea level
+        max_angle: 20.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+      cold_gas:  # Cold gas propulsion system.
+        max_force: 100000.0  # [N]
+        max_angle: 10.0  # [deg]
+
+    noise:  # TODO: move this to env?
+      position: # [m] 
+        x: 30.0                       # Standard deviation [m]
+        y: 0.0                       # Standard deviation [m]
+      linear_velocity: # [m/s]
+        x: 0.0                        # Standard deviation [m / s]
+        y: 0.0                        # Standard deviation [m / s]
+      angular_velocity: 0.0             # Standard deviation [deg / s]
+      angle: 0.0                      # Standard deviation [deg]
+
+    neural_network: # model
+      num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
+      num_dim_out: 6      # Predictions of thrust and angle for three engines.
+      num_dim_hidden: 4
+      num_hidden_layers: 1
+
+framework:
+  screen:
+    width: 640
+    height: 1024
+  target_fps: 60
+  velocity_iterations: 10   # Number of iterations to compute next velocity.
+  position_iterations: 10   # Number of iterations to compute next position.
+
+renderer:
+  scale_force: 0.0001
+  screen:
+    shift:
+      x: -0.5
+      y: -0.05
+  ppm: 2     # Pixels per meter (zoom)

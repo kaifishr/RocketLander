@@ -27,6 +27,9 @@ class Booster(Booster2D):
         super().__init__(world=world, config=config)
 
         self.model = ModelLoader(config=config)()
+        # print(f"{self.model.training = }")
+        # self.model.eval()
+        # print(f"{self.model.training = }")
 
         # Forces predicted by neural network.
         self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))
@@ -143,11 +146,14 @@ class Booster(Booster2D):
 
                 # Pre-processing
                 # data = self._pre_process(self.data)
-                data = self.data
+                data = self.data  # state
 
                 # Raw network predictions
-                pred = self.model(data)
+                print(f"comp_action() {self.model.training = }")
+                pred = self.model(data)  # returns the action
+                print(f"{pred = }")
 
+                # TODO: Select post processing based on optimization method.
                 # Post-processing
                 self.predictions = self._post_process(pred)
 
@@ -156,13 +162,13 @@ class Booster(Booster2D):
 
     def fetch_state(self):
         """Fetches data (or state) from booster that is fed into neural network."""
-        self.data = np.array(
+        self.data = np.array(  # TODO: Change to state
             (
                 self.body.position.x,
                 self.body.position.y,
                 self.body.linearVelocity.x,
                 self.body.linearVelocity.y,
-                self.body.angularVelocity,
+                self.body.angularVelocity,  # TODO: Change with angle.
                 self.body.transform.angle,
             )
         )

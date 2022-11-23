@@ -30,31 +30,39 @@ def capture_screen(screen, iteration: int) -> None:
     pygame.image.save(screen, filename)
 
 
-def save_checkpoint(model: torch.nn.Module, config: Config, generation: int) -> None:
+def save_checkpoint(model: object, config: Config) -> None:
     """Saves model checkpoint.
 
+    Uses torch.save() to save NumPy and PyTorch models.
+
     Args:
-        model:
-        ckpt_dir:
-        model_name:
+        model: Neural network.
+        config: Configuration.
+        generation: Current generation.
     """
-    model_name = f"weights_{generation}"
-    model_path = Path(config.checkpoints.model_path) / f"{model_name}.pth"
+    model_name = config.checkpoints.model_name
+    checkpoint_name = f"ckpt{f'_{model_name}' if model_name else ''}"
+    model_path = Path(config.checkpoints.model_path) / f"{checkpoint_name}.pth"
+
     torch.save(obj=model.state_dict(), f=model_path)
 
 
-def load_checkpoint(model: torch.nn.Module, config: Config) -> None:
+def load_checkpoint(model: object, config: Config) -> None:
     """Loads model from checkpoint.
 
     Args:
-        model:
-        ckpt_dir:
-        model_name:
+        model: Neural network.
+        config: Configuration.
     """
-    model_name = "weights"
-    model_path = Path(config.checkpoints.model_path) / f"{model_name}.pth"
+    model_name = config.checkpoints.model_name
+    checkpoint_name = f"ckpt{f'_{model_name}' if model_name else ''}"
+    model_path = Path(config.checkpoints.model_path) / f"{checkpoint_name}.pth"
+
     if model_path.is_file():
         state_dict = torch.load(f=model_path)
         model.load_state_dict(state_dict=state_dict)
     else:
-        print(f"Model '{model_name}' not found. Continuing with random weights.")
+        print(
+            f"Model checkpoint '{checkpoint_name}' not found. "
+            "Continuing with random weights."
+        )

@@ -10,7 +10,6 @@ that calls the physics engine and rendering engines.
 import copy
 import math
 import random
-import numpy as np
 
 from Box2D.Box2D import b2Vec2
 

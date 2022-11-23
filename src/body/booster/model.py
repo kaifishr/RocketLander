@@ -25,28 +25,23 @@ class ModelLoader:
 
     def __call__(self):
         """Loads and returns model.
-
         Args:
             lib: Library "numpy" or "pytorch".
         """
         lib = self.config.optimizer.lib
 
+        # Instantiate network
         if lib == "numpy":
             model = NumpyNeuralNetwork(self.config)
-            if self.config.checkpoints.load_model:
-                raise NotImplementedError(
-                    f"Loading checkpoints not implemented for NumPy neural networks."
-                )
-
         elif lib == "torch":
             model = TorchNeuralNetwork(self.config)
-            if self.config.checkpoints.load_model:
-                load_checkpoint(model=self.model, config=self.config)
-
+            model.train(False)
         else:
             raise NotImplementedError(f"Network for {lib} not implemented.")
 
-        model.eval()  # No gradients for genetic optimization required.
+        # Load pre-trained model
+        if self.config.checkpoints.load_model:
+            load_checkpoint(model=model, config=self.config)
 
         return model
 
@@ -138,6 +133,19 @@ class NumpyNeuralNetwork:
 
         return weights, biases
 
+    def state_dict(self) -> dict:
+        """Returns a dictionary containing the network's weights and biases."""
+        state = {"weights": self.weights, "biases": self.biases}
+        return state
+
+    def load_state_dict(self, state_dict: dict) -> None:
+        """Loads state dict holding the network's weights and biases.
+
+        NOTE: Method ignores parameter dimension. 
+        """
+        self.weights = state_dict["weights"]
+        self.biases = state_dict["biases"]
+
     def __call__(self, x: numpy.ndarray):
         return self.forward(x)
 
@@ -165,9 +173,6 @@ class TorchNeuralNetwork(nn.Module):
     Simple fully-connected neural network.
 
     Attributes:
-        mutation_prob:
-        mutation_rate:
-        net:
     """
 
     def __init__(self, config: Config) -> None:
@@ -201,22 +206,13 @@ class TorchNeuralNetwork(nn.Module):
         self.net = nn.Sequential(*layers)
         self.apply(self._init_weights)
 
-        # <Genetic optimization>
-        self.mutation_prob = config.optimizer.mutation_probability
-        self.mutation_rate = config.optimizer.mutation_rate
-        # </Genetic optimization>
-
         # <Reinforcement learning (Deep Q-Learning)>
+        self.num_states = 6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
+        self.num_actions = 9  # Three engines at maximum thrust at three angles
         self.epsilon = 1.0
         self.gamma = 0.99
-        self.decay_rate = 0.005
-        self.epsilon_min = 0.05
         self.memory_size = 1000
         self.memory = deque()
-        self.num_states = (
-            6  # State of booster (pos_x, pos_y, vel_x, vel_y, omega, angle)
-        )
-        self.num_actions = 9  # Three engines at maximum thrust at three angles
         # </Reinforcement learning (Deep Q-Learning)>
 
     def _init_weights(self, module) -> None:
@@ -227,50 +223,7 @@ class TorchNeuralNetwork(nn.Module):
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
 
-    # <Genetic optimization>
-
-    @torch.no_grad()
-    def _mutate_weights(self, module: nn.Module) -> None:
-        """Mutates weights."""
-        if isinstance(module, nn.Linear):
-            mask = torch.rand_like(module.weight) < self.mutation_prob
-            mutation = self.mutation_rate * torch.randn_like(module.weight)
-            module.weight.add_(mask * mutation)
-            if module.bias is not None:
-                mask = torch.rand_like(module.bias) < self.mutation_prob
-                mutation = self.mutation_rate * torch.randn_like(module.bias)
-                module.bias.add_(mask * mutation)
-
-    def mutate_weights(self) -> None:
-        """Mutates the network's weights."""
-        self.apply(self._mutate_weights)
-
-    # </Genetic optimization>
-
-    # <Reinforcement learning (Deep Q-Learning)>
-
-    def _select_action(self, state: torch.Tensor, epsilon: float = 0.9) -> int:
-        """Selects action from a discrete action space.
-
-        Args:
-            epsilon: Probability of choosing a random action (epsilon-greedy value).
-
-        Returns:
-            Action to be performed by booster (Firing engine at certain angle).
-        """
-        if random.random() < epsilon:
-            # Choose a random action
-            action = random.randint(0, self.num_actions - 1)
-        else:
-            # Select action with highest predicted utility given state
-            with torch.no_grad():
-                self.eval()
-                pred = self.forward(state)
-                action = torch.argmax(pred)
-                self.train()
-
-        return action
-
+    # ... Methods for Deep Q-Learning
     def _memorize(
         self,
         state: torch.Tensor,
@@ -321,13 +274,54 @@ class TorchNeuralNetwork(nn.Module):
 
         return x_data, y_data
 
+    def _select_action(self, state: torch.Tensor) -> int:
+        """Selects an action from a discrete action space.
+
+        This method is used during the exploration phase.
+
+        Args:
+            epsilon: Probability of choosing a random action (epsilon-greedy value).
+
+        Returns:
+            Action to be performed by booster (Firing engine at certain angle).
+        """
+        if random.random() < self.epsilon:
+            # Choose a random action
+            action = random.randint(0, self.num_actions - 1)
+            print(f"random {action = }")
+        else:
+            # Select action with highest predicted utility given state
+            with torch.no_grad():  # Use decorator for method
+                # self.eval()
+                pred = self.forward(state)
+                action = torch.argmax(pred)
+                # self.train()
+            print(f"network {action = }")
+
+        return action
     # </Reinforcement learning (Deep Q-Learning)>
 
-    @torch.no_grad()  # TODO: Test this
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.net(x)
+    def forward(self, x: list) -> torch.Tensor:
+        """Forward method receives current state and predicts an action.
 
-        # Detach prediction from graph.
-        x = x.detach().numpy().astype(np.float)
+        TODO: 
+            - Change forward method to use _select_action(state=x) during simulation.
+              and self.net() during optimization.
+        
+        Args:
+            x: Current state.
+
+        Returns:
+            Action vector.
+        """
+        print(f"forward() {self.training = }")
+        x = torch.from_numpy(x).float()
+
+        if self.training:
+            print("training")
+            x = self.net(x)
+        else:
+            print("exploration")
+            x = self._select_action(x)
 
         return x
