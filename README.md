@@ -37,23 +37,30 @@ python -m projects.simulated_annealing.main
 
 - Uses simple mutation operation
 
+
 ### Evolution Strategies
 
-The evolution strategies (ES) optimization estimates gradients
+Evolution Strategies (ES) is a class of black-box stochastic optimization techniques and has achieved some impressive results on RL benchmarks.
 
-- In the past, ES has achieved strong results on RL benchmarks.
-- ES is easy to implement and can be massively scaled.
-- In its core, the ES algorithm resembles simple hill-climbing in a high-dimensional space. 
-- ES uses *finite differences* along a few random directions at each optimization step to estimate the gradients. 
-- No need for backpropagation
-- Parameter centric reinforcement learning.
-- ES also allows to use a continuous action space.
+Even though their names may suggest otherwise, evolution strategies optimization has very little similarity to genetic optimization, 
+
+At its core, the ES optimization algorithm resembles simple hill-climbing in a high-dimensional space sampling a population of candidate solutions and allow agents with high reward to have a higher influence on the distribution of future generations.
+
+Despite the simplicity, the ES algorithm is pretty powerful and overcomes many of RL's inconveniences. Optimization with ES is highly parallelizable, makes no assumptions about the underlying model to train, allows interactions between agents out of the box, and is not constraint to a discrete action space.
+
+For the ES algorithm to work we only have to look at the parameterized reward function $R(\bm s; \bm \theta)$, takes takes a state vector and outputs a scalar reward. During the optimization process, we estimate gradients that allow us to steer the parameters $\bm \theta$ into a direction to maximize the reward $R$. Thus, we are optimizing $R$ with respect to $\bm \theta$.
+
+The ES algorithm generates at each time step a population of different parameter configurations $\bm \theta_i$ (the agents / boosters neural network weights) from the base parameters $\bm \theta$ by adding gaussian noise ($\bm \theta_i = \bm \theta + \bm \epsilon$ with $\bm \epsilon \sim \mathcal{N}(0, \sigma^2)$ and $i \in [1, N]$). After each agent has spend one episode / epoch in the environment a weighted sum over each agents policy network's parameters and gained reward is being created. This weighted sum of parameter vectors becomes the new base parameters. Mathematically, ES uses finite differences along a few random directions at each optimization step to estimate the gradients of the reward function $R$ with respect to the parameter vector $\bm \theta$.
+
 
 ### Simulated Annealing
 
-- Run neighbor state in parallel
-    - Only works for random starting point for each agent
-- Select best agent
+In 1983, Kirkpatrick et al., combined the insights of heating and cooling materials to change their physical properties with the Monte Carlo-based Metropolis-Hastings algorithm, to find approximate solutions to the traveling salesman problem. This combination led to the technique of Simulated Annealing (SA). It has been shown, that with a sufficiently high initial temperature and sufficiently long cooling time, the system's minimum-energy state is reached.
+
+In a nutshell, simulated annealing selects at each iteration a randomly created candidate solution that is close to the current one under some distance metric. The system moves to the proposed solution either if it comes with a higher reward or with a temperature-dependent probability. With decreasing temperature, the temperature-dependent probability to accept worse solutions narrows and the optimization focuses more and more on improving solutions approaching a Monte Carlo algorithm behavior.
+
+In a past project ([*NeuralAnnealing*](https://github.com/kaifishr/NeuralAnnealing)) I used SA for to optimize neural networks for a classification task. Therefore, I thought to give it a shot and use SA to optimize a network to learn how to land a booster.
+
 
 ### Reinforcement Learning
 
@@ -75,7 +82,7 @@ The implemented Deep Q-Learning algorithm uses a batch of episodes to learn a po
     - We start the training process with a random initialization of the policy (the neural network)
     - While the agent interacts with the environment, we record the produced data at each time step. These data are the current state, the agent's performed action, and the reward received.
     - Given the set of state-action-reward pairs, we can use backpropagation to encourage state-actions pairs that resulted in a positive or high reward discourage pairs with negative or low reward.
-    - During the training process, we enforce a certain degree of exploration by injecting noise to the actions of the agent. Exploration is induced by sampling from the action distribution at each time step.
+    - During the training process, we enforce a certain degree of exploration by injecting noise to the actions of the agent. Exploration is induced by sampling from the action distribution at each time step. This is in contrast to ES, where noise is not injected into the agent's action space, but rather directly in the parameter space.
 
 
 #### Deep Q-Learning
@@ -234,11 +241,20 @@ python -m projects.genetic_optimization.main
 
 ## References
 
-- [PyBox2D](https://github.com/pybox2d/pybox2d) on GitHub
-- [backends](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends) for PyBox2D
-- PyBox2D [tutorial](https://github.com/pybox2d/cython-box2d/blob/master/docs/source/getting_started.md)
-- [Minimal PyBox2D examples](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples)
-- Box2D C++ [documentation](https://box2d.org/documentation/)
+[1] [PyBox2D](https://github.com/pybox2d/pybox2d) on GitHub
+
+[2] [backends](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends) for PyBox2D
+
+[3] PyBox2D [tutorial](https://github.com/pybox2d/cython-box2d/blob/master/docs/source/getting_started.md)
+
+[4] [Minimal PyBox2D examples](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples)
+
+[5] Box2D C++ [documentation](https://box2d.org/documentation/)
+
+[6] OpenAI Blog, [*Evolution Strategies as a Scalable Alternative to Reinforcement Learning*](https://openai.com/blog/evolution-strategies/)
+
+[7] Salimans et al., 2017, [*Evolution Strategies as a Scalable Alternative to Reinforcement Learning*](https://arxiv.org/abs/1703.03864)
+
 
 ## Citation
 
@@ -250,6 +266,17 @@ If you find this project useful, please use BibTeX to cite it as:
   author={Fischer, Kai},
   year={2022},
   howpublished={\url{https://github.com/kaifishr/RocketBooster}}
+}
+```
+
+```bibtex
+@article{fischer2022rocketbooster,
+  title   = "RocketBooster",
+  author  = "Fischer, Kai",
+  journal = "GitHub repository",
+  year    = "2022",
+  month   = "Nov",
+  url     = "https://github.com/kaifishr/RocketBooster"
 }
 ```
 
