@@ -1,6 +1,6 @@
 # RocketBooster ✨🚀✨
 
-TL;DR: *RocketBooster* is a simple training environment equipped with optimization algorithms such as reinforcement learning, genetic optimization, and simulated annealing to learn to propulsively land an orbital rocket booster.
+TL;DR: *RocketBooster* is a simple training environment to land an orbital rocket booster equipped using optimization algorithms such as Reinforcement Learning, Genetic Optimization, Evolution Strategies, and Simulated Annealing.
 
 ## Introduction
 
@@ -9,15 +9,12 @@ TL;DR: *RocketBooster* is a simple training environment equipped with optimizati
 </p>
 
 - The booster's goal is to reach the landing pad at a velocity smaller or equal to $v_{\text{max}}$.
-- Boosters are equipped with neural networks for thrust control.
 
 Inspired by SpaceX's incredible progress, I set up a simple environment that uses PyBox2D for rigid physics simulation and PyGame for rendering and visualization, that allows to use different methods to land a booster in a physical simulation.
 
 The physics is modeled using PyBox2D, a 2D physics library for rigid physics simulations. The booster consists of three sections. A long and low density section (the booster's hull containing mostly empty fuel tanks) connected to a short high density section (the booster's engines). On top of that there are the landing legs which are modeled as medium density sticks attached to the lower part of the rocket in a 45 degree angle.
 
-The landing of the booster is learned using a genetic algorithm to optimize a small neural network, the booster's brain. The network's input are the booster's current height (x, y), speed (vx, vy), acceleration (ax, ay) and remaining fuel (maybe in a later stage).
-
-This project can also be tackled with deep reinforcement learning (e.g. deep Q-learning).
+The propulsive landing of the booster is learned using a neural network (the booster's brain) and one of the above mentioned optimization methods. The neural network controls the actions of the booster. The network's input (or state) at each time step consists of the booster's position ($r_x$, $r_y$), velocity ($v_x$, $v_y$), angle ($\theta$), and angular velocity ($\omega$). Based on the current state, the network predicts an action comprising thrust levels and engine angles.
 
 ## Run Examples
 
@@ -232,6 +229,7 @@ python -m projects.genetic_optimization.main
 ## TODOs
 
 - Add project with deep reinforcement learning.
+- Add fuel constraint.
 
 
 ## References
