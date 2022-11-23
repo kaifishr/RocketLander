@@ -121,11 +121,8 @@ class EvolutionStrategies:
             numpy.add(bias, noise_b, out=bias) 
 
 
-class EvolutionStrategies_v2:
+class EvolutionStrategies_:
     """Evolution strategies optimizer. Version 2.
-    
-    Implementation follows paper:
-    https://arxiv.org/abs/1703.03864
     
     Attr:
         boosters:
