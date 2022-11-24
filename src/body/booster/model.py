@@ -261,16 +261,13 @@ class TorchNeuralNetwork(nn.Module):
         self.actions_lookup[n] = action
 
     # ... Methods for Deep Q-Learning
-    def _memorize(
-        self,
-        state: torch.Tensor,
-        action: int,
-        reward: float = -1,
-        new_state: torch.Tensor = -1,
-        done: bool = -1,
-    ) -> None:
-        """Stores past events."""
-        self.memory.append((state, action, reward, new_state, done))
+    def _memorize(self, state: torch.Tensor, action: int, reward: float = -1) -> None:
+        """Stores past events.
+
+        Stores current `state`, `action` based on state, and `reward`
+        the followed from the performed action. 
+        """
+        self.memory.append((state, action, reward))
         # Make sure that the memory is not exceeded.
         if len(self.memory) > self.memory_size:
             self.memory.popleft()

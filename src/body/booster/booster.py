@@ -76,15 +76,20 @@ class Booster(Booster2D):
                 reward_vel = 1.0 / (1.0 + beta * velocity)
 
                 # Only final reward at end of epoch.
-                # NOTE: Landing detection with this reward function not necessary.
                 # self.reward = reward_pos + reward_vel
                 self.reward = reward_pos * reward_vel
                 # self.reward = math.exp(-(alpha*distance**2 + beta*velocity**2))
 
-                # Accumulating the reward leads to softer touch down
-                # as the booster collects high rewards close to the
-                # landing zone.
-                # self.reward += reward
+                ###
+                # TODO: Only for RL required.
+                # Add reward to memory
+                # self.model.memory[-1][-1] = self.reward
+                ###
+
+                ### Accumulating the reward leads to softer touch down
+                ### as the booster collects high rewards close to the
+                ### landing zone.
+                ### self.reward += reward
 
             else:
                 self.body.active = False
@@ -149,7 +154,7 @@ class Booster(Booster2D):
                 data = self.data  # state
 
                 # Raw network predictions
-                print(f"comp_action() {self.model.training = }")
+                # print(f"comp_action() {self.model.training = }")
                 pred = self.model(data)  # returns the action
 
                 # Data post-processing
