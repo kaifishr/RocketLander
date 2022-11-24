@@ -117,15 +117,6 @@ class Environment(Framework):
         Args:
             use_noise: If true, adds noise to kinematic variables.
         """
-        # if add_noise:
-        #     noise = self.config.env.booster.noise
-        #     noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
-        #     noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
-        #     noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
-        #     noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
-        #     noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-        #     noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
-
         for booster in self.boosters:
 
             # Reset kinematic variables
@@ -207,29 +198,31 @@ class Environment(Framework):
         TODO: If that stays here, make methods private.
         TODO: Move loop from trainer here?
         """
-        # Physics and (optional) rendering
-        self.step()
-
-        # Detect high stresses
-        self.detect_stress()
-
-        # Detect collision with ground
-        self.detect_impact()
-
-        # Detect landing (Turns off engines)
-        self.detect_landing()
-
-        # Detect leaving the domain
-        self.detect_escape()
-
-        # Compute current fitness / score of booster
-        self.comp_reward()
-
-        # Fetch data of each booster used for neural network
+        # ... 7) Fetch data of each booster used for neural network
         self.fetch_state()
 
-        # Run neural network prediction for given state
+        # ... 8) Run neural network prediction for given state
         self.comp_action()
 
-        # Apply network predictions to booster
+        # ... 9) Apply network predictions to booster
         self.apply_action()
+
+        # ... 1) Physics and (optional) rendering
+        self.step()
+
+        # ... 6) Compute current fitness / score of booster
+        self.comp_reward()
+
+        # ... Boundary conditions
+
+        # ... 2) Detect leaving the domain.
+        self.detect_escape()
+
+        # ... 3) Detect high stresses on the booster.
+        self.detect_stress()
+
+        # ... 4) Detect collision with ground.
+        self.detect_impact()
+
+        # ... 5) Detect landing and turn engines off.
+        self.detect_landing()

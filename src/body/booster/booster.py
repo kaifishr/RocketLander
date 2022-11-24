@@ -55,7 +55,7 @@ class Booster(Booster2D):
 
             vel = self.body.linearVelocity
 
-            # Reward proximity to landing pad if sink rate is negative.
+            # Reward only if sink rate is negative.
             if vel.y <= 0.0:
 
                 pos_x, pos_y = self.body.position
@@ -82,14 +82,9 @@ class Booster(Booster2D):
 
                 ###
                 # TODO: Only for RL required.
-                # Add reward to memory
-                # self.model.memory[-1][-1] = self.reward
+                # Add reward to most resent memory
+                self.model.memory[-1][-1] = self.reward
                 ###
-
-                ### Accumulating the reward leads to softer touch down
-                ### as the booster collects high rewards close to the
-                ### landing zone.
-                ### self.reward += reward
 
             else:
                 self.body.active = False
@@ -141,6 +136,7 @@ class Booster(Booster2D):
 
     def comp_action(self) -> None:
         """Computes next section of actions applied to engines.
+        
         Next steps of action are computed by feeding obstacle data coming
         from ray casting to the drone's neural network which then returns
         a set of actions (forces) to be applied to the drone's engines.
@@ -154,7 +150,6 @@ class Booster(Booster2D):
                 data = self.data  # state
 
                 # Raw network predictions
-                # print(f"comp_action() {self.model.training = }")
                 pred = self.model(data)  # returns the action
 
                 # Data post-processing

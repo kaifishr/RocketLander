@@ -180,11 +180,11 @@ class TorchNeuralNetwork(nn.Module):
         """Initializes NeuralNetwork class."""
         super().__init__()
 
-        self.num_engines = 3  # Three engines at maximum thrust at three angles
-        self.num_thrust_levels = 3  # Thrust levels at which engine can fire. Minimum is 2 for on/off
-        self.num_thrust_angles = 3  # Thrust angles at which engine can fire. Must be an odd number.
+        self.num_engines = 3 
+        self.num_thrust_levels = 3  # Thrust levels of engines. Minimum is 2 for on/off
+        self.num_thrust_angles = 3  # Thrust angles of engines. Must be an odd number.
         self.num_states = 6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
-        self.epsilon = 1.0
+        self.epsilon = 0.5  # TODO: Use epsilon decay method from optimizer()
         self.gamma = 0.99
         self.memory_size = 1000
         self.memory = deque()
@@ -260,53 +260,16 @@ class TorchNeuralNetwork(nn.Module):
         action = np.zeros((self.num_engines * 2)) 
         self.actions_lookup[n] = action
 
-    # ... Methods for Deep Q-Learning
     def _memorize(self, state: torch.Tensor, action: int, reward: float = -1) -> None:
         """Stores past events.
 
         Stores current `state`, `action` based on state, and `reward`
         the followed from the performed action. 
         """
-        self.memory.append((state, action, reward))
+        self.memory.append([state, action, reward])
         # Make sure that the memory is not exceeded.
         if len(self.memory) > self.memory_size:
             self.memory.popleft()
-
-    def _create_training_set(self, replay: deque):
-        """"""
-        # Select states and new states from replay
-        states = torch.Tensor([memory[0] for memory in self.replay])
-        new_states = torch.Tensor([memory[3] for memory in self.replay])
-
-        # Predict expected utility (Q-value) of current state and new state
-        with torch.no_grad():
-            self.eval()
-            expected_utility = self.forward(states)
-            expected_utility_new = self.forward(new_states)
-            self.train()
-
-        replay_length = len(replay)
-        x_data = torch.empty(size=(replay_length, self.num_states))
-        y_data = torch.empty(size=(replay_length, self.num_actions))
-
-        # Create training set
-        for i in range(replay_length):
-
-            # Unpack replay
-            state, action, reward, new_state, done = replay[i]
-
-            # Utility is the reward of performing an action a in state s.
-            target = expected_utility[i]
-            target[action] = reward
-
-            # Add expected maximum future reward if not done.
-            if not done:
-                target[action] += self.gamma * torch.amax(expected_utility_new[i])
-
-            x_data[i] = state
-            y_data[i] = target
-
-        return x_data, y_data
 
     @torch.no_grad()
     def _select_action(self, state: torch.Tensor) -> int:
