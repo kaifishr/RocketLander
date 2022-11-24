@@ -151,10 +151,8 @@ class Booster(Booster2D):
                 # Raw network predictions
                 print(f"comp_action() {self.model.training = }")
                 pred = self.model(data)  # returns the action
-                print(f"{pred = }")
 
-                # TODO: Select post processing based on optimization method.
-                # Post-processing
+                # Data post-processing
                 self.predictions = self._post_process(pred)
 
             else:

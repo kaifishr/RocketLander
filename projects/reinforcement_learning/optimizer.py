@@ -39,8 +39,15 @@ class DeepQOptimizer:
         rewards = [booster.reward for booster in self.boosters]
         self.idx_best = numpy.argmax(rewards)
         self.reward = rewards[self.idx_best]
-        print(f"step() {rewards = }")
+        print(f"optimizer.step() {rewards = }")
+
+        ###
+        for i, booster in enumerate(self.boosters):
+            print()
+            print("booster", i)
+            print(booster.model.memory)
         exit()
+        ###
 
         # Reduce temperature according to scheduler
         self._scheduler()

@@ -2,6 +2,7 @@
 
 The booster's brain represented by a feedforward neural network.
 """
+from typing import Union
 import math
 import random
 from collections import deque
@@ -168,9 +169,9 @@ class NumpyNeuralNetwork:
 
 
 class TorchNeuralNetwork(nn.Module):
-    """Network class.
+    """Deep Q Reinforcement Learning Model.
 
-    Simple fully-connected neural network.
+    Simple fully-connected neural network for Deep Q reinforcement learning.
 
     Attributes:
     """
@@ -179,12 +180,24 @@ class TorchNeuralNetwork(nn.Module):
         """Initializes NeuralNetwork class."""
         super().__init__()
 
+        self.num_engines = 3  # Three engines at maximum thrust at three angles
+        self.num_thrust_levels = 3  # Thrust levels at which engine can fire. Minimum is 2 for on/off
+        self.num_thrust_angles = 3  # Thrust angles at which engine can fire. Must be an odd number.
+        self.num_states = 6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
+        self.epsilon = 1.0
+        self.gamma = 0.99
+        self.memory_size = 1000
+        self.memory = deque()
+
+        # Number of actions plus `do nothing` action.
+        self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
+
         config = config.env.booster.neural_network
 
         in_features = config.num_dim_in
-        out_features = config.num_dim_out
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
+        out_features = self.num_actions 
 
         layers = [
             nn.Flatten(start_dim=0),
@@ -204,16 +217,9 @@ class TorchNeuralNetwork(nn.Module):
         ]
 
         self.net = nn.Sequential(*layers)
-        self.apply(self._init_weights)
 
-        # <Reinforcement learning (Deep Q-Learning)>
-        self.num_states = 6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
-        self.num_actions = 9  # Three engines at maximum thrust at three angles
-        self.epsilon = 1.0
-        self.gamma = 0.99
-        self.memory_size = 1000
-        self.memory = deque()
-        # </Reinforcement learning (Deep Q-Learning)>
+        self.apply(self._init_weights)
+        self._init_action_lookup()
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
@@ -223,14 +229,45 @@ class TorchNeuralNetwork(nn.Module):
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
 
+    def _init_action_lookup(self):
+        """Creates an action lookup table for discrete actions.
+
+        TODO: Check thrust angles for number of angles = 1.
+        """
+        self.actions_lookup = {}
+
+        thrust_levels = numpy.linspace(1.0 / self.num_thrust_levels, 1.0, self.num_thrust_levels)
+        thrust_angles = numpy.linspace(0.0, 1.0, self.num_thrust_angles)
+
+        if self.num_thrust_angles == 1:
+            thrust_angles = numpy.array([0.5])
+
+        n = 0
+        # Add actions to look-up table.
+        for i in range(self.num_engines):
+            for j in range(self.num_thrust_levels):
+                for k in range(self.num_thrust_angles):
+                    # Action vector with thrust and angle information for each engine.
+                    action = np.zeros((self.num_engines * 2)) 
+                    # Select thrust for engine i
+                    action[2*i] = thrust_levels[j]
+                    # Select angle for engine i
+                    action[2*i+1] = thrust_angles[k]  
+                    self.actions_lookup[n] = action
+                    n += 1
+
+        # Add `do nothing` action.
+        action = np.zeros((self.num_engines * 2)) 
+        self.actions_lookup[n] = action
+
     # ... Methods for Deep Q-Learning
     def _memorize(
         self,
         state: torch.Tensor,
         action: int,
-        reward: float,
-        new_state: torch.Tensor,
-        done,
+        reward: float = -1,
+        new_state: torch.Tensor = -1,
+        done: bool = -1,
     ) -> None:
         """Stores past events."""
         self.memory.append((state, action, reward, new_state, done))
@@ -274,10 +311,11 @@ class TorchNeuralNetwork(nn.Module):
 
         return x_data, y_data
 
+    @torch.no_grad()
     def _select_action(self, state: torch.Tensor) -> int:
         """Selects an action from a discrete action space.
 
-        This method is used during the exploration phase.
+        Action is random with probability `epsilon` to encourage exploration.
 
         Args:
             epsilon: Probability of choosing a random action (epsilon-greedy value).
@@ -293,21 +331,22 @@ class TorchNeuralNetwork(nn.Module):
             # Select action with highest predicted utility given state
             with torch.no_grad():  # Use decorator for method
                 # self.eval()
-                pred = self.forward(state)
-                action = torch.argmax(pred)
+                pred = self.net(state)
+                action = torch.argmax(pred).item()
                 # self.train()
             print(f"network {action = }")
 
-        return action
-    # </Reinforcement learning (Deep Q-Learning)>
+        # Add state-action pair to memory
+        self._memorize(state=state, action=action)
 
-    def forward(self, x: list) -> torch.Tensor:
+        # Convert action to action vector
+        action = self.actions_lookup[action]
+
+        return action
+
+    def forward(self, state: list) -> Union[torch.Tensor, int]:
         """Forward method receives current state and predicts an action.
 
-        TODO: 
-            - Change forward method to use _select_action(state=x) during simulation.
-              and self.net() during optimization.
-        
         Args:
             x: Current state.
 
@@ -315,13 +354,13 @@ class TorchNeuralNetwork(nn.Module):
             Action vector.
         """
         print(f"forward() {self.training = }")
-        x = torch.from_numpy(x).float()
+        state = torch.from_numpy(state).float()
 
         if self.training:
             print("training")
-            x = self.net(x)
+            action = self.net(state)
         else:
             print("exploration")
-            x = self._select_action(x)
+            action = self._select_action(state)
 
-        return x
+        return action
