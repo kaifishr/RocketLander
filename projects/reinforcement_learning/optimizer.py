@@ -127,7 +127,8 @@ class DeepQOptimizer:
         self._epsilon_scheduler()
 
         # Broadcast model to all agents
-        self._copy_agents()  # TODO: Use this also for other optimizers. Add to optimizer base class.
+        # TODO: Use this also for other optimizers. Add to optimizer base class.
+        self._copy_agents()  
 
         self.model.eval()
         self.iteration += 1

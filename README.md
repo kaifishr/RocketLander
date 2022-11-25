@@ -28,10 +28,34 @@ python -m projects.simulated_annealing.main
 
 ## Methods
 
+
+### Notation
+
+In this project, the words *booster*, *agent*, *individual* are used interchangeably. 
+
+So are *epoch* and *episode*.
+
+
 ### Reward Function
 
-- Number of simulation steps (time restriction) acts as an implicit fuel restriction. Thus, the booster is rewarded for landing quickly.
-- Accumulate rewards vs. final reward
+We use the same reward function for all optimization methods to measure the success of the agent during each episode. The reward function receives the current state of the environment as input and outputs a scalar value.
+
+Building a good reward function leading to the expected behavior of an agent can be very challenging. Slight changes of the reward function can sometimes result in totally unexpected behavior of the agent.
+
+A reward function for landing a rocket booster can be designed as follows. A first term captures the distance from the booster to the landing pad. The closer the booster is to the landing pad, the higher is the reward. This can be formulated as follows:
+
+$$r_{\text{proximity}} = \frac{1}{1 + \alpha \sqrt{(x_\text{p} - x_\text{b})^2 + (y_\text{p} - y_\text{b})^2}}$$
+
+with the $x$- and $y$-coordinates of the landing $\text p$ ad and the $\text b$ ooster. To avoid a rapid unscheduled disassembly of the booster, there is also a term that takes the booster's velocity into account,
+
+$$r_{\text{velocity}} = \frac{1}{1 + \beta \sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
+
+with $x$- and $y$-components of the booster's velocity. $\alpha$ and $\beta$ are hyperparameter that allow to emphasis the reward coming from the proximity or velocity. By multiplying both terms we can encourage a soft landing and the final reward function is obtained:
+
+$$R = r_{\text{proximity}} \cdot r_{\text{velocity}}$$
+
+Lowering the number of simulations steps equals a time restriction and at the same time resembles an implicit fuel restriction, encouraging the booster to land more quickly.
+
 
 ### Genetic Optimization
 
@@ -63,6 +87,16 @@ In a past project ([*NeuralAnnealing*](https://github.com/kaifishr/NeuralAnneali
 
 
 ### Reinforcement Learning
+
+Reinforcement Learning (RL) is without a doubt one of the most interesting subfields of machine learning.
+
+Reinforcement learning consists of an agent (here the booster) interacting with an environment whose actions follow a policy (the booster's neural network) that the agent learns over time.
+
+At each time step, the agent observes the state of its environment and takes actions based on the policy the agent learned so far.
+
+The result of each action carried out by the agent is associated with a reward and a transition to a new state.
+
+The goal of RL is to learn a policy that allows to pick the best known actions at any state to maximize the reward received. 
 
 Here we use Deep Q-Learning which is one of the core concepts in Reinforcement Learning (RL).
 
