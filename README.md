@@ -31,7 +31,7 @@ python -m projects.simulated_annealing.main
 
 ### Notation
 
-In this project, the words *booster*, *agent*, *individual* are used interchangeably. 
+In this project, the words *booster*, *agent*, *individual*, *candidate* are used interchangeably. 
 
 So are *epoch* and *episode*.
 
@@ -54,21 +54,23 @@ with $x$- and $y$-components of the booster's velocity. $\alpha$ and $\beta$ are
 
 $$R = r_{\text{proximity}} \cdot r_{\text{velocity}}$$
 
+Using the formulation above of the reward function, the reward is always between 0 and 1.
+
 Lowering the number of simulations steps equals a time restriction and at the same time resembles an implicit fuel restriction, encouraging the booster to land more quickly.
 
 
 ### Genetic Optimization
 
-- Uses simple mutation operation
+Inspired by evolution, genetic optimization (GO) uses a population of individuals that are slightly different from each other. These differences result from mutation which is a fundamental property of evolution and result in different behavior of each agent. The difference in behavior makes some agents more successful than others. The fitness or success of an agent is represented by the fitness or reward function.
+
+The algorithm starts with a population of candidates, from which the agent with the highest fitness makes it to the next round. After the selection the fittest individual propagates its genes accompanied with random mutations on to the next generation. This process is repeated until the desired fitness is achieved.
+
+Here, we use the mutation operation during the optimization process to learn to land a rocket booster. Mutation operations act on all members of a population. The mutation operation is defined by the probability with which a parameter mutation is going to happen and the rate or strength with which the mutation acts on the parameter.
 
 
 ### Evolution Strategies
 
-Evolution Strategies (ES) is a class of black-box stochastic optimization techniques and has achieved some impressive results on RL benchmarks.
-
-Even though their names may suggest otherwise, evolution strategies optimization has very little similarity to genetic optimization, 
-
-At its core, the ES optimization algorithm resembles simple hill-climbing in a high-dimensional space sampling a population of candidate solutions and allow agents with high reward to have a higher influence on the distribution of future generations.
+Evolution Strategies (ES) is a class of black-box stochastic optimization techniques and has achieved some impressive results on RL benchmarks. Even though their names may suggest otherwise, evolution strategies optimization has very little similarity to genetic optimization. At its core, the ES optimization algorithm resembles simple hill-climbing in a high-dimensional space sampling a population of candidate solutions and allow agents with high reward to have a higher influence on the distribution of future generations.
 
 Despite the simplicity, the ES algorithm is pretty powerful and overcomes many of RL's inconveniences. Optimization with ES is highly parallelizable, makes no assumptions about the underlying model to train, allows interactions between agents out of the box, and is not constraint to a discrete action space.
 
