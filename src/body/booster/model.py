@@ -175,19 +175,18 @@ class TorchNeuralNetwork(nn.Module):
 
     Attributes:
     """
+    num_engines = 3  # Number of engines.
+    num_states = 6   # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
 
     def __init__(self, config: Config) -> None:
         """Initializes NeuralNetwork class."""
         super().__init__()
 
-        self.num_engines = 3    # FIX
-        self.num_states = 6     # FIX State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
 
         self.num_thrust_levels = config.optimizer.num_thrust_levels
         self.num_thrust_angles = config.optimizer.num_thrust_angles
         self.memory_size = config.optimizer.memory_size
-
-        self.epsilon = -1
+        self.epsilon = config.optimizer.epsilon
 
         self.memory = deque()
 
@@ -225,7 +224,6 @@ class TorchNeuralNetwork(nn.Module):
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
-            # torch.nn.init.normal_(module.weight, mean=0.0, std=0.5)
             gain = 5.0 / 3.0  # Gain for tanh nonlinearity.
             torch.nn.init.xavier_normal_(module.weight, gain=gain)
             if module.bias is not None:
@@ -259,7 +257,7 @@ class TorchNeuralNetwork(nn.Module):
                     n += 1
 
         # Add `do nothing` action.
-        action = np.zeros((self.num_engines * 2)) 
+        action = np.zeros((self.num_engines * 2))
         self.actions_lookup[n] = action
 
     def _memorize(self, state: torch.Tensor, action: int, reward: float = -1) -> None:
@@ -269,7 +267,6 @@ class TorchNeuralNetwork(nn.Module):
         the followed from the performed action. 
         """
         self.memory.append([state, action, reward])
-        # Make sure that the memory is not exceeded.
         if len(self.memory) > self.memory_size:
             self.memory.popleft()
 
@@ -288,7 +285,6 @@ class TorchNeuralNetwork(nn.Module):
         if random.random() < self.epsilon:
             # Choose a random action
             action = random.randint(0, self.num_actions - 1)
-            # print(f"random {action = }")
         else:
             # Select action with highest predicted utility given state
             with torch.no_grad():  # Use decorator for method
@@ -296,7 +292,6 @@ class TorchNeuralNetwork(nn.Module):
                 pred = self.net(state)
                 action = torch.argmax(pred).item()
                 # self.train()
-            # print(f"network {action = }")
 
         # Add state-action pair to memory
         self._memorize(state=state, action=action)

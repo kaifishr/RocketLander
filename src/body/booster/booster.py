@@ -85,6 +85,7 @@ class Booster(Booster2D):
                 ###
 
             else:
+                # TODO: Move this to boundary conditions.
                 self.body.active = False
                 self.predictions.fill(0.0)
 

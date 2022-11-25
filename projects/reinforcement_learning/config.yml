@@ -21,14 +21,14 @@ trainer:
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 16
+  num_boosters: 1
   num_simulation_steps: 1000
-  num_thrust_levels: 2  # Thrust levels of engines. Minimum is 2 for on/off
-  num_thrust_angles: 1  # Thrust angles of engines. Must be an odd number.
-  learning_rate: 1.0e-2
+  num_thrust_levels: 3  # Thrust levels of engines. Minimum is 2 for on/off
+  num_thrust_angles: 5  # Thrust angles of engines. Must be an odd number.
+  learning_rate: 1.0e-3
   batch_size: 256
-  memory_size: 2000
-  gamma: 0.8
+  memory_size: 4000
+  gamma: 0.5
   decay_rate: 0.005
   epsilon: 0.9          # Epsilon-greedy value.
   epsilon_min: 0.05     # Minimal epsilon greedy value.
@@ -72,7 +72,7 @@ env:
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
-        y: -30.0
+        y: -50.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
@@ -87,18 +87,18 @@ env:
     noise:  # TODO: move this to env?
       position: # [m] 
         x: 20.0                       # Standard deviation [m]
-        y: 0.0                       # Standard deviation [m]
+        y: 20.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 0.0                        # Standard deviation [m / s]
-        y: 0.0                        # Standard deviation [m / s]
+        x: 5.0                        # Standard deviation [m / s]
+        y: 5.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 32
-      num_hidden_layers: 3
+      num_dim_hidden: 16
+      num_hidden_layers: 2
 
 framework:
   screen:
