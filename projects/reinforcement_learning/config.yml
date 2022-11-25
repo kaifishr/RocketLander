@@ -21,13 +21,17 @@ trainer:
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 2  # TODO: This is fix.
-  num_simulation_steps: 5
-  learning_rate: 1.0e-3
-  epsilon: 0.99
-  gamma: 0.9
-  decay_rate: 0.002
-  epsilon_min: 0.01
+  num_boosters: 16
+  num_simulation_steps: 1000
+  num_thrust_levels: 2  # Thrust levels of engines. Minimum is 2 for on/off
+  num_thrust_angles: 1  # Thrust angles of engines. Must be an odd number.
+  learning_rate: 1.0e-2
+  batch_size: 256
+  memory_size: 2000
+  gamma: 0.8
+  decay_rate: 0.005
+  epsilon: 0.9          # Epsilon-greedy value.
+  epsilon_min: 0.05     # Minimal epsilon greedy value.
   lib: "torch"    # NOTE: This is fix.
 
 # Simulation environment 
@@ -47,7 +51,7 @@ env:
 
   landing_pad:
     position: # [m]
-      x: 0.0
+      x: -100.0
       y: 0.0
 
   landing:
@@ -64,7 +68,7 @@ env:
 
     init:
       position: # [m]
-        x: 0.0
+        x: 70.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
@@ -82,7 +86,7 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 30.0                       # Standard deviation [m]
+        x: 20.0                       # Standard deviation [m]
         y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
         x: 0.0                        # Standard deviation [m / s]
@@ -93,8 +97,8 @@ env:
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 4
-      num_hidden_layers: 1
+      num_dim_hidden: 32
+      num_hidden_layers: 3
 
 framework:
   screen:

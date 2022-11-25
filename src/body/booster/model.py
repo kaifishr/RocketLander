@@ -180,13 +180,15 @@ class TorchNeuralNetwork(nn.Module):
         """Initializes NeuralNetwork class."""
         super().__init__()
 
-        self.num_engines = 3 
-        self.num_thrust_levels = 3  # Thrust levels of engines. Minimum is 2 for on/off
-        self.num_thrust_angles = 3  # Thrust angles of engines. Must be an odd number.
-        self.num_states = 6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
-        self.epsilon = 0.5  # TODO: Use epsilon decay method from optimizer()
-        self.gamma = 0.99
-        self.memory_size = 1000
+        self.num_engines = 3    # FIX
+        self.num_states = 6     # FIX State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
+
+        self.num_thrust_levels = config.optimizer.num_thrust_levels
+        self.num_thrust_angles = config.optimizer.num_thrust_angles
+        self.memory_size = config.optimizer.memory_size
+
+        self.epsilon = -1
+
         self.memory = deque()
 
         # Number of actions plus `do nothing` action.
@@ -286,7 +288,7 @@ class TorchNeuralNetwork(nn.Module):
         if random.random() < self.epsilon:
             # Choose a random action
             action = random.randint(0, self.num_actions - 1)
-            print(f"random {action = }")
+            # print(f"random {action = }")
         else:
             # Select action with highest predicted utility given state
             with torch.no_grad():  # Use decorator for method
@@ -294,7 +296,7 @@ class TorchNeuralNetwork(nn.Module):
                 pred = self.net(state)
                 action = torch.argmax(pred).item()
                 # self.train()
-            print(f"network {action = }")
+            # print(f"network {action = }")
 
         # Add state-action pair to memory
         self._memorize(state=state, action=action)

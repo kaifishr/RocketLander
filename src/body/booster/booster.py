@@ -26,10 +26,8 @@ class Booster(Booster2D):
         """Initializes Booster class."""
         super().__init__(world=world, config=config)
 
+        # Install the booster's brain.
         self.model = ModelLoader(config=config)()
-        # print(f"{self.model.training = }")
-        # self.model.eval()
-        # print(f"{self.model.training = }")
 
         # Forces predicted by neural network.
         self.predictions = np.zeros(shape=(self.num_dims * self.num_engines))

@@ -2,14 +2,11 @@
 import copy
 import math
 
-from collections import deque
-
 import torch
 from torch.utils.data import (
     TensorDataset,
     DataLoader
 )
-import torch.optim as optim
 
 from src.utils.config import Config
 from src.environment import Environment
@@ -20,6 +17,8 @@ class DeepQOptimizer:
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
+        self.num_engines = 3    # FIX
+        self.num_states = 6     # FIX
 
         self.boosters = environment.boosters
 
@@ -29,21 +28,19 @@ class DeepQOptimizer:
         self.decay_rate = self.config.decay_rate
         self.eps_min = self.config.epsilon_min
         self.learning_rate = self.config.learning_rate
-        self.num_states = 6
-        self.num_actions = 15  # TODO
-        self.num_engines = 3 
-        self.num_thrust_levels = 3  # Thrust levels of engines. Minimum is 2 for on/off
-        self.num_thrust_angles = 3  # Thrust angles of engines. Must be an odd number.
+        self.batch_size = self.config.batch_size
+        self.num_thrust_levels = self.config.num_thrust_levels
+        self.num_thrust_angles = self.config.num_thrust_angles
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
 
         # Scalars
-        self.epsilon = 1.0
         self.reward = 0.0
         self.loss = 0.0
         self.iteration = 0
         self.stats = {"reward": 0.0, "loss": 0.0}
 
         self.model = copy.deepcopy(self.boosters[0].model)
+
         self.criterion = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(
             params=self.model.parameters(), 
@@ -52,25 +49,31 @@ class DeepQOptimizer:
 
         self._init_agents()
 
-    def _epsilon_scheduler(self) -> None:
-        """Decreases epsilon exponentially."""
-        decay_rate = self.decay_rate
-        iteration = self.iteration
-        eps_min = self.eps_min
-        self.epsilon = eps_min + (1.0 - eps_min) * math.exp(-decay_rate * iteration)
-
     def _init_agents(self) -> None:
         """Initializes agents for reinforcement learning.
         
         Assigns same initial network parameters to all agents.
         """
-        self._copy_agents()
+        self._broadcast_agents()
+        for booster in self.boosters:
+            booster.model.epsilon = self.epsilon
 
-    def _copy_agents(self) -> None:
+    def _broadcast_agents(self) -> None:
         """Broadcasts base network parameters to all agents."""
         for booster in self.boosters:
             booster.model.parameters = copy.deepcopy(self.model.parameters)
             # booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
+
+    def _epsilon_scheduler(self) -> None:
+        """Decreases epsilon-greedy value exponentially."""
+        decay_rate = self.decay_rate
+        iteration = self.iteration
+        eps_min = self.eps_min
+        eps_max = self.epsilon
+        epsilon = eps_min + (eps_max - eps_min) * math.exp(-decay_rate * iteration)
+
+        for booster in self.boosters:
+            booster.model.epsilon = epsilon
 
     def _create_training_set(self):
         """Create training set from memory.
@@ -139,7 +142,7 @@ class DeepQOptimizer:
         dataset = TensorDataset(x_data, y_data)
         dataloader = DataLoader(
             dataset=dataset,
-            batch_size=4,
+            batch_size=self.batch_size,
             shuffle=True,
         )
 
@@ -169,16 +172,14 @@ class DeepQOptimizer:
         # Create data set from recorded state-action-reward pairs.
         self._create_training_set()
 
+        # Broadcast model to all agents
+        self.model.eval()
+
+        # Broadcast model weights to all agents
+        # TODO: Add _broadcast_params() to optimizer base class.
+        self._broadcast_agents()
+
         # Reduce  according to scheduler
         self._epsilon_scheduler()
 
-        # Broadcast model to all agents
-        # TODO: Use this also for other optimizers. Add to optimizer base class.
-        self.model.eval()
-
-        self._copy_agents()  
-
         self.iteration += 1
-
-        # if self.iteration == 3:
-        #     exit()
