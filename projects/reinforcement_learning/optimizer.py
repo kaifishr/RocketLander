@@ -5,6 +5,11 @@ import math
 from collections import deque
 
 import torch
+from torch.utils.data import (
+    TensorDataset,
+    DataLoader
+)
+import torch.optim as optim
 
 from src.utils.config import Config
 from src.environment import Environment
@@ -23,6 +28,7 @@ class DeepQOptimizer:
         self.gamma = self.config.gamma
         self.decay_rate = self.config.decay_rate
         self.eps_min = self.config.epsilon_min
+        self.learning_rate = self.config.learning_rate
         self.num_states = 6
         self.num_actions = 15  # TODO
         self.num_engines = 3 
@@ -30,12 +36,19 @@ class DeepQOptimizer:
         self.num_thrust_angles = 3  # Thrust angles of engines. Must be an odd number.
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
 
-        self.model = copy.deepcopy(self.boosters[0].model)
-
         # Scalars
         self.epsilon = 1.0
         self.reward = 0.0
+        self.loss = 0.0
         self.iteration = 0
+        self.stats = {"reward": 0.0, "loss": 0.0}
+
+        self.model = copy.deepcopy(self.boosters[0].model)
+        self.criterion = torch.nn.MSELoss()
+        self.optimizer = torch.optim.Adam(
+            params=self.model.parameters(), 
+            lr=self.learning_rate, 
+        )
 
         self._init_agents()
 
@@ -59,46 +72,90 @@ class DeepQOptimizer:
             booster.model.parameters = copy.deepcopy(self.model.parameters)
             # booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
 
-    def _create_training_set(self, replay: deque):
+    def _create_training_set(self):
+        """Create training set from memory.
+
+        Creates dataset from memory that each of the booster's network holds.
+
+        Memory is a list of state-action-reward-tuples: 
+
+        memory = [
+            [state_0, action_0, reward_1],
+            [state_1, action_1, reward_2],
+            .
+            .
+            .
+            [state_n, action_n, reward_n+1],
+        ]
         """
-        Args:
-            replay: List of tuples holding [state, action, reward, new_state]
-        """
+        replay_memory = []
+
+        # Gather the memory that each booster's network holds.
+        for booster in self.boosters:
+            for memory in booster.model.memory:
+                # Create replay memory and add `done` field.
+                # `done` indicates if simulation has come to an end.
+                replay_memory.append(memory + [False, ])
+            # Set `done` to true for last memory before simulation stopped.
+            # Not happy with this. Consider time constraints and actual landing.
+            replay_memory[-1][-1] = True
+
         # Select states and new states from replay
-        states = torch.Tensor([memory[0] for memory in replay])
-        new_states = torch.Tensor([memory[3] for memory in replay])
+        # NOTE: replay = replay_memory
+        # new_states = torch.Tensor([memory[3] for memory in replay])
+        states = torch.stack([memory[0] for memory in replay_memory])
 
-        # Predict expected utility (Q-value) of current state and new state
-        # TODO: Instead of saving agent integer, save expected utility 
-        #       predicted by network.
+        # Predict expected utilities (Q-values) for all states 
+        # TODO: Save expected utility during simulation.
         with torch.no_grad():
-            self.eval()
-            expected_utility = self.forward(states)
-            expected_utility_new = self.forward(new_states)
-            self.train()
+            self.model.eval()
+            expected_utility = self.model(states)
+            # expected_utility_new = self.forward(new_states)
+            self.model.train()
 
-        replay_length = len(replay)
-        x_data = torch.empty(size=(replay_length, self.num_states))
-        y_data = torch.empty(size=(replay_length, self.num_actions))
+        replay_memory_length = len(replay_memory)
+        x_data = torch.empty(size=(replay_memory_length, self.num_states))
+        y_data = torch.empty(size=(replay_memory_length, self.num_actions))
 
-        # Create training set
-        for i in range(replay_length):
+        # Create the actual training set
+        x_data = states
 
-            # Unpack replay
-            state, action, reward, new_state, done = replay[i]
+        for i in range(replay_memory_length):
 
+            # Unpack replay memory.
+            state, action, reward, done = replay_memory[i]
             # Utility is the reward of performing an action a in state s.
             target = expected_utility[i]
             target[action] = reward
 
             # Add expected maximum future reward if not done.
             if not done:
-                target[action] += self.gamma * torch.amax(expected_utility_new[i])
+                target[action] += self.gamma * torch.amax(expected_utility[i+1])
 
-            x_data[i] = state
+            # x_data[i] = state
             y_data[i] = target
 
-        return x_data, y_data
+        # Create dataset
+        dataset = TensorDataset(x_data, y_data)
+        dataloader = DataLoader(
+            dataset=dataset,
+            batch_size=4,
+            shuffle=True,
+        )
+
+        # Train model for single epoch
+        for x, y in dataloader:
+            self.optimizer.zero_grad()
+            # Forward: Predict action pred from state x
+            pred = self.model(x)
+            # Compute loss
+            loss = self.criterion(input=pred, target=y)
+            # Backpropagation
+            loss.backward()
+            # Gradient descent
+            self.optimizer.step()
+
+        # return x_data, y_data
 
     def step(self) -> None:
         """Runs single optimization step."""
@@ -107,31 +164,21 @@ class DeepQOptimizer:
         # Select booster with highest reward in current population.
         rewards = [booster.reward for booster in self.boosters]
         self.reward = max(rewards)
-        print(f"optimizer.step() {rewards = }")
+        # print(f"optimizer.step() {rewards = }")
 
         # Create data set from recorded state-action-reward pairs.
-
-        ###
-        # for i, booster in enumerate(self.boosters):
-        #     print("booster", i)
-        #     for m in booster.model.memory:
-        #         print(m)
-        #     print()
-        # exit()
-        ###
-
-        # Train model on training set.
-        ...
+        self._create_training_set()
 
         # Reduce  according to scheduler
         self._epsilon_scheduler()
 
         # Broadcast model to all agents
         # TODO: Use this also for other optimizers. Add to optimizer base class.
+        self.model.eval()
+
         self._copy_agents()  
 
-        self.model.eval()
         self.iteration += 1
 
-        if self.iteration == 3:
-            exit()
+        # if self.iteration == 3:
+        #     exit()

@@ -200,7 +200,7 @@ class TorchNeuralNetwork(nn.Module):
         out_features = self.num_actions 
 
         layers = [
-            nn.Flatten(start_dim=0),
+            # nn.Flatten(start_dim=0),
             nn.Linear(in_features=in_features, out_features=hidden_features),
             nn.Tanh(),
         ]
@@ -313,14 +313,16 @@ class TorchNeuralNetwork(nn.Module):
         Returns:
             Action vector.
         """
-        print(f"forward() {self.training = }")
-        state = torch.from_numpy(state).float()
+        # print(f"forward() {self.training = }")
 
-        if self.training:
-            print("training")
+        if self.training or isinstance(state, torch.Tensor):
+            # print("forward() training")
+            # print(state.shape)
             action = self.net(state)
         else:
-            print("exploration")
+            # print("forward() exploration")
+            state = torch.from_numpy(state).float()
+            # print(state.shape)
             action = self._select_action(state)
 
         return action

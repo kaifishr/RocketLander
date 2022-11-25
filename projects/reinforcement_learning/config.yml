@@ -23,6 +23,7 @@ trainer:
 optimizer:
   num_boosters: 2  # TODO: This is fix.
   num_simulation_steps: 5
+  learning_rate: 1.0e-3
   epsilon: 0.99
   gamma: 0.9
   decay_rate: 0.002

@@ -61,7 +61,7 @@ Lowering the number of simulations steps equals a time restriction and at the sa
 
 ### Genetic Optimization
 
-Inspired by evolution, genetic optimization (GO) uses a population of individuals that are slightly different from each other. These differences result from mutation which is a fundamental property of evolution and result in different behavior of each agent. The difference in behavior makes some agents more successful than others. The fitness or success of an agent is represented by the fitness or reward function.
+Inspired by evolution, genetic optimization uses a population of individuals that are slightly different from each other. These differences result from mutation which is a fundamental property of evolution and result in different behavior of each agent. The difference in behavior makes some agents more successful than others. The fitness or success of an agent is represented by the fitness or reward function.
 
 The algorithm starts with a population of candidates, from which the agent with the highest fitness makes it to the next round. After the selection the fittest individual propagates its genes accompanied with random mutations on to the next generation. This process is repeated until the desired fitness is achieved.
 
