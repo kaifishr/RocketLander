@@ -1,20 +1,26 @@
 # RocketBooster ✨🚀✨
+# FalconLander ✨🚀✨
+# RocketLander ✨🚀✨
 
-TL;DR: *RocketBooster* is a simple training environment to land an orbital rocket booster equipped using optimization algorithms such as Reinforcement Learning, Genetic Optimization, Evolution Strategies, and Simulated Annealing.
 
 ## Introduction
+
+*RocketBooster* is a comprehensive framework that uses optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable an orbital rocket booster to land autonomously. *RocketBooster* is designed to be simple to use and can be easily extended. 
 
 <p align="center">
     <img src="docs/booster.png" width="240" height=""/>
 </p>
 
-- The booster's goal is to reach the landing pad at a velocity smaller or equal to $v_{\text{max}}$.
+$\textbf{\textcolor{red}{\text{TODO: Replace image with short gif of a landing booster.}}}$
 
-Inspired by SpaceX's incredible progress, I set up a simple environment that uses PyBox2D for rigid physics simulation and PyGame for rendering and visualization, that allows to use different methods to land a booster in a physical simulation.
+The framework uses [*PyBox2D*](https://box2d.org/) a 2D physics library for rigid physics simulations, and [*PyGame*](https://www.pygame.org/) for rendering and visualization.
 
-The physics is modeled using PyBox2D, a 2D physics library for rigid physics simulations. The booster consists of three sections. A long and low density section (the booster's hull containing mostly empty fuel tanks) connected to a short high density section (the booster's engines). On top of that there are the landing legs which are modeled as medium density sticks attached to the lower part of the rocket in a 45 degree angle.
+I tried to make the simulation relatively realistic, even though that may conflict with [Box2D's recommendation](https://box2d.org/documentation/index.html#autotoc_md17) on object sizes. The booster has a height of about $46$ meters, a weight of about $25$ metric tons, and consists of three parts. A long and low-density hull section containing mostly empty fuel tanks, the short but high-density engine section, and the static medium-density landing legs.
 
-The propulsive landing of the booster is learned using a neural network (the booster's brain) and one of the above mentioned optimization methods. The neural network controls the actions of the booster. The network's input (or state) at each time step consists of the booster's position ($r_x$, $r_y$), velocity ($v_x$, $v_y$), angle ($\theta$), and angular velocity ($\omega$). Based on the current state, the network predicts an action comprising thrust levels and engine angles.
+In this framework, a booster is considered an agent or individual equipped with a neural network (the agent's brain) to learn how to propulsively land a booster. The network is trained using either reinforcement learning, evolution strategies, genetic optimization, or a simulated annealing algorithm.
+
+The neural network controls the actions of the booster. At each time step during the simulation, the network receives as input the current state consisting of the booster's position ($p_x$, $p_y$), velocity ($v_x$, $v_y$), angle ($\theta$), and angular velocity ($\omega$). Based on the current state, the network predicts an action, including thrust levels and engine deflection.
+
 
 ## Run Examples
 
@@ -211,6 +217,7 @@ python -m projects.genetic_optimization.main
 - Add project with deep reinforcement learning.
 - Add fuel constraint.
 - Remove engines running detection with new final reward.
+- Add dynamic landing legs.
 
 
 ## References
@@ -235,21 +242,12 @@ python -m projects.genetic_optimization.main
 If you find this project useful, please use BibTeX to cite it as:
 
 ```bibtex
-@misc{fischer2022rocketbooster,
-  title={RocketBooster},
-  author={Fischer, Kai},
-  year={2022},
-  howpublished={\url{https://github.com/kaifishr/RocketBooster}}
-}
-```
-
-```bibtex
 @article{fischer2022rocketbooster,
   title   = "RocketBooster",
   author  = "Fischer, Kai",
   journal = "GitHub repository",
   year    = "2022",
-  month   = "Nov",
+  month   = "December",
   url     = "https://github.com/kaifishr/RocketBooster"
 }
 ```
