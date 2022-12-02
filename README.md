@@ -2,6 +2,7 @@
 # **RocketLander** ✨🚀✨
 # **BoosterLander** ✨🚀✨
 
+---
 
 # Introduction
 
@@ -11,7 +12,7 @@
     <img src="docs/booster.png" width="240" height=""/>
 </p>
 
-$\textbf{\color{red}{\text{TODO: Replace image with short gif of a landing booster.}}}$
+$\textbf{\text{\textcolor{red}{TODO: Replace image with short gif of a landing booster.}}}$
 
 The framework uses [*PyBox2D*](https://box2d.org/) a 2D physics library for rigid physics simulations, and [*PyGame*](https://www.pygame.org/) for rendering and visualization. 
 
