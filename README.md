@@ -26,10 +26,10 @@ The neural network controls the actions of the booster. At each time step, the n
 
 To run *RocketLander*, install the latest master directly from GitHub. For a basic install, run:
 
-```bash
+```console
 git clone https://github.com/kaifishr/RocketLander
 cd RocketLander 
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 To start a training session using a specified learning method, run one of the examples in the project folder. For example:
@@ -68,10 +68,6 @@ $$R = R_{\text{proximity}} \cdot R_{\text{velocity}}$$
 
 We can implicitly model a fuel restriction by lowering the number of simulation steps. This time restriction resembles an implicit fuel restriction, encouraging the booster to land more quickly.
 
----
----
----
----
 
 ## Reinforcement Learning
 

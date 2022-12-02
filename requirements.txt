@@ -3,8 +3,6 @@ matplotlib
 numpy
 pygame
 PyYAML
-scikit-learn
 scipy
-sklean
 tensorboard 
 torch
