@@ -2,7 +2,6 @@
 # **RocketLander** ✨🚀✨
 # **BoosterLander** ✨🚀✨
 
----
 
 # Introduction
 
@@ -69,106 +68,47 @@ $$R = R_{\text{proximity}} \cdot R_{\text{velocity}}$$
 
 We can implicitly model a fuel restriction by lowering the number of simulation steps. This time restriction resembles an implicit fuel restriction, encouraging the booster to land more quickly.
 
+---
+---
+---
+---
 
 ## Reinforcement Learning
 
-Reinforcement Learning (RL) is without a doubt one of the most interesting subfields of machine learning.
+Reinforcement Learning is without a doubt one of the most interesting subfields of machine learning in which an agent (here the booster) learns to make decisions in an environment by interacting with it and receiving rewards for its actions.
 
-Reinforcement learning consists of an agent (here the booster) interacting with an environment whose actions follow a policy (the booster's neural network) that the agent learns over time.
-
-At each time step, the agent observes the state of its environment and takes actions based on the policy the agent learned so far.
-
-The result of each action carried out by the agent is associated with a reward and a transition to a new state.
-
-The goal of RL is to learn a policy that allows to pick the best known actions at any state to maximize the reward received. 
-
-Here we use Deep Q-Learning which is one of the core concepts in Reinforcement Learning (RL).
-
-The implemented Deep Q-Learning algorithm uses a batch of episodes to learn a policy that maximizes the reward.
-
-- NOTE: Run N agents in parallel and record their episodes.
-
-- In Deep Q-Learning, a NN maps input states to pairs of actions and Q-values.
-
-- We use a policy function (e.g. a neural network resembling the agent's brain), to compute what an agent is supposed to do in any given situation.
-
-- The neural network takes the current state of its environment (position, velocity, angle, angular velocity) as input and outputs the probability of taking one of the allowed actions. 
-
-- We can use Deep Q-Learning to learn a control policy to land our booster.
-
-- Using Deep Q-Learning, we use a deep neural network to predict the expected utility (also Q-value) of executing an action in a given state.
-
-- Training process
-    - We start the training process with a random initialization of the policy (the neural network)
-    - While the agent interacts with the environment, we record the produced data at each time step. These data are the current state, the agent's performed action, and the reward received.
-    - Given the set of state-action-reward pairs, we can use backpropagation to encourage state-actions pairs that resulted in a positive or high reward discourage pairs with negative or low reward.
-    - During the training process, we enforce a certain degree of exploration by injecting noise to the actions of the agent. Exploration is induced by sampling from the action distribution at each time step. This is in contrast to ES, where noise is not injected into the agent's action space, but rather directly in the parameter space.
+In reinforcement learning, the goal of the agent is to learn a policy, represented by the booster's neural network, that maximizes a reward over time. The neural network maps the booster's state to pairs of actions and Q-values, which the agent uses to determine the best action to take in a given situation. This is typically done by trial and error, with the agent learning from its mistakes and adjusting its policy-based actions over time to improve its performance. 
 
 
 ### Deep Q-Learning
 
-- Deep Q-Learning, Policy Gradients are model-free learning algorithms as they do not use the transition probability distribution (and the reward function) associated with the Markov decision process (MDP), which, in RL, represents the problem to be solved. That means, RL algorithms do not learn a model of their environment's transition function to make predictions of future states and rewards.
+For this project I used [Deep Q-learning](https://en.wikipedia.org/wiki/Q-learning) which is one of the core concepts in reinforcement learning. The implemented deep Q-learning algorithm uses a batch of episodes recorded by multiple boosters in parallel to learn a policy that maximizes the reward.
 
-- Model-free RL always needs to take an action before it can make predictions about the next state and reward.
+For the training of the agent we proceed as follows. We start by initializing our policy (the neural network) randomly. To ensure the agent explores its environment, we inject noise into its action space. That means, we either choose a random action from our discrete action space, or we take the action with the highest predicted utility predicted by the policy neural network at a given state As an aside, this is different from evolutionary strategies presented above, where we inject noise directly into the parameter space of the agent. Aside end. 
 
-- Model-free RL means, that the agent does not have access to a model of the environment. Here, the environment is a function used to predict state transition and rewards.
+As the agent interacts with the environment, we record its state, action, and the reward received at each time step. We can then use backpropagation to encourage state-action pairs that result in positive or high rewards and discourage those with negative or low rewards. 
 
-- Deep Q-Learning uses a trial and error method to learn about the environment it interacts with. This is also called exploration. 
-
-- Q-Value is the maximum expected reward an agent can reach by taken a certain action $A$ in state $S$.
-
-### Memory Size
-
-- Replay
 
 ### Action Space
 
-We select an action from a discrete action space (maximum thrust of an engine at a certain angle). At maximum thrust (only on or off), the discrete action space of the booster for five different angles covering $\{-10°,-5°,0°,5°,10°,\}$ looks as follows:
+Q-learning is a type of reinforcement learning algorithm that is typically used in situations where the action space is discrete. This means that the possible actions that can be taken in a given situation are finite and distinct, rather than continuous or infinitely variable. 
 
-|#|Action|
-|:---:|:---:|
-|1|Main engine fire at -10°|
-|2|Main engine fire at -5°|
-|3|Main engine fire at 0°|
-|...|...|
-|6|Left engine fire at -10°|
-|...|...|
-|15|Right engine fire at 10°|
+When applying Q-learning to the problem of landing a booster, we need to discretize the action space and represent it as a lookup table from which the agent can choose an action. For example, if the main engine operates at two thrust levels and our booster can be fired at three different angles $\{-15°, 0°, 15°\}$, the discrete action space for the booster would consist of six possible actions, as shown below:
 
+<center> 
 
-As we select one action a time, the action is an array with shape `(1,)`. For the action space above, the action can take values in the range from 0 to 14.
+|#|Thrust level | Angle|
+|:---:|:---:|:---:|
+|1|50% | -15°|
+|2|50% | -0°|
+|3|50% | 15°|
+|4|100% | -15°|
+|5|100% | 0°|
+|6|100% | 15°|
 
-During training, we either choose a random action from our discrete action space, or we take the action with highest predicted utility predicted by the neural network for a given state.
+</center> 
 
-### State Space
-
-The state (or observation) space is defined by the booster's position, velocity, angle, and angular velocity:
-
-|Number|Observation|Minimum|Maximum|
-|:---:|:---:|:---:|:---:|
-|1|Position $r_x$|$r_{x,{\text{min}}}$|$r_{x,{\text{max}}}$|
-|2|Position $r_y$|$r_{y,{\text{min}}}$|$r_{y,{\text{max}}}$|
-|3|Velocity $v_x$|$v_{x,{\text{min}}}$|$v_{x,{\text{max}}}$|
-|4|Velocity $v_y$|$v_{y,{\text{min}}}$|$v_{y,{\text{max}}}$|
-|5|Angle $\theta$|$\theta_{\text{min}}$|$\theta_{\text{max}}$|
-|6|Angular velocity $\omega$|$\omega_{\text{min}}$|$\omega_{\text{max}}$|
-
-The ranges above are defined in the *config.yml* file.
-
-Thus, an observation is an array with shape `(6,)`.
-
-captures the booster's states within the simulation and is defined by the 
-
-
-### Parameters
-
-- `epsilon` is the epsilon-greedy value. This value defines the probability, that the agent selects a random action instead of the action that maximizes the expected utility (Q-value).
-
-- `decay_rate` determines the decay of the `epsilon` value after each epoch.
-
-- `epsilon_min` minimum allowed value for `epsilon` during the training period.
-
-- `gamma` is a discount factor that determines how much the agent considers future rewards.
+However, when dealing with engines that can operate at multiple levels of thrust and deflection angles (such as main engines and cold gas thrusters), discretizing the action space can make learning inefficient. This is due to the curse of dimensionality, which is a phenomenon that occurs when the number of dimensions in a problem grows exponentially, making it difficult to find good solutions.
 
 
 ## Evolution Strategies

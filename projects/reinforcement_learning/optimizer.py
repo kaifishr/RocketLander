@@ -13,7 +13,17 @@ from src.environment import Environment
 
 
 class DeepQOptimizer:
-    """Optimizer class for deep reinforcement learning."""
+    """Optimizer class for deep reinforcement learning.
+
+    Attributes:
+        epsilon: The epsilon-greedy value. This value defines the probability, 
+            that the agent selects a random action instead of the action that 
+            maximizes the expected utility (Q-value).
+        epsilon_min: Minimal value of the epsilon-greedy value.
+        decay_rate: Determines the decay of the epsilon-greedy value after each epoch.
+        gamma: A discount factor determining how much the agent considers future rewards.
+    
+    """
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
