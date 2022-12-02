@@ -1,100 +1,75 @@
-# RocketBooster ✨🚀✨
-# FalconLander ✨🚀✨
-# RocketLander ✨🚀✨
+# **FalconLander** ✨🚀✨
+# **RocketLander** ✨🚀✨
+# **BoosterLander** ✨🚀✨
 
 
-## Introduction
+# Introduction
 
-*RocketBooster* is a comprehensive framework that uses optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable an orbital rocket booster to land autonomously. *RocketBooster* is designed to be simple to use and can be easily extended. 
+*RocketLander* is a comprehensive framework equipped with optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable an orbital rocket booster to land autonomously. *RocketLander* is designed to be simple to use and can be easily extended. 
 
 <p align="center">
     <img src="docs/booster.png" width="240" height=""/>
 </p>
 
-$\textbf{\textcolor{red}{\text{TODO: Replace image with short gif of a landing booster.}}}$
+$\textbf{\color{red}{\text{TODO: Replace image with short gif of a landing booster.}}}$
 
-The framework uses [*PyBox2D*](https://box2d.org/) a 2D physics library for rigid physics simulations, and [*PyGame*](https://www.pygame.org/) for rendering and visualization.
+The framework uses [*PyBox2D*](https://box2d.org/) a 2D physics library for rigid physics simulations, and [*PyGame*](https://www.pygame.org/) for rendering and visualization. 
 
-I tried to make the simulation relatively realistic, even though that may conflict with [Box2D's recommendation](https://box2d.org/documentation/index.html#autotoc_md17) on object sizes. The booster has a height of about $46$ meters, a weight of about $25$ metric tons, and consists of three parts. A long and low-density hull section containing mostly empty fuel tanks, the short but high-density engine section, and the static medium-density landing legs.
+I tried to make the simulation relatively realistic, even though that may conflict with [Box2D's recommendation](https://box2d.org/documentation/index.html#autotoc_md17) on object sizes. The booster has a height of about $46$ meters, a weight of about $25$ metric tons, and is made up of three parts. A long and low-density hull section containing mostly empty fuel tanks, a short but high-density engine section, and static medium-density landing legs.
 
-In this framework, a booster is considered an agent or individual equipped with a neural network (the agent's brain) to learn how to propulsively land a booster. The network is trained using either reinforcement learning, evolution strategies, genetic optimization, or a simulated annealing algorithm.
+In this framework, a booster is considered an agent that is equipped with a neural network (the agent's "brain") to learn how to propulsively land itself. The network is trained using reinforcement learning, evolution strategies, genetic optimization, or simulated annealing.
 
-The neural network controls the actions of the booster. At each time step during the simulation, the network receives as input the current state consisting of the booster's position ($p_x$, $p_y$), velocity ($v_x$, $v_y$), angle ($\theta$), and angular velocity ($\omega$). Based on the current state, the network predicts an action, including thrust levels and engine deflection.
+The neural network controls the actions of the booster. At each time step, the network receives the current state of the booster, which includes its position ($r_x$, $r_y$), velocity ($v_x$, $v_y$), angle ($\theta$), and angular velocity ($\omega$), as input. Based on this information, the network predicts an action, such as the levels of thrust and engine deflection.
 
 
-## Run Examples
+# Installation
+
+To run *RocketLander*, install the latest master directly from GitHub. For a basic install, run:
+
+```bash
+git clone https://github.com/kaifishr/RocketLander
+cd RocketLander 
+pip install -r requirements.txt
+```
+
+To start a training session using a specified learning method, run one of the examples in the project folder. For example:
 
 ```console
-cd rocketbooster
+cd rocketlander
+python -m projects.reinforcement_learning.main
 python -m projects.evolution_strategies.main
 python -m projects.genetic_optimization.main
-python -m projects.reinforcement_learning.main
 python -m projects.simulated_annealing.main
 ```
 
-## Methods
+
+# Methods
+
+## Notation
+
+In this project, the terms *booster*, *agent*, *individual*, and *candidate* are used interchangeably. Similarly, the terms *epoch* and *episode* are also used interchangeably. In the context of genetic optimization the terms *fitness* and *reward* are considered the same thing.
 
 
-### Notation
+## Reward Function
 
-In this project, the words *booster*, *agent*, *individual*, *candidate* are used interchangeably. 
+Independent of the optimization method the same reward function is used to measure the success of the agent during each episode. The reward function receives the booster's current position and velocity as input and outputs a scalar value. A simple reward function for landing a rocket booster can be designed as follows. 
 
-So are *epoch* and *episode*.
+To encourage the booster to land as close as possible to the center of the landing pad, we can assign a high reward for proximity. For example, we can assign a reward of $1$ for a landing at the center of the landing pad, and reduce the reward to $0$ as the distance between the booster and the landing pad increases. This can be formulated as follows:
 
+$$R_{\text{proximity}} = \frac{1}{1 + \alpha \sqrt{(r_{x, \text{pad}} - r_{x, \text{booster}})^2 + (r_{y, \text{pad}} - r_{y, \text{booster}})^2}}$$
 
-### Reward Function
+with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, there is also a term that takes the booster's velocity into account,
 
-We use the same reward function for all optimization methods to measure the success of the agent during each episode. The reward function receives the current state of the environment as input and outputs a scalar value.
+$$R_{\text{velocity}} = \frac{1}{1 + \beta \sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
 
-Building a good reward function leading to the expected behavior of an agent can be very challenging. Slight changes of the reward function can sometimes result in totally unexpected behavior of the agent.
+with the $x$- and $y$-components of the booster's velocity. The reward goes to $0$ for high velocities and to $1$ if the booster is not moving. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity. By multiplying these terms together, we obtain a reward function that ranges from $0$ to $1$ and encourages a soft landing at the center of the landing pad:
 
-A reward function for landing a rocket booster can be designed as follows. A first term captures the distance from the booster to the landing pad. The closer the booster is to the landing pad, the higher is the reward. This can be formulated as follows:
+$$R = R_{\text{proximity}} \cdot R_{\text{velocity}}$$
 
-$$r_{\text{proximity}} = \frac{1}{1 + \alpha \sqrt{(x_\text{p} - x_\text{b})^2 + (y_\text{p} - y_\text{b})^2}}$$
-
-with the $x$- and $y$-coordinates of the landing $\text p$ ad and the $\text b$ ooster. To avoid a rapid unscheduled disassembly of the booster, there is also a term that takes the booster's velocity into account,
-
-$$r_{\text{velocity}} = \frac{1}{1 + \beta \sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
-
-with $x$- and $y$-components of the booster's velocity. $\alpha$ and $\beta$ are hyperparameter that allow to emphasis the reward coming from the proximity or velocity. By multiplying both terms we can encourage a soft landing and the final reward function is obtained:
-
-$$R = r_{\text{proximity}} \cdot r_{\text{velocity}}$$
-
-Using the formulation above of the reward function, the reward is always between 0 and 1.
-
-Lowering the number of simulations steps equals a time restriction and at the same time resembles an implicit fuel restriction, encouraging the booster to land more quickly.
+We can implicitly model a fuel restriction by lowering the number of simulation steps. This time restriction resembles an implicit fuel restriction, encouraging the booster to land more quickly.
 
 
-### Genetic Optimization
-
-Inspired by evolution, genetic optimization uses a population of individuals that are slightly different from each other. These differences result from mutation which is a fundamental property of evolution and result in different behavior of each agent. The difference in behavior makes some agents more successful than others. The fitness or success of an agent is represented by the fitness or reward function.
-
-The algorithm starts with a population of candidates, from which the agent with the highest fitness makes it to the next round. After the selection the fittest individual propagates its genes accompanied with random mutations on to the next generation. This process is repeated until the desired fitness is achieved.
-
-Here, we use the mutation operation during the optimization process to learn to land a rocket booster. Mutation operations act on all members of a population. The mutation operation is defined by the probability with which a parameter mutation is going to happen and the rate or strength with which the mutation acts on the parameter.
-
-
-### Evolution Strategies
-
-Evolution Strategies (ES) is a class of black-box stochastic optimization techniques and has achieved some impressive results on RL benchmarks. Even though their names may suggest otherwise, evolution strategies optimization has very little similarity to genetic optimization. At its core, the ES optimization algorithm resembles simple hill-climbing in a high-dimensional space sampling a population of candidate solutions and allow agents with high reward to have a higher influence on the distribution of future generations.
-
-Despite the simplicity, the ES algorithm is pretty powerful and overcomes many of RL's inconveniences. Optimization with ES is highly parallelizable, makes no assumptions about the underlying model to train, allows interactions between agents out of the box, and is not constraint to a discrete action space.
-
-For the ES algorithm to work we only have to look at the parameterized reward function $R(\bm s; \bm \theta)$, takes takes a state vector and outputs a scalar reward. During the optimization process, we estimate gradients that allow us to steer the parameters $\bm \theta$ into a direction to maximize the reward $R$. Thus, we are optimizing $R$ with respect to $\bm \theta$.
-
-The ES algorithm generates at each time step a population of different parameter configurations $\bm \theta_i$ (the agents / boosters neural network weights) from the base parameters $\bm \theta$ by adding gaussian noise ($\bm \theta_i = \bm \theta + \bm \epsilon$ with $\bm \epsilon \sim \mathcal{N}(0, \sigma^2)$ and $i \in [1, N]$). After each agent has spend one episode / epoch in the environment a weighted sum over each agents policy network's parameters and gained reward is being created. This weighted sum of parameter vectors becomes the new base parameters. Mathematically, ES uses finite differences along a few random directions at each optimization step to estimate the gradients of the reward function $R$ with respect to the parameter vector $\bm \theta$.
-
-
-### Simulated Annealing
-
-In 1983, Kirkpatrick et al., combined the insights of heating and cooling materials to change their physical properties with the Monte Carlo-based Metropolis-Hastings algorithm, to find approximate solutions to the traveling salesman problem. This combination led to the technique of Simulated Annealing (SA). It has been shown, that with a sufficiently high initial temperature and sufficiently long cooling time, the system's minimum-energy state is reached.
-
-In a nutshell, simulated annealing selects at each iteration a randomly created candidate solution that is close to the current one under some distance metric. The system moves to the proposed solution either if it comes with a higher reward or with a temperature-dependent probability. With decreasing temperature, the temperature-dependent probability to accept worse solutions narrows and the optimization focuses more and more on improving solutions approaching a Monte Carlo algorithm behavior.
-
-In a past project ([*NeuralAnnealing*](https://github.com/kaifishr/NeuralAnnealing)) I used SA for to optimize neural networks for a classification task. Therefore, I thought to give it a shot and use SA to optimize a network to learn how to land a booster.
-
-
-### Reinforcement Learning
+## Reinforcement Learning
 
 Reinforcement Learning (RL) is without a doubt one of the most interesting subfields of machine learning.
 
@@ -129,7 +104,7 @@ The implemented Deep Q-Learning algorithm uses a batch of episodes to learn a po
     - During the training process, we enforce a certain degree of exploration by injecting noise to the actions of the agent. Exploration is induced by sampling from the action distribution at each time step. This is in contrast to ES, where noise is not injected into the agent's action space, but rather directly in the parameter space.
 
 
-#### Deep Q-Learning
+### Deep Q-Learning
 
 - Deep Q-Learning, Policy Gradients are model-free learning algorithms as they do not use the transition probability distribution (and the reward function) associated with the Markov decision process (MDP), which, in RL, represents the problem to be solved. That means, RL algorithms do not learn a model of their environment's transition function to make predictions of future states and rewards.
 
@@ -141,11 +116,11 @@ The implemented Deep Q-Learning algorithm uses a batch of episodes to learn a po
 
 - Q-Value is the maximum expected reward an agent can reach by taken a certain action $A$ in state $S$.
 
-#### Memory Size
+### Memory Size
 
 - Replay
 
-#### Action Space
+### Action Space
 
 We select an action from a discrete action space (maximum thrust of an engine at a certain angle). At maximum thrust (only on or off), the discrete action space of the booster for five different angles covering $\{-10°,-5°,0°,5°,10°,\}$ looks as follows:
 
@@ -164,7 +139,7 @@ As we select one action a time, the action is an array with shape `(1,)`. For th
 
 During training, we either choose a random action from our discrete action space, or we take the action with highest predicted utility predicted by the neural network for a given state.
 
-#### State Space
+### State Space
 
 The state (or observation) space is defined by the booster's position, velocity, angle, and angular velocity:
 
@@ -183,7 +158,8 @@ Thus, an observation is an array with shape `(6,)`.
 
 captures the booster's states within the simulation and is defined by the 
 
-#### Parameters
+
+### Parameters
 
 - `epsilon` is the epsilon-greedy value. This value defines the probability, that the agent selects a random action instead of the action that maximizes the expected utility (Q-value).
 
@@ -194,64 +170,78 @@ captures the booster's states within the simulation and is defined by the
 - `gamma` is a discount factor that determines how much the agent considers future rewards.
 
 
+## Evolution Strategies
 
-## Installation
+Evolution strategies is a class of black-box stochastic optimization techniques that have achieved impressive results on reinforcement learning benchmarks. Despite their name, evolution strategies optimization has very little in common with genetic optimization. At its core, the evolution strategies optimization algorithm resembles simple hill-climbing in a high-dimensional space. It samples a population of candidate solutions and allows agents with high rewards to have a greater influence on the distribution of future generations.
 
-To run *RocketBooster*, install the latest master directly from GitHub. For a basic install, run:
+Despite the simplicity, the evolution strategies algorithm is pretty powerful and overcomes many of reinforcement learning inconveniences. Optimization with evolution strategies is highly parallelizable, makes no assumptions about the underlying model to train, allows interactions between agents by default, and is not restricted to a discrete action space.
 
-```bash
-git clone https://github.com/kaifishr/RocketBooster
-cd RocketBooster 
-pip install -r requirements.txt
-```
+For the evolution strategies algorithm to work we only have to look at the parameterized reward function $R(\bm s; \bm \theta)$, that takes a state vector and outputs a scalar reward. During the optimization process, we estimate gradients that allow us to steer the parameters $\bm \theta$ into a direction to maximize the reward $R$. Thus, we are optimizing $R$ with respect to $\bm \theta$.
 
-Then start the optimization by running:
-Start the training with genetic optimization by running the following command:
+The evolution strategies algorithm generates at each time step a population of different parameter configurations $\bm \theta_i$ (the agents' neural network weights) from the base parameters $\bm \theta$ by adding gaussian noise ($\bm \theta_i = \bm \theta + \bm \epsilon$ with $\bm \epsilon \sim \mathcal{N}(0, \sigma^2)$ and $i \in [1, N]$). After each agent has spend one episode in the environment a weighted sum over each agents policy network's parameters and gained reward is being created. This weighted sum of parameter vectors becomes the new base parameters. 
 
-```bash
-python -m projects.genetic_optimization.main
-```
+Mathematically, evolution strategies uses finite differences along a few random directions at each optimization step to estimate the gradients of the reward function $R$ with respect to the parameter vector $\bm \theta$. The estimated gradient is then used to update the policy network's parameters in a direction that increases the reward. This process is repeated until the desired level of performance is reached.
 
-## TODOs
 
-- Add project with deep reinforcement learning.
-- Add fuel constraint.
-- Remove engines running detection with new final reward.
+## Genetic Optimization
+
+Inspired by evolution, genetic optimization uses a population of individuals that are slightly different from each other. These differences result from mutation, which is a fundamental property of evolution, and result in different behaviors in each agent. The difference in behavior makes some agents more successful than others. The fitness or success of an agent is represented by the fitness or reward function.
+
+The algorithm begins with a population of candidate solutions, from which the agent with the highest fitness level advances to the next round. After selection, the fittest individual propagates its genetic traits to the next generation, with random mutations. This process is repeated until the desired fitness level is reached.
+
+Here, we use the mutation operation during the optimization process to learn to land a rocket booster. Mutation operations act on all members of a population. The mutation operation is defined by the probability with which a parameter mutation is going to happen and the rate or strength with which the mutation acts on the parameter.
+
+
+## Simulated Annealing
+
+In 1983, Kirkpatrick et al., combined the insights of heating and cooling materials to change their physical properties with the Monte Carlo-based Metropolis-Hastings algorithm, to find approximate solutions to the traveling salesman problem. This combination led to the technique of simulated annealing. It has been shown, that with a sufficiently high initial temperature and sufficiently long cooling time, the system's minimum-energy state is reached.
+
+In a nutshell, simulated annealing selects at each iteration a randomly created candidate solution that is close to the current one under some distance metric. The system moves to the proposed solution either if it comes with a higher reward or with a temperature-dependent probability. With decreasing temperature, the temperature-dependent probability to accept worse solutions narrows and the optimization focuses more and more on improving solutions approaching a Monte Carlo algorithm behavior.
+
+In a previous project called [*NeuralAnnealing*](https://github.com/kaifishr/NeuralAnnealing), I implemented simulated annealing with [JAX](https://jax.readthedocs.io/en/latest/) to optimize neural networks for a classification task. I had good results with this approach, so I thought I would try using it here.
+
+
+# TODOs
+
+- Add explicit fuel constraint.
 - Add dynamic landing legs.
 
 
-## References
+# References
 
-[1] [PyBox2D](https://github.com/pybox2d/pybox2d) on GitHub
+Salimans et al., 2017, [*Evolution Strategies as a Scalable Alternative to Reinforcement Learning*](https://arxiv.org/abs/1703.03864)
 
-[2] [backends](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends) for PyBox2D
+Yaghmaie et al., 2021, [*A Crash Course on Reinforcement Learning*](https://arxiv.org/abs/2103.04910)
 
-[3] PyBox2D [tutorial](https://github.com/pybox2d/cython-box2d/blob/master/docs/source/getting_started.md)
+[Box2D](https://box2d.org/) website
 
-[4] [Minimal PyBox2D examples](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples)
+[Box2D C++](https://box2d.org/documentation/) documentation
 
-[5] Box2D C++ [documentation](https://box2d.org/documentation/)
+[PyBox2D](https://github.com/pybox2d/pybox2d) on Github
 
-[6] OpenAI Blog, [*Evolution Strategies as a Scalable Alternative to Reinforcement Learning*](https://openai.com/blog/evolution-strategies/)
+[Backends](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples/backends) for PyBox2D
 
-[7] Salimans et al., 2017, [*Evolution Strategies as a Scalable Alternative to Reinforcement Learning*](https://arxiv.org/abs/1703.03864)
+PyBox2D [tutorial](https://github.com/pybox2d/cython-box2d/blob/master/docs/source/getting_started.md)
+
+[Minimal PyBox2D examples](https://github.com/pybox2d/pybox2d/tree/master/library/Box2D/examples)
 
 
-## Citation
+# Citation
 
 If you find this project useful, please use BibTeX to cite it as:
 
 ```bibtex
-@article{fischer2022rocketbooster,
-  title   = "RocketBooster",
+@article{fischer2022rocketlander,
+  title   = "RocketLander",
   author  = "Fischer, Kai",
   journal = "GitHub repository",
   year    = "2022",
   month   = "December",
-  url     = "https://github.com/kaifishr/RocketBooster"
+  url     = "https://github.com/kaifishr/RocketLander"
 }
 ```
 
-## License
+
+# License
 
 MIT

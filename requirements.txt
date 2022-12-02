@@ -1,0 +1,10 @@
+box2d-py
+matplotlib
+numpy
+pygame
+PyYAML
+scikit-learn
+scipy
+sklean
+tensorboard 
+torch
