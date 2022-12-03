@@ -12,23 +12,6 @@ from src.utils.config import Config
 from src.environment import Environment
 
 
-class Optimizer:
-
-    def __init__(self, environment: Environment, config: Config) -> None:
-        """Initializes optimizer base class."""
-
-        self.stats = {"reward": 0.0, "loss": 0.0}
-
-    def step(self) -> None:
-        """Runs single optimization step."""
-
-    def _broadcast_params(self) -> None:
-        """Broadcasts set of network parameters to all agents."""
-        for booster in self.boosters:
-            # booster.model.parameters = copy.deepcopy(self.model.parameters)
-            booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
-
-
 class DeepQOptimizer:
     """Optimizer class for deep reinforcement learning.
 
@@ -63,10 +46,10 @@ class DeepQOptimizer:
 
         # Scalars
         self.reward = 0.0
-        self.loss = 0.0
         self.iteration = 0
         self.stats = {"reward": 0.0, "loss": 0.0}
 
+        # TODO: Pass models to agents by reference as they all use the same model.
         self.model = copy.deepcopy(self.boosters[0].model)
 
         # Mean squared error loss function
@@ -161,7 +144,6 @@ class DeepQOptimizer:
             dataset=dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            drop_last=True,
         )
 
     def _train_network(self) -> None:
@@ -172,8 +154,12 @@ class DeepQOptimizer:
         """
         self.model.train()
 
+        running_loss = 0.0
+        running_counter = 0
+
         for epoch in range(self.num_epochs):
             for state, q_target in self.dataloader:
+
                 self.optimizer.zero_grad()
                 # Forward: Predict expected utility from state.
                 q_value = self.model(state)
@@ -184,6 +170,11 @@ class DeepQOptimizer:
                 # Gradient descent
                 self.optimizer.step()
 
+                running_loss += loss.item()
+                running_counter += len(state)
+
+        self.stats["loss"] = running_loss / running_counter
+
         self.model.eval()
 
     def step(self) -> None:
@@ -192,6 +183,7 @@ class DeepQOptimizer:
         # Select booster with highest reward in current population.
         rewards = [booster.reward for booster in self.boosters]
         self.reward = max(rewards)
+        self.stats["reward"] = self.reward
 
         # Create training set from memory.
         self._create_training_set()

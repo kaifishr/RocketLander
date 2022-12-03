@@ -183,26 +183,21 @@ class TorchNeuralNetwork(nn.Module):
         """Initializes NeuralNetwork class."""
         super().__init__()
 
-
         self.num_thrust_levels = config.optimizer.num_thrust_levels
         self.num_thrust_angles = config.optimizer.num_thrust_angles
         self.memory_size = config.optimizer.memory_size
         self.epsilon = config.optimizer.epsilon
 
-        self.memory = deque()
-
         # Number of actions plus `do nothing` action.
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
 
         config = config.env.booster.neural_network
-
         in_features = config.num_dim_in
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
         out_features = self.num_actions 
 
         layers = [
-            # nn.Flatten(start_dim=0),
             nn.Linear(in_features=in_features, out_features=hidden_features),
             nn.Tanh(),
         ]
@@ -219,6 +214,7 @@ class TorchNeuralNetwork(nn.Module):
         ]
 
         self.net = nn.Sequential(*layers)
+        self.memory = deque()
 
         self.apply(self._init_weights)
         self._init_action_lookup()
@@ -292,11 +288,9 @@ class TorchNeuralNetwork(nn.Module):
         else:
             # Exploitation by selecting action with highest 
             # predicted utility at current state.
-            # with torch.no_grad():  # TODO: Remove, use decorator for this method
-            # self.eval()
-            pred = self.net(state)  # TODO: Save pred directly in memory?
+            # TODO: Save pred directly in memory?
+            pred = self.net(state)
             action = torch.argmax(pred).item()
-            # self.train()
 
         # Add state-action pair to memory
         self._memorize(state=state, action=action)
@@ -315,16 +309,10 @@ class TorchNeuralNetwork(nn.Module):
         Returns:
             Action vector.
         """
-        # print(f"forward() {self.training = }")
-
         if self.training or isinstance(state, torch.Tensor):
-            # print("forward() training")
-            # print(state.shape)
             action = self.net(state)
         else:
-            # print("forward() exploration")
             state = torch.from_numpy(state).float()
-            # print(state.shape)
             action = self._select_action(state)
 
         return action

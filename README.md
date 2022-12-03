@@ -140,6 +140,8 @@ In a previous project called [*NeuralAnnealing*](https://github.com/kaifishr/Neu
 
 # TODOs
 
+- Use global trainer class
+- Use optimizer base class
 - Add explicit fuel constraint.
 - Add dynamic landing legs.
 

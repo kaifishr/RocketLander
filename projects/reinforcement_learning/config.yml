@@ -15,20 +15,19 @@ checkpoints:
   model_path: "weights"
 
 trainer:
-  # num_epochs: -1
   # num_episodes: -1
   num_generations: -1  # -1 for infinite generations or positive integer
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 1
-  num_simulation_steps: 600
+  num_boosters: 8
+  num_simulation_steps: 800
   num_thrust_levels: 2  # Thrust levels of engines. Minimum is 2 for on/off
-  num_thrust_angles: 2  # Thrust angles of engines. Must be an odd number.
+  num_thrust_angles: 2  # Thrust angles of engines.
   learning_rate: 5.0e-3
-  batch_size: 512
+  batch_size: 256
   num_epochs: 1
-  memory_size: 2000
+  memory_size: 4000
   gamma: 0.2
   decay_rate: 0.005
   epsilon: 0.9          # Epsilon-greedy value.
@@ -87,11 +86,11 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 20.0                       # Standard deviation [m]
-        y: 0.0                       # Standard deviation [m]
+        x: 5.0                       # Standard deviation [m]
+        y: 5.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: .0                        # Standard deviation [m / s]
-        y: .0                        # Standard deviation [m / s]
+        x: 1.0                        # Standard deviation [m / s]
+        y: 1.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
