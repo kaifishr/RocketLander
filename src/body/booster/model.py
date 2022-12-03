@@ -169,9 +169,10 @@ class NumpyNeuralNetwork:
 
 
 class TorchNeuralNetwork(nn.Module):
-    """Deep Q Reinforcement Learning Model.
+    """Policy network for deep Q-learning.
 
-    Simple fully-connected neural network for Deep Q reinforcement learning.
+    Simple fully-connected neural network for deep Q reinforcement learning.
+    Network processes number of states inputs and returns a discrete action.
 
     Attributes:
     """
@@ -230,7 +231,7 @@ class TorchNeuralNetwork(nn.Module):
                 torch.nn.init.zeros_(module.bias)
 
     def _init_action_lookup(self):
-        """Creates an action lookup table for discrete actions.
+        """Creates lookup table of discrete action space.
 
         TODO: Check thrust angles for number of angles = 1.
         """
@@ -264,7 +265,8 @@ class TorchNeuralNetwork(nn.Module):
         """Stores past events.
 
         Stores current `state`, `action` based on state, and `reward`
-        the followed from the performed action. 
+        the followed from the performed action. Reward is added later
+        on during the reward computation. 
         """
         self.memory.append([state, action, reward])
         if len(self.memory) > self.memory_size:
@@ -274,32 +276,35 @@ class TorchNeuralNetwork(nn.Module):
     def _select_action(self, state: torch.Tensor) -> int:
         """Selects an action from a discrete action space.
 
-        Action is random with probability `epsilon` to encourage exploration.
+        Action is random with probability `epsilon` (epsilon-greedy value)
+        to encourage exploration.
 
         Args:
-            epsilon: Probability of choosing a random action (epsilon-greedy value).
+            state: Observed state.
 
         Returns:
-            Action to be performed by booster (Firing engine at certain angle).
+            Action to be performed by booster. Action consists of firing
+            engine at certain thrust level and angle.
         """
         if random.random() < self.epsilon:
-            # Choose a random action
+            # Exploration by choosing a random action.
             action = random.randint(0, self.num_actions - 1)
         else:
-            # Select action with highest predicted utility given state
-            with torch.no_grad():  # Use decorator for method
-                # self.eval()
-                pred = self.net(state)
-                action = torch.argmax(pred).item()
-                # self.train()
+            # Exploitation by selecting action with highest 
+            # predicted utility at current state.
+            # with torch.no_grad():  # TODO: Remove, use decorator for this method
+            # self.eval()
+            pred = self.net(state)  # TODO: Save pred directly in memory?
+            action = torch.argmax(pred).item()
+            # self.train()
 
         # Add state-action pair to memory
         self._memorize(state=state, action=action)
 
         # Convert action to action vector
-        action = self.actions_lookup[action]
+        selected_action = self.actions_lookup[action]
 
-        return action
+        return selected_action
 
     def forward(self, state: list) -> Union[torch.Tensor, int]:
         """Forward method receives current state and predicts an action.

@@ -22,13 +22,14 @@ trainer:
 # Deep Q-Learning 
 optimizer:
   num_boosters: 1
-  num_simulation_steps: 1000
+  num_simulation_steps: 600
   num_thrust_levels: 2  # Thrust levels of engines. Minimum is 2 for on/off
   num_thrust_angles: 2  # Thrust angles of engines. Must be an odd number.
   learning_rate: 5.0e-3
   batch_size: 512
-  memory_size: 4000
-  gamma: 0.5
+  num_epochs: 1
+  memory_size: 2000
+  gamma: 0.2
   decay_rate: 0.005
   epsilon: 0.9          # Epsilon-greedy value.
   epsilon_min: 0.1     # Minimal epsilon greedy value.
