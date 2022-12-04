@@ -20,18 +20,18 @@ trainer:
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 8
-  num_simulation_steps: 800
+  num_boosters: 4
+  num_simulation_steps: 600
   num_thrust_levels: 2  # Thrust levels of engines. Minimum is 2 for on/off
   num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 5.0e-3
-  batch_size: 256
+  learning_rate: 1.0e-4
+  batch_size: 4096
   num_epochs: 1
-  memory_size: 4000
-  gamma: 0.2
-  decay_rate: 0.005
-  epsilon: 0.9          # Epsilon-greedy value.
-  epsilon_min: 0.1     # Minimal epsilon greedy value.
+  memory_size: 1200
+  gamma: 0.98    # test gamma between 0.8 and 0.99
+  decay_rate: 0.002
+  epsilon_max: 0.9     # Epsilon-greedy value.
+  epsilon_min: 0.1     # Minimal epsilon-greedy value.
   lib: "torch"    # NOTE: This is fix.
 
 # Simulation environment 
@@ -68,11 +68,11 @@ env:
 
     init:
       position: # [m]
-        x: 70.0
+        x: 80.0
         y: 400.0
-      linear_velocity: # [m/s]
+      linear_velocity: # [m / s]
         x: 0.0
-        y: -30.0
+        y: -40.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
@@ -86,11 +86,11 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 5.0                       # Standard deviation [m]
-        y: 5.0                       # Standard deviation [m]
+        x: 30.0                       # Standard deviation [m]
+        y: 30.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 1.0                        # Standard deviation [m / s]
-        y: 1.0                        # Standard deviation [m / s]
+        x: 0.0                        # Standard deviation [m / s]
+        y: 0.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 

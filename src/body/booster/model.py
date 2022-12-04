@@ -186,7 +186,6 @@ class TorchNeuralNetwork(nn.Module):
         self.num_thrust_levels = config.optimizer.num_thrust_levels
         self.num_thrust_angles = config.optimizer.num_thrust_angles
         self.memory_size = config.optimizer.memory_size
-        self.epsilon = config.optimizer.epsilon
 
         # Number of actions plus `do nothing` action.
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
@@ -218,6 +217,8 @@ class TorchNeuralNetwork(nn.Module):
 
         self.apply(self._init_weights)
         self._init_action_lookup()
+
+        self.epsilon = 1.0
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):

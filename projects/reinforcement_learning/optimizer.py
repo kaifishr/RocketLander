@@ -33,10 +33,10 @@ class DeepQOptimizer:
         self.boosters = environment.boosters
 
         self.config = config.optimizer
-        self.epsilon = self.config.epsilon
+        self.epsilon_max = self.config.epsilon_max
+        self.epsilon_min = self.config.epsilon_min
         self.gamma = self.config.gamma
         self.decay_rate = self.config.decay_rate
-        self.eps_min = self.config.epsilon_min
         self.learning_rate = self.config.learning_rate
         self.batch_size = self.config.batch_size
         self.num_epochs = self.config.num_epochs
@@ -47,7 +47,8 @@ class DeepQOptimizer:
         # Scalars
         self.reward = 0.0
         self.iteration = 0
-        self.stats = {"reward": 0.0, "loss": 0.0}
+        # TODO: Add to tensorboard
+        self.stats = {"reward": 0.0, "loss": 0.0, "epsilon": 1.0}
 
         # TODO: Pass models to agents by reference as they all use the same model.
         self.model = copy.deepcopy(self.boosters[0].model)
@@ -73,20 +74,23 @@ class DeepQOptimizer:
         """
         self._broadcast_agents()
         for booster in self.boosters:
-            booster.model.epsilon = self.epsilon
+            booster.model.epsilon = self.epsilon_max
 
     def _broadcast_agents(self) -> None:
         """Broadcasts base network parameters to all agents."""
         for booster in self.boosters:
-            booster.model.parameters = copy.deepcopy(self.model.parameters)
-            # booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
+            # booster.model = copy.deepcopy(self.model)  # Bad idea. Also copies memory!
+            booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
+
+            # Does not work?
+            # booster.model.parameters = copy.deepcopy(self.model.parameters)
 
     def _epsilon_scheduler(self) -> None:
         """Decreases epsilon-greedy value exponentially."""
-        decay_rate = self.decay_rate
         iteration = self.iteration
-        eps_min = self.eps_min
-        eps_max = self.epsilon
+        decay_rate = self.decay_rate
+        eps_min = self.epsilon_min
+        eps_max = self.epsilon_max
         epsilon = eps_min + (eps_max - eps_min) * math.exp(-decay_rate * iteration)
 
         for booster in self.boosters:
@@ -111,6 +115,7 @@ class DeepQOptimizer:
 
         # Gather the memory from each booster's.
         for booster in self.boosters:
+            # TODO: Use replay_memory.expand(memory), add "done" indicator to model.
             for memory in booster.model.memory:
                 # Create replay memory and add `done` field.
                 # `done` indicates if simulation has come to an end.
