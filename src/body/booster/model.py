@@ -218,7 +218,7 @@ class TorchNeuralNetwork(nn.Module):
         self.apply(self._init_weights)
         self._init_action_lookup()
 
-        self.epsilon = 1.0
+        self.epsilon = None
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):

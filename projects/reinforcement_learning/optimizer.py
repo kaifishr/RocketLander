@@ -51,6 +51,7 @@ class DeepQOptimizer:
         self.stats = {"reward": 0.0, "loss": 0.0, "epsilon": 1.0}
 
         # TODO: Pass models to agents by reference as they all use the same model.
+        # TODO: Collides with memory stored in each model.
         self.model = copy.deepcopy(self.boosters[0].model)
 
         # Mean squared error loss function
@@ -76,14 +77,13 @@ class DeepQOptimizer:
         for booster in self.boosters:
             booster.model.epsilon = self.epsilon_max
 
+    @torch.no_grad()
     def _broadcast_agents(self) -> None:
         """Broadcasts base network parameters to all agents."""
         for booster in self.boosters:
-            # booster.model = copy.deepcopy(self.model)  # Bad idea. Also copies memory!
-            booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
-
-            # Does not work?
-            # booster.model.parameters = copy.deepcopy(self.model.parameters)
+            # for params1, params2 in zip(booster.model.parameters(), self.model.parameters()):
+            #     params1.data.copy_(params2.data)
+            booster.model.load_state_dict(state_dict=self.model.state_dict())
 
     def _epsilon_scheduler(self) -> None:
         """Decreases epsilon-greedy value exponentially."""
@@ -164,7 +164,6 @@ class DeepQOptimizer:
 
         for epoch in range(self.num_epochs):
             for state, q_target in self.dataloader:
-
                 self.optimizer.zero_grad()
                 # Forward: Predict expected utility from state.
                 q_value = self.model(state)
@@ -190,9 +189,8 @@ class DeepQOptimizer:
         self.reward = max(rewards)
         self.stats["reward"] = self.reward
 
-        # Create training set from memory.
+        # Create training set from memory
         self._create_training_set()
-
         self._train_network()
 
         # Broadcast model weights to all agents
