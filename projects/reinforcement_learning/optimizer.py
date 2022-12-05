@@ -137,7 +137,6 @@ class DeepQOptimizer:
         for i in range(len(replay_memory)): 
             # Unpack replay memory.
             state, action, reward, done = replay_memory[i]
-
             if done:
                 q_targets[i, action] = reward
             else:

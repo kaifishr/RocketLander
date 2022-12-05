@@ -41,6 +41,7 @@ class Booster(Booster2D):
 
         # Booster's reward (or fitness score)
         self.reward = 0.0
+        self.score_old = 0.0
 
         self.engine_running = True
 
@@ -48,6 +49,8 @@ class Booster(Booster2D):
         """Computes reward for current simulation step.
 
         Accumulates defined rewards for booster.
+
+        TODO: Install different reward functions depending on optimization method.
         """
         if self.body.active:
 
@@ -64,19 +67,22 @@ class Booster(Booster2D):
                 distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
                 velocity = (vel.x**2 + vel.y**2) ** 0.5
 
-                alpha = 1.0
-                beta = 1.0 / 60.0
+                alpha = 0.1
+                beta = 0.01
 
                 # Reward proximity to landing pad
                 reward_pos = 1.0 / (1.0 + alpha * distance)
 
                 # Reward soft touchdown
-                reward_vel = 1.0 / (1.0 + beta * velocity)
+                reward_vel = 1.0 # / (1.0 + beta * velocity)
 
                 # Only final reward at end of epoch.
-                # self.reward = reward_pos + reward_vel
-                self.reward = reward_pos * reward_vel
-                # self.reward = math.exp(-(alpha*distance**2 + beta*velocity**2))
+                score = reward_pos * reward_vel
+                if score > self.score_old:
+                    self.reward = 1.0
+                else:
+                    self.reward = 0.0
+                self.score_old = score
 
                 ###
                 # TODO: Only for RL required.

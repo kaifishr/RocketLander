@@ -2,7 +2,7 @@
 # Configuration for Reinforcement Learning #
 ############################################
 
-random_seed: 31886
+random_seed: 21886
 
 # Directory to save the frames to create a video.
 dirs:
@@ -24,12 +24,12 @@ optimizer:
   num_simulation_steps: 600
   num_thrust_levels: 2  # Thrust levels of engines. Minimum is 2 for on/off
   num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 3.0e-4
+  learning_rate: 1.0e-4
   batch_size: 128
   num_epochs: 1
-  memory_size: 8000
-  gamma: 0.90    # test gamma between 0.8 and 0.99
-  decay_rate: 0.004
+  memory_size: 2000
+  gamma: 0.98    # test gamma between 0.8 and 0.99
+  decay_rate: 0.002
   epsilon_max: 0.9     # Epsilon-greedy value.
   epsilon_min: 0.1     # Minimal epsilon-greedy value.
   lib: "torch"    # NOTE: This is fix.
@@ -51,7 +51,7 @@ env:
 
   landing_pad:
     position: # [m]
-      x: -100.0
+      x: 0.0
       y: 0.0
 
   landing:
@@ -68,11 +68,11 @@ env:
 
     init:
       position: # [m]
-        x: 70.0
+        x: 0.0
         y: 400.0
       linear_velocity: # [m / s]
         x: 0.0
-        y: -40.0
+        y: -20.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
@@ -86,11 +86,11 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 1.0                       # Standard deviation [m]
-        y: 1.0                       # Standard deviation [m]
+        x: 50.0                       # Standard deviation [m]
+        y: 20.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 1.0                        # Standard deviation [m / s]
-        y: 1.0                        # Standard deviation [m / s]
+        x: 10.0                        # Standard deviation [m / s]
+        y: 10.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
