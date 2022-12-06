@@ -36,12 +36,13 @@ class Booster(Booster2D):
         self.max_force_cold_gas = config.env.booster.engine.cold_gas.max_force
         self.max_angle_cold_gas = config.env.booster.engine.cold_gas.max_angle
 
-        # Input data for neural network
-        self.data = []
+        # Observed state, also input data for neural network
+        self.state = []
 
         # Booster's reward (or fitness score)
         self.reward = 0.0
-        self.score_old = 0.0
+        self.distance_x_old = float("inf")
+        self.distance_y_old = float("inf")
 
         self.engine_running = True
 
@@ -51,49 +52,51 @@ class Booster(Booster2D):
         Accumulates defined rewards for booster.
 
         TODO: Install different reward functions depending on optimization method.
+        TODO: Check reward if engines are turned off.
         """
         if self.body.active:
+            # if self.engine_running:
 
-            vel = self.body.linearVelocity
+            # Position
+            pos_x, pos_y = self.body.position
+            pos_pad = self.config.env.landing_pad.position
+            eta = 1.0 / 60.0
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
 
-            # Reward only if sink rate is negative.
-            if vel.y <= 0.0:
+            # Velocity
+            # vel = self.body.linearVelocity
+            # velocity = (vel.x**2 + vel.y**2) ** 0.5
 
-                pos_x, pos_y = self.body.position
-                pos_pad = self.config.env.landing_pad.position
-                eta = 1.0 / 60.0
-                pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            # alpha = 0.1
+            # beta = 0.01
 
-                distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
-                velocity = (vel.x**2 + vel.y**2) ** 0.5
+            # Reward proximity to landing pad
+            # reward_pos = 1.0 / (1.0 + alpha * distance)
+            distance_x = abs(pos_pad.x - pos_x)
+            distance_y = abs(pos_pad.y - pos_y)
 
-                alpha = 0.1
-                beta = 0.01
+            reward = 0.0
 
-                # Reward proximity to landing pad
-                reward_pos = 1.0 / (1.0 + alpha * distance)
+            # Reward agent if it gets closer to target
+            if (distance_x < self.distance_x_old) and (distance_y < self.distance_y_old):
+                reward += 1.0 
 
-                # Reward soft touchdown
-                reward_vel = 1.0 # / (1.0 + beta * velocity)
+            # Punish agent if distance to goal is large
+            reward -= 0.3 * distance / (1.0 + distance)
 
-                # Only final reward at end of epoch.
-                score = reward_pos * reward_vel
-                if score > self.score_old:
-                    self.reward = 1.0
-                else:
-                    self.reward = 0.0
-                self.score_old = score
+            # Punish agent for making a choice. Encourages agent to find the landing pad quickly.
+            reward -= 0.1
 
-                ###
-                # TODO: Only for RL required.
-                # Add reward to most resent memory
-                self.model.memory[-1][-1] = self.reward
-                ###
+            self.distance_x_old = distance_x
+            self.distance_y_old = distance_y
+            self.reward += reward
 
-            else:
-                # TODO: Move this to boundary conditions.
-                self.body.active = False
-                self.predictions.fill(0.0)
+            ###
+            # TODO: Only for RL required.
+            # Add reward to most recent memory
+            self.model.memory[-1][-1] = reward
+            ###
 
     def detect_landing(self) -> None:
         """Detects successful landing of booster.
@@ -140,22 +143,17 @@ class Booster(Booster2D):
             return
 
     def comp_action(self) -> None:
-        """Computes next section of actions applied to engines.
-        
-        Next steps of action are computed by feeding obstacle data coming
-        from ray casting to the drone's neural network which then returns
-        a set of actions (forces) to be applied to the drone's engines.
-        """
+        """Computes actions from observed sate."""
         if self.body.active:
 
             if self.engine_running:
 
                 # Pre-processing
-                # data = self._pre_process(self.data)
-                data = self.data  # state
+                # state = self._pre_process(self.state)
+                state = self.state  
 
                 # Raw network predictions
-                pred = self.model(data)  # returns the action
+                pred = self.model(state)  # returns the action
 
                 # Data post-processing
                 self.predictions = self._post_process(pred)
@@ -164,15 +162,15 @@ class Booster(Booster2D):
                 self.predictions.fill(0.0)
 
     def fetch_state(self):
-        """Fetches data (or state) from booster that is fed into neural network."""
-        self.data = np.array(  # TODO: Change to state
+        """Fetches state from booster that is fed into neural network."""
+        self.state = np.array(
             (
                 self.body.position.x,
                 self.body.position.y,
                 self.body.linearVelocity.x,
                 self.body.linearVelocity.y,
-                self.body.angularVelocity,  # TODO: Change with angle.
                 self.body.transform.angle,
+                self.body.angularVelocity,
             )
         )
 
@@ -319,11 +317,14 @@ class Booster(Booster2D):
 
     def _print_booster_info(self) -> None:
         """Prints booster data."""
-        print(f"{self.body.transform = }")
-        print(f"{self.body.position = }")
-        print(f"{self.body.angle = }")
-        print(f"{self.body.localCenter = }")
-        print(f"{self.body.worldCenter = }")
-        print(f"{self.body.massData = }")
-        print(f"{self.body.linearVelocity = }")
-        print(f"{self.body.angularVelocity = }\n")
+        info = (
+            f"{self.body.transform = }\n"
+            f"{self.body.position = }\n"
+            f"{self.body.angle = }\n"
+            f"{self.body.localCenter = }\n"
+            f"{self.body.worldCenter = }\n"
+            f"{self.body.massData = }\n"
+            f"{self.body.linearVelocity = }\n"
+            f"{self.body.angularVelocity = }\n"
+        )
+        print(info)

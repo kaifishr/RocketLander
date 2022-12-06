@@ -197,17 +197,20 @@ class TorchNeuralNetwork(nn.Module):
         out_features = self.num_actions 
 
         layers = [
+            nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
             nn.Tanh(),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
+                nn.LayerNorm(hidden_features),
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
                 nn.Tanh(),
             ]
 
         layers += [
+            nn.LayerNorm(hidden_features),
             nn.Linear(in_features=hidden_features, out_features=out_features),
             nn.Sigmoid(),
         ]
