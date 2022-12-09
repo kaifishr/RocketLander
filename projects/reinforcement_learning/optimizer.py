@@ -2,6 +2,7 @@
 import copy
 import math
 
+import numpy
 import torch
 from torch.utils.data import (
     TensorDataset,
@@ -116,17 +117,25 @@ class DeepQOptimizer:
         ]
         """
         replay_memory = []
+        # skip_frames = 4  # TODO: skip frames from memory
 
         # Gather the memory from each booster's.
         for booster in self.boosters:
             # TODO: Use replay_memory.expand(memory), add "done" indicator to model.
             for memory in booster.model.memory:
+            # for memory in booster.model.memory[::skip_frames]:
                 # Create replay memory and add `done` field.
                 # `done` indicates if simulation has come to an end.
                 replay_memory.append(memory + [False, ])
             # Set `done` to true for last memory before simulation stopped.
             # Not happy with this. Consider time constraints and actual landing.
             replay_memory[-1][-1] = True
+
+        # Normalize rewards
+        rewards = numpy.array([memory[2] for memory in replay_memory])
+        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-4)
+        for memory, reward in zip(replay_memory, rewards):
+            memory[2] = reward
 
         # Select states from replay memory.
         states = torch.stack([memory[0] for memory in replay_memory])
