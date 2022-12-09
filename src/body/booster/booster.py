@@ -40,7 +40,7 @@ class Booster(Booster2D):
         self.state = []
 
         # Booster's reward (or fitness score)
-        self.reward = 0.0
+        self.reward = 0.0  # reward -> total_reward
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
 
@@ -62,35 +62,39 @@ class Booster(Booster2D):
             pos_pad = self.config.env.landing_pad.position
             eta = 1.0 / 60.0
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
-            distance = ((pos_pad.x - pos_x) ** 2 + (pos_pad.y - pos_y) ** 2) ** 0.5
+            distance_x = (pos_pad.x - pos_x) ** 2 
+            distance_y = (pos_pad.y - pos_y) ** 2
+            distance = (distance_x + distance_y) ** 0.5
 
             # Velocity
             # vel = self.body.linearVelocity
             # velocity = (vel.x**2 + vel.y**2) ** 0.5
-
             # alpha = 0.1
             # beta = 0.01
-
             # Reward proximity to landing pad
             # reward_pos = 1.0 / (1.0 + alpha * distance)
-            distance_x = abs(pos_pad.x - pos_x)
-            distance_y = abs(pos_pad.y - pos_y)
 
             reward = 0.0
 
-            # Reward agent if it gets closer to target
-            if (distance_x < self.distance_x_old) and (distance_y < self.distance_y_old):
-                reward += 1.0 
+            # Reward getting closer to target
+            if distance_x < self.distance_x_old:
+                if distance_y < self.distance_y_old:
+                    # Reward agent if distance to landing pad gets smaller.
+                    reward += 1.0 
 
-            # Punish agent if distance to goal is large
-            reward -= 0.3 * distance / (1.0 + distance)
+                    # Reward proximity
+                    alpha = 0.01
+                    reward += 1.0 / (1.0 + alpha * distance)
 
-            # Punish agent for making a choice. Encourages agent to find the landing pad quickly.
+            else:
+                reward -= 1.0
+
+            # Punish strolling around. Encourages agent to land fast.
             reward -= 0.1
+            self.reward += reward
 
             self.distance_x_old = distance_x
             self.distance_y_old = distance_y
-            self.reward += reward
 
             ###
             # TODO: Only for RL required.

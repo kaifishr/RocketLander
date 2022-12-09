@@ -148,7 +148,8 @@ class Environment(Framework):
 
             # Reset reward.
             booster.reward = 0.0
-            booster.distance_old = float("inf")
+            booster.distance_x_old = float("inf")
+            booster.distance_y_old = float("inf")
 
             # Reactivate booster after collision in last generation.
             booster.body.active = True

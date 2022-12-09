@@ -1,6 +1,7 @@
 """Optimization class for Deep Q Reinforcement Learning."""
 import copy
 import math
+import random
 
 import numpy
 import torch
@@ -129,7 +130,10 @@ class DeepQOptimizer:
                 replay_memory.append(memory + [False, ])
             # Set `done` to true for last memory before simulation stopped.
             # Not happy with this. Consider time constraints and actual landing.
-            replay_memory[-1][-1] = True
+            # replay_memory[-1][-1] = True  # TODO: Set this only true, if the booster has landed successfully.
+
+        # TODO: Select subset at this stage to accelerate further processing.
+        # replay_memory = random.sample(replay_memory, min(len(replay_memory), self.batch_size))
 
         # Normalize rewards
         rewards = numpy.array([memory[2] for memory in replay_memory])
@@ -147,13 +151,14 @@ class DeepQOptimizer:
         self.model.train()
 
         # Create the actual training set
-        for i in range(len(replay_memory)): 
+        # TODO: In a multi agent setting, this mixes states of different boosters!
+        for i in range(len(replay_memory)-1): 
             # Unpack replay memory.
             state, action, reward, done = replay_memory[i]
-            if done:
+            if done:  # Full reward if booster landed successfully.
                 q_targets[i, action] = reward
-            else:
-                q_targets[i, action] = reward + self.gamma * torch.amax(q_targets[i+1])
+            else:  # Discount the reward by gamma as landing was not successful.
+                q_targets[i, action] = reward + self.gamma * torch.amax(q_targets[i+1]).item()
 
         # Create dataloader 
         dataset = TensorDataset(states, q_targets)
@@ -173,6 +178,8 @@ class DeepQOptimizer:
 
         running_loss = 0.0
         running_counter = 0
+
+        # TODO: Make this more efficient
 
         for state, q_target in self.dataloader:
             self.optimizer.zero_grad()
