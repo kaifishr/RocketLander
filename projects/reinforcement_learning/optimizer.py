@@ -22,6 +22,9 @@ class DeepQOptimizer:
         epsilon_min: Minimal value of the epsilon-greedy value.
         decay_rate: Determines the decay of the epsilon-greedy value after each epoch.
         gamma: A discount factor determining how much the agent considers future rewards.
+
+    TODO:
+        - Add replay memory deque to optimizer for higher efficiency.
     
     """
 
@@ -59,6 +62,7 @@ class DeepQOptimizer:
 
         # Adam optimizer
         self.optimizer = torch.optim.Adam(
+        # self.optimizer = torch.optim.SGD(
             params=self.model.parameters(), 
             lr=self.learning_rate, 
         )
@@ -161,20 +165,20 @@ class DeepQOptimizer:
         running_loss = 0.0
         running_counter = 0
 
-        for epoch in range(self.num_epochs):
-            for state, q_target in self.dataloader:
-                self.optimizer.zero_grad()
-                # Forward: Predict expected utility from state.
-                q_value = self.model(state)
-                # Compute loss
-                loss = self.criterion(input=q_value, target=q_target)
-                # Backpropagation
-                loss.backward()
-                # Gradient descent
-                self.optimizer.step()
+        for state, q_target in self.dataloader:
+            self.optimizer.zero_grad()
+            # Forward: Predict expected utility from state.
+            q_value = self.model(state)
+            # Compute loss
+            loss = self.criterion(input=q_value, target=q_target)
+            # Backpropagation
+            loss.backward()
+            # Gradient descent
+            self.optimizer.step()
 
-                running_loss += loss.item()
-                running_counter += len(state)
+            running_loss += loss.item()
+            running_counter += len(state)
+            break
 
         self.stats["loss"] = running_loss / running_counter
 

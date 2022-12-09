@@ -199,14 +199,14 @@ class TorchNeuralNetwork(nn.Module):
         layers = [
             nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
-            nn.Tanh(),
+            nn.GELU(),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
                 nn.LayerNorm(hidden_features),
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
-                nn.Tanh(),
+                nn.GELU(),
             ]
 
         layers += [
@@ -225,7 +225,7 @@ class TorchNeuralNetwork(nn.Module):
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
-            gain = 5.0 / 3.0  # Gain for tanh nonlinearity.
+            gain = 2 ** 0.5  # Gain for relu nonlinearity.
             torch.nn.init.xavier_normal_(module.weight, gain=gain)
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
