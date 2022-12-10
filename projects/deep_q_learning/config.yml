@@ -2,7 +2,7 @@
 # Configuration for Reinforcement Learning #
 ############################################
 
-random_seed: 2168883
+random_seed: 1000002
 
 # Directory to save the frames to create a video.
 dirs:
@@ -19,17 +19,17 @@ trainer:
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 1
+  num_boosters: 4
   num_simulation_steps: 800
   num_thrust_levels: 1  # Thrust levels of engines. 
   num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 0.0001
+  learning_rate: 0.00001
   batch_size: 64
   num_epochs: 1
   memory_size: 5000
   gamma: 0.99    # test gamma between 0.8 and 0.99
-  decay_rate: 0.002
-  epsilon_max: 0.6     # Epsilon-greedy value.
+  decay_rate: 0.001
+  epsilon_max: 0.9     # Epsilon-greedy value.
   epsilon_min: 0.1     # Minimal epsilon-greedy value.
   reward_scaling: -1  # NOTE: not used yet
   lib: "torch"    # NOTE: This is fix.
@@ -86,11 +86,11 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 0.0                       # Standard deviation [m]
-        y: 0.0                       # Standard deviation [m]
+        x: 5.0                       # Standard deviation [m]
+        y: 5.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 0.0                        # Standard deviation [m / s]
-        y: 0.0                        # Standard deviation [m / s]
+        x: 5.0                        # Standard deviation [m / s]
+        y: 5.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 

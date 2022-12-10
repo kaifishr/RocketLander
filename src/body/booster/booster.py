@@ -88,10 +88,10 @@ class Booster(Booster2D):
                     reward += 1.0 / (1.0 + alpha * distance)
 
             else:
-                reward -= 1.0
+                reward -= 0.05
 
             # Punish strolling around. Encourages agent to land fast.
-            reward -= 0.1
+            reward -= 0.05
             self.reward += reward
 
             self.distance_x_old = distance_x
@@ -158,7 +158,7 @@ class Booster(Booster2D):
                 state = self.state  
 
                 # Raw network predictions
-                pred = self.model(state)  # returns the action
+                pred = self.model.predict(state)  # returns the action
 
                 # Data post-processing
                 self.predictions = self._post_process(pred)

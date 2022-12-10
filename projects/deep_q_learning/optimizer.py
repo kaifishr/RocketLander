@@ -76,14 +76,11 @@ class DeepQOptimizer:
     def _broadcast_agents(self) -> None:
         """Broadcasts base network parameters to all agents."""
         for booster in self.boosters:
-            for params1, params2 in zip(booster.model.parameters(), self.model.parameters()):
-                # params1.data.copy_(params2.data)
-                # params1.data[:] = params2.data[:]
-                # params1.data[...] = params2.data[...]
-                params1.data = params2.data
-            # booster.model.load_state_dict(state_dict=self.model.state_dict())
-            # booster.model.load_state_dict(state_dict=copy.deepcopy(self.model.state_dict()))
-            # booster.model = copy.deepcopy(self.model)
+            # for params1, params2 in zip(booster.model.parameters(), self.model.parameters()):
+            #     #params1.data = params2.data
+            #     # params1.data.copy_(params2.data)
+            #     params1.data[...] = params2.data[...]
+            booster.model.load_state_dict(state_dict=self.model.state_dict())
 
     def _epsilon_scheduler(self) -> None:
         """Decreases epsilon-greedy value exponentially."""
@@ -114,7 +111,8 @@ class DeepQOptimizer:
         """
         replay_memory = []
 
-        # Gather the memory from each booster's.
+        # Build replay memory with [state, action, reward, next_state, done]
+        # with memory from each booster.
         for booster in self.boosters:
             for (s0, a0, r0), (s1, _, _) in zip(list(booster.model.memory)[:-1], list(booster.model.memory)[1:]):
                 replay_memory.append([s0, a0, r0, s1, False])

@@ -77,7 +77,7 @@ class Trainer:
                 reward = self.optimizer.stats["reward"]
                 if self.config.checkpoints.save_model:
                     if reward > max_reward:
-                        model = self.env.drones[self.optimizer.idx_best].model
+                        model = self.optimizer.model
                         save_checkpoint(model=model, config=self.config, episode=episode)
                         max_reward = reward
 

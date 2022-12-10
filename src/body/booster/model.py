@@ -294,7 +294,9 @@ class TorchNeuralNetwork(nn.Module):
         else:
             # Exploitation by selecting action with highest 
             # predicted utility at current state.
+            self.eval()
             q_values = self.policy(state)
+            self.train()
             action_idx = torch.argmax(q_values).item()
 
         # Add state-action pair to memory
@@ -306,7 +308,7 @@ class TorchNeuralNetwork(nn.Module):
         return action
 
     @torch.no_grad()
-    def predict(self, state: list) -> numpy.ndarray:
+    def predict(self, state: numpy.ndarray) -> numpy.ndarray:
         """Predicts action.
         
         Args:
