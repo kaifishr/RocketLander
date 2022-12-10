@@ -40,6 +40,7 @@ class Booster(Booster2D):
         self.state = []
 
         # Booster's reward (or fitness score)
+        # TODO: Treat reward as a list to be compatible across all optimizers
         self.reward = 0.0  # reward -> total_reward
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")

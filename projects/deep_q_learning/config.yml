@@ -2,7 +2,7 @@
 # Configuration for Reinforcement Learning #
 ############################################
 
-random_seed: 219568
+random_seed: 219563
 
 # Directory to save the frames to create a video.
 dirs:
@@ -21,17 +21,18 @@ trainer:
 # Deep Q-Learning 
 optimizer:
   num_boosters: 1
-  num_simulation_steps: 1000
+  num_simulation_steps: 600
   num_thrust_levels: 1  # Thrust levels of engines. 
   num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 1.0e-5
-  batch_size: 128
+  learning_rate: 0.0005
+  batch_size: 64
   num_epochs: 1
-  memory_size: 2000
-  gamma: 0.8    # test gamma between 0.8 and 0.99
-  decay_rate: 0.001
-  epsilon_max: 0.9     # Epsilon-greedy value.
+  memory_size: 5000
+  gamma: 0.99    # test gamma between 0.8 and 0.99
+  decay_rate: 0.002
+  epsilon_max: 1.0     # Epsilon-greedy value.
   epsilon_min: 0.1     # Minimal epsilon-greedy value.
+  reward_scaling: -1  # NOTE: not used yet
   lib: "torch"    # NOTE: This is fix.
 
 # Simulation environment 
@@ -68,8 +69,8 @@ env:
 
     init:
       position: # [m]
-        x: 100.0
-        y: 400.0
+        x: 80.0
+        y: 300.0
       linear_velocity: # [m / s]
         x: 0.0
         y: -40.0
@@ -86,19 +87,19 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 50.0                       # Standard deviation [m]
-        y: 30.0                       # Standard deviation [m]
+        x: 0.0                       # Standard deviation [m]
+        y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 5.0                        # Standard deviation [m / s]
-        y: 5.0                        # Standard deviation [m / s]
+        x: 0.0                        # Standard deviation [m / s]
+        y: 0.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       # num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 32
-      num_hidden_layers: 3
+      num_dim_hidden: 64
+      num_hidden_layers: 2
 
 framework:
   screen:
