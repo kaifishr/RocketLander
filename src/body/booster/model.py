@@ -197,28 +197,30 @@ class TorchNeuralNetwork(nn.Module):
         out_features = self.num_actions 
 
         layers = [
-            # nn.LayerNorm(in_features),
+            nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
             nn.GELU(),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
-                # nn.LayerNorm(hidden_features),
+                nn.LayerNorm(hidden_features),
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
                 nn.GELU(),
             ]
 
         layers += [
-            # nn.LayerNorm(hidden_features),
+            nn.LayerNorm(hidden_features),
             nn.Linear(in_features=hidden_features, out_features=out_features),
             nn.Sigmoid(),
         ]
 
-        self.net = nn.Sequential(*layers)
+        self.policy = nn.Sequential(*layers)
         self.memory = deque()
 
         self.apply(self._init_weights)
+
+        self.actions_lookup = None
         self._init_action_lookup()
 
         self.epsilon = None
@@ -261,7 +263,7 @@ class TorchNeuralNetwork(nn.Module):
         action = np.zeros((self.num_engines * 2))
         self.actions_lookup[n] = action
 
-    def _memorize(self, state: torch.Tensor, action: int, reward: float = -1) -> None:
+    def _memorize(self, state: torch.Tensor, action: int, reward: float = 0.0) -> None:
         """Stores past events.
 
         Stores current `state`, `action` based on state, and `reward`
@@ -288,35 +290,43 @@ class TorchNeuralNetwork(nn.Module):
         """
         if random.random() < self.epsilon:
             # Exploration by choosing a random action.
-            action = random.randint(0, self.num_actions - 1)
+            action_idx = random.randint(0, self.num_actions - 1)
         else:
             # Exploitation by selecting action with highest 
             # predicted utility at current state.
-            # TODO: Save pred directly in memory?
-            pred = self.net(state)
-            action = torch.argmax(pred).item()
+            q_values = self.policy(state)
+            action_idx = torch.argmax(q_values).item()
 
         # Add state-action pair to memory
-        self._memorize(state=state, action=action)
+        self._memorize(state=state, action=action_idx)
 
-        # Convert action to action vector
-        selected_action = self.actions_lookup[action]
-
-        return selected_action
-
-    def forward(self, state: list) -> Union[torch.Tensor, int]:
-        """Forward method receives current state and predicts an action.
-
-        Args:
-            x: Current state.
-
-        Returns:
-            Action vector.
-        """
-        if self.training or isinstance(state, torch.Tensor):
-            action = self.net(state)
-        else:
-            state = torch.from_numpy(state).float()
-            action = self._select_action(state)
+        # Convert action index to action vector
+        action = self.actions_lookup[action_idx]
 
         return action
+
+    @torch.no_grad()
+    def predict(self, state: list) -> numpy.ndarray:
+        """Predicts action.
+        
+        Args:
+            state: Current state.
+
+        Returns:
+            Action vector / Q-values.
+        """
+        state = torch.from_numpy(state).float()
+        action = self._select_action(state)
+        return action
+
+    def forward(self, state: list) -> torch.Tensor:
+        """Predicts action based for current state.
+
+        Args:
+            state: Current state.
+
+        Returns:
+            Action vector / Q-values.
+        """
+        q_values = self.policy(state)
+        return q_values 

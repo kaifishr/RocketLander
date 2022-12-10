@@ -2,7 +2,7 @@
 # Configuration for Reinforcement Learning #
 ############################################
 
-random_seed: 219563
+random_seed: 2168883
 
 # Directory to save the frames to create a video.
 dirs:
@@ -15,22 +15,21 @@ checkpoints:
   model_path: "weights"
 
 trainer:
-  # num_episodes: -1
-  num_generations: -1  # -1 for infinite generations or positive integer
+  num_episodes: -1  # -1 for infinite generations or positive integer
 
 # Deep Q-Learning 
 optimizer:
   num_boosters: 1
-  num_simulation_steps: 600
+  num_simulation_steps: 800
   num_thrust_levels: 1  # Thrust levels of engines. 
   num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 0.0005
+  learning_rate: 0.0001
   batch_size: 64
   num_epochs: 1
   memory_size: 5000
   gamma: 0.99    # test gamma between 0.8 and 0.99
   decay_rate: 0.002
-  epsilon_max: 1.0     # Epsilon-greedy value.
+  epsilon_max: 0.6     # Epsilon-greedy value.
   epsilon_min: 0.1     # Minimal epsilon-greedy value.
   reward_scaling: -1  # NOTE: not used yet
   lib: "torch"    # NOTE: This is fix.

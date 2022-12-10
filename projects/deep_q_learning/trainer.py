@@ -41,11 +41,11 @@ class Trainer:
     def run(self) -> None:
         """Runs training."""
 
-        num_generations = self.config.trainer.num_generations
+        num_episodes = self.config.trainer.num_episodes
         num_simulation_steps = self.config.optimizer.num_simulation_steps
 
         step = 0
-        generation = 0
+        episode = 0
         max_reward = 0.0
 
         is_running = True
@@ -65,27 +65,25 @@ class Trainer:
                 self.env.reset()
 
                 step = 0
-                generation += 1
-
-                reward = self.optimizer.reward
+                episode += 1
 
                 # Write stats to Tensorboard.
-                self.writer.add_scalar("Reward", reward, generation)
-                self.writer.add_scalar("Seconds", time.time() - t0, generation)
-                print(f"{generation = }")
+                for name, scalar in self.optimizer.stats.items():
+                    self.writer.add_scalar(name, scalar, episode)
+                self.writer.add_scalar("Seconds", time.time() - t0, episode)
+                print(f"{episode = }")
 
                 # Save model
+                reward = self.optimizer.stats["reward"]
                 if self.config.checkpoints.save_model:
                     if reward > max_reward:
                         model = self.env.drones[self.optimizer.idx_best].model
-                        save_checkpoint(
-                            model=model, config=self.config, generation=generation
-                        )
+                        save_checkpoint(model=model, config=self.config, episode=episode)
                         max_reward = reward
 
                 t0 = time.time()
 
-                if generation == num_generations:
+                if episode == num_episodes:
                     is_running = False
 
             step += 1

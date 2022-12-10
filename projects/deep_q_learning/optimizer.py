@@ -50,29 +50,18 @@ class DeepQOptimizer:
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
 
         # Scalars
-        self.reward = 0.0
-        self.iteration = 0
-        # TODO: Add to tensorboard
-        self.stats = {"reward": 0.0, "loss": 0.0, "epsilon": 1.0}
+        self.stats = {"reward": -1, "loss": -1, "epsilon": -1}
 
-        # TODO: Pass models to agents by reference as they all use the same model.
-        # TODO: Collides with memory stored in each model.
         self.model = copy.deepcopy(self.boosters[0].model)
 
-        # Mean squared error loss function
         self.criterion = torch.nn.MSELoss()
-
-        # Adam optimizer
         self.optimizer = torch.optim.Adam(
-        # self.optimizer = torch.optim.SGD(
             params=self.model.parameters(), 
             lr=self.learning_rate, 
         )
 
-        # Dataloader
-        self.dataloader = None
-
         self._init_agents()
+        self.iteration = 0
 
     def _init_agents(self) -> None:
         """Initializes agents for reinforcement learning.
@@ -87,9 +76,14 @@ class DeepQOptimizer:
     def _broadcast_agents(self) -> None:
         """Broadcasts base network parameters to all agents."""
         for booster in self.boosters:
-            # for params1, params2 in zip(booster.model.parameters(), self.model.parameters()):
-            #     params1.data.copy_(params2.data)
-            booster.model.load_state_dict(state_dict=self.model.state_dict())
+            for params1, params2 in zip(booster.model.parameters(), self.model.parameters()):
+                # params1.data.copy_(params2.data)
+                # params1.data[:] = params2.data[:]
+                # params1.data[...] = params2.data[...]
+                params1.data = params2.data
+            # booster.model.load_state_dict(state_dict=self.model.state_dict())
+            # booster.model.load_state_dict(state_dict=copy.deepcopy(self.model.state_dict()))
+            # booster.model = copy.deepcopy(self.model)
 
     def _epsilon_scheduler(self) -> None:
         """Decreases epsilon-greedy value exponentially."""
@@ -98,6 +92,7 @@ class DeepQOptimizer:
         eps_min = self.epsilon_min
         eps_max = self.epsilon_max
         epsilon = eps_min + (eps_max - eps_min) * math.exp(-decay_rate * iteration)
+        self.stats["epsilon"] = epsilon
 
         for booster in self.boosters:
             booster.model.epsilon = epsilon
@@ -118,22 +113,12 @@ class DeepQOptimizer:
         ]
         """
         replay_memory = []
-        # skip_frames = 4  # TODO: skip frames from memory
 
         # Gather the memory from each booster's.
         for booster in self.boosters:
-            # TODO: Use replay_memory.expand(memory), add "done" indicator to model.
-            for memory in booster.model.memory:
-            # for memory in booster.model.memory[::skip_frames]:
-                # Create replay memory and add `done` field.
-                # `done` indicates if simulation has come to an end.
-                replay_memory.append(memory + [False, ])
-            # Set `done` to true for last memory before simulation stopped.
-            # Not happy with this. Consider time constraints and actual landing.
-            # replay_memory[-1][-1] = True  # TODO: Set this only true, if the booster has landed successfully.
-
-        # TODO: Select subset at this stage to accelerate further processing.
-        # replay_memory = random.sample(replay_memory, min(len(replay_memory), self.batch_size))
+            for (s0, a0, r0), (s1, _, _) in zip(list(booster.model.memory)[:-1], list(booster.model.memory)[1:]):
+                replay_memory.append([s0, a0, r0, s1, False])
+                # TODO: Set `done` to True if booster has landed.
 
         # Normalize rewards
         rewards = numpy.array([memory[2] for memory in replay_memory])
@@ -141,76 +126,56 @@ class DeepQOptimizer:
         for memory, reward in zip(replay_memory, rewards):
             memory[2] = reward
 
+        # Use subset of replay memory as transitions are strongly correlated.  
+        replay_memory = random.sample(replay_memory, min(len(replay_memory), self.batch_size))
+
         # Select states from replay memory.
         states = torch.stack([memory[0] for memory in replay_memory])
+        next_states = torch.stack([memory[3] for memory in replay_memory])
 
         # Predict expected utilities (Q target values) for states from replay memory.
-        # TODO: Save expected utility directly during simulation for higher efficiency?
         self.model.eval()
         q_targets = self.model(states)
+        q_targets_new = self.model(next_states)
         self.model.train()
 
-        # Create the actual training set
-        # TODO: In a multi agent setting, this mixes states of different boosters!
-        for i in range(len(replay_memory)-1): 
-            # Unpack replay memory.
-            state, action, reward, done = replay_memory[i]
-            if done:  # Full reward if booster landed successfully.
+        for i, (_, action, reward, next_state, done) in enumerate(replay_memory):
+            q_targets[i, action] = reward
+            if not done:  # Discount the reward by gamma as landing was not successful.
+                q_targets[i, action] = reward + self.gamma * torch.amax(q_targets_new[i]).item()
+            else:  # Full reward if booster landed successfully.
                 q_targets[i, action] = reward
-            else:  # Discount the reward by gamma as landing was not successful.
-                q_targets[i, action] = reward + self.gamma * torch.amax(q_targets[i+1]).item()
 
-        # Create dataloader 
-        dataset = TensorDataset(states, q_targets)
-        self.dataloader = DataLoader(
-            dataset=dataset,
-            batch_size=self.batch_size,
-            shuffle=True,
-        )
+        return states, q_targets
 
-    def _train_network(self) -> None:
-        """Trains network on memory.
+    def _train_network(self, states, q_targets) -> None:
+        """Trains network on random batch of memory.
         
-        Trans network for specified number of epochs and mini batch size
-        on memory.
         """
         self.model.train()
 
-        running_loss = 0.0
-        running_counter = 0
-
-        # TODO: Make this more efficient
-
-        for state, q_target in self.dataloader:
-            self.optimizer.zero_grad()
-            # Forward: Predict expected utility from state.
-            q_value = self.model(state)
-            # Compute loss
-            loss = self.criterion(input=q_value, target=q_target)
-            # Backpropagation
-            loss.backward()
-            # Gradient descent
-            self.optimizer.step()
-
-            running_loss += loss.item()
-            running_counter += len(state)
-            break
-
-        self.stats["loss"] = running_loss / running_counter
+        self.optimizer.zero_grad()
+        # Predict expected utility from state with policy (network).
+        q_values = self.model(states)
+        # Compute loss
+        loss = self.criterion(input=q_values, target=q_targets)
+        # Backpropagation
+        loss.backward()
+        # Gradient descent
+        self.optimizer.step()
 
         self.model.eval()
+        self.stats["loss"] = loss.item() / len(states)
+
 
     def step(self) -> None:
         """Runs single optimization step."""
-
-        # Select booster with highest reward in current population.
-        rewards = [booster.reward for booster in self.boosters]
-        self.reward = max(rewards)
+        self.reward = max([booster.reward for booster in self.boosters])
         self.stats["reward"] = self.reward
 
         # Create training set from memory
-        self._create_training_set()
-        self._train_network()
+        states, q_targets = self._create_training_set()
+        self._train_network(states, q_targets)
 
         # Broadcast model weights to all agents
         self._broadcast_agents()
