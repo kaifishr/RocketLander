@@ -42,8 +42,7 @@ class Booster(Booster2D):
         # Booster's reward (or fitness score)
         # TODO: Treat reward as a list to be compatible across all optimizers
         self.reward = 0.0  # reward -> total_reward
-        self.distance_x_old = float("inf")
-        self.distance_y_old = float("inf")
+        self.distance_old = float("inf")
 
         self.engine_running = True
 
@@ -77,25 +76,21 @@ class Booster(Booster2D):
 
             reward = 0.0
 
+            # Reward proximity
+            alpha = 0.01
+            reward += 1.0 / (1.0 + alpha * distance)
+
             # Reward getting closer to target
-            if distance_x < self.distance_x_old:
-                if distance_y < self.distance_y_old:
-                    # Reward agent if distance to landing pad gets smaller.
-                    reward += 1.0 
-
-                    # Reward proximity
-                    alpha = 0.01
-                    reward += 1.0 / (1.0 + alpha * distance)
-
+            if distance < self.distance_old:
+                # Reward agent if distance to landing pad gets smaller.
+                reward += 1.0 
+                self.distance_old = distance
             else:
-                reward -= 0.05
+                reward -= 1.0
 
             # Punish strolling around. Encourages agent to land fast.
             reward -= 0.05
             self.reward += reward
-
-            self.distance_x_old = distance_x
-            self.distance_y_old = distance_y
 
             ###
             # TODO: Only for RL required.
@@ -158,7 +153,7 @@ class Booster(Booster2D):
                 state = self.state  
 
                 # Raw network predictions
-                pred = self.model.predict(state)  # returns the action
+                pred = self.model.predict(state)  # predicts action
 
                 # Data post-processing
                 self.predictions = self._post_process(pred)

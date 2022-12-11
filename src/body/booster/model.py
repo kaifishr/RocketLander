@@ -185,7 +185,7 @@ class TorchNeuralNetwork(nn.Module):
 
         self.num_thrust_levels = config.optimizer.num_thrust_levels
         self.num_thrust_angles = config.optimizer.num_thrust_angles
-        self.memory_size = config.optimizer.memory_size
+        self.num_simulation_steps = config.optimizer.num_simulation_steps
 
         # Number of actions plus `do nothing` action.
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
@@ -199,14 +199,14 @@ class TorchNeuralNetwork(nn.Module):
         layers = [
             nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
-            nn.GELU(),
+            nn.ReLU(),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
                 nn.LayerNorm(hidden_features),
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
-                nn.GELU(),
+                nn.ReLU(),
             ]
 
         layers += [
@@ -252,9 +252,9 @@ class TorchNeuralNetwork(nn.Module):
                 for k in range(self.num_thrust_angles):
                     # Action vector with thrust and angle information for each engine.
                     action = np.zeros((self.num_engines * 2)) 
-                    # Select thrust for engine i
+                    # Select thrust j for engine i
                     action[2*i] = thrust_levels[j]
-                    # Select angle for engine i
+                    # Select angle k for engine i
                     action[2*i+1] = thrust_angles[k]  
                     self.actions_lookup[n] = action
                     n += 1
@@ -271,7 +271,7 @@ class TorchNeuralNetwork(nn.Module):
         on during the reward computation. 
         """
         self.memory.append([state, action, reward])
-        if len(self.memory) > self.memory_size:
+        if len(self.memory) > self.num_simulation_steps:
             self.memory.popleft()
 
     @torch.no_grad()
@@ -299,10 +299,10 @@ class TorchNeuralNetwork(nn.Module):
             self.train()
             action_idx = torch.argmax(q_values).item()
 
-        # Add state-action pair to memory
+        # Add state-action pair to memory.
         self._memorize(state=state, action=action_idx)
 
-        # Convert action index to action vector
+        # Convert action index to action vector.
         action = self.actions_lookup[action_idx]
 
         return action
