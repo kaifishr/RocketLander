@@ -195,23 +195,27 @@ class TorchNeuralNetwork(nn.Module):
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
         out_features = self.num_actions 
+        dropout_rate = 0.1
 
         layers = [
             nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
-            nn.ReLU(),
+            nn.LayerNorm(hidden_features),
+            nn.GELU(),
+            nn.Dropout(p=dropout_rate)
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
-                nn.LayerNorm(hidden_features),
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
-                nn.ReLU(),
+                nn.LayerNorm(hidden_features),
+                nn.GELU(),
+                nn.Dropout(p=dropout_rate)
             ]
 
         layers += [
-            nn.LayerNorm(hidden_features),
             nn.Linear(in_features=hidden_features, out_features=out_features),
+            nn.LayerNorm(out_features),
             nn.Sigmoid(),
         ]
 
