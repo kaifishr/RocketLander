@@ -24,7 +24,6 @@ class DeepQOptimizer:
             that the agent selects a random action instead of the action that 
             maximizes the expected utility (Q-value).
         epsilon_min: Minimal value of the epsilon-greedy value.
-        decay_rate: Determines the decay of the epsilon-greedy value after each epoch.
         gamma: A discount factor determining how much the agent considers future rewards.
     """
     num_engines = 3    # FIX
@@ -36,20 +35,16 @@ class DeepQOptimizer:
         self.boosters = environment.boosters
 
         config = config.optimizer
-        self.epsilon_max = config.epsilon_max
+        self.epsilon = config.epsilon
         self.epsilon_min = config.epsilon_min
+        self.epsilon_decay = config.epsilon_decay
         self.gamma = config.gamma
-        self.decay_rate = config.decay_rate
         self.learning_rate = config.learning_rate
         self.batch_size = config.batch_size
         self.num_epochs = config.num_epochs
-        self.memory_size = config.memory_size
         self.num_thrust_levels = config.num_thrust_levels
         self.num_thrust_angles = config.num_thrust_angles
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
-
-        # Scalars
-        self.stats = {"reward": -1, "loss": -1, "epsilon": -1}
 
         self.model = copy.deepcopy(self.boosters[0].model)
 
@@ -59,8 +54,11 @@ class DeepQOptimizer:
             lr=self.learning_rate, 
         )
 
-        self.replay_memory = deque()
+        self.replay_memory = deque(maxlen=config.memory_size)
         self._init_agents()
+
+        # Scalars
+        self.stats = {"reward": -1, "loss": -1, "epsilon": -1}
         self.iteration = 0
 
     def _init_agents(self) -> None:
@@ -70,7 +68,7 @@ class DeepQOptimizer:
         """
         self._broadcast_agents()
         for booster in self.boosters:
-            booster.model.epsilon = self.epsilon_max
+            booster.model.epsilon = self.epsilon
 
     @torch.no_grad()
     def _broadcast_agents(self) -> None:
@@ -83,16 +81,14 @@ class DeepQOptimizer:
             # booster.model.load_state_dict(state_dict=self.model.state_dict())
 
     def _epsilon_scheduler(self) -> None:
-        """Decreases epsilon-greedy value exponentially."""
-        iteration = self.iteration
-        decay_rate = self.decay_rate
-        eps_min = self.epsilon_min
-        eps_max = self.epsilon_max
-        epsilon = eps_min + (eps_max - eps_min) * math.exp(-decay_rate * iteration)
-        self.stats["epsilon"] = epsilon
+        """Decays epsilon-greedy value."""
+
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay 
+        self.stats["epsilon"] = self.epsilon
 
         for booster in self.boosters:
-            booster.model.epsilon = epsilon
+            booster.model.epsilon = self.epsilon
 
     @torch.no_grad()
     def _create_training_set(self) -> None:
@@ -103,35 +99,33 @@ class DeepQOptimizer:
         # Build replay memory with [state, action, reward, next_state, done]
         # with memory from each booster.
         for booster in self.boosters:
-            for (s0, a0, r0), (s1, _, _) in zip(list(booster.model.memory)[:-1], list(booster.model.memory)[1:]):
-                self.replay_memory.append([s0, a0, r0, s1, False])
-                # TODO: Set `done` to True if booster has landed.
-                if len(self.replay_memory) > self.memory_size:
-                    self.replay_memory.popleft()
-
-        # Normalize the rewards.
-        rewards = numpy.array([memory[2] for memory in self.replay_memory])
-        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-4)
-        for memory, reward in zip(self.replay_memory, rewards):
-            memory[2] = reward
+            for (s0, a0, r0, _), (s1, *_) in zip(booster.model.memory[:-1], booster.model.memory[1:]):
+                self.replay_memory.append(copy.deepcopy([s0, a0, r0, s1, False]))
 
         # Use subset of replay memory for training as transitions are strongly correlated.  
-        replay_memory_batch = random.sample(
+        replay_batch = random.sample(
             self.replay_memory, 
             min(len(self.replay_memory), self.batch_size)
         )
 
+        # Normalize the rewards of batch
+        rewards = numpy.array([memory[2] for memory in replay_batch])
+        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-4)
+        for memory, reward in zip(replay_batch, rewards):
+            memory[2] = reward
+
         # Select states from replay memory.
-        states = torch.stack([memory[0] for memory in replay_memory_batch])
-        next_states = torch.stack([memory[3] for memory in replay_memory_batch])
+        states = torch.stack([memory[0] for memory in replay_batch])
+        next_states = torch.stack([memory[3] for memory in replay_batch])
 
         # Predict expected utilities (Q target values) for states from replay memory.
-        self.model.eval()
-        q_targets = self.model(states)
-        q_targets_new = self.model(next_states)
-        self.model.train()
+        with torch.no_grad():
+            self.model.eval()
+            q_targets = self.model(states)
+            q_targets_new = self.model(next_states)
+            self.model.train()
 
-        for i, (_, action, reward, next_state, done) in enumerate(replay_memory_batch):
+        for i, (_, action, reward, next_state, done) in enumerate(replay_batch):
             q_targets[i, action] = reward
             if not done:  # Discount the reward by gamma as landing was not successful.
                 q_targets[i, action] = reward + self.gamma * torch.amax(q_targets_new[i]).item()
@@ -153,6 +147,7 @@ class DeepQOptimizer:
         loss = self.criterion(input=q_values, target=q_targets)
         # Backpropagation
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
         # Gradient descent
         self.optimizer.step()
 
@@ -167,10 +162,12 @@ class DeepQOptimizer:
 
         # Create training set from memory
         states, q_targets = self._create_training_set()
-        self._train_network(states, q_targets)
+        
+        if len(self.replay_memory) > 100000:
+            self._train_network(states, q_targets)
 
-        # Broadcast model weights to all agents
-        self._broadcast_agents()
+            # Broadcast model weights to all agents
+            self._broadcast_agents()
 
         # Reduce epsilon according to scheduler
         self._epsilon_scheduler()

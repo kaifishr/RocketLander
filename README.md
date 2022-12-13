@@ -138,6 +138,7 @@ In a previous project called [*NeuralAnnealing*](https://github.com/kaifishr/Neu
 
 # TODOs
 
+- Set `done` to True if booster has landed.
 - Use global trainer class
 - Use optimizer base class
 - Add explicit fuel constraint.

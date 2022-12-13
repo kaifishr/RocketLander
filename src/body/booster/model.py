@@ -2,10 +2,8 @@
 
 The booster's brain represented by a feedforward neural network.
 """
-from typing import Union
 import math
 import random
-from collections import deque
 
 import numpy
 import numpy as np
@@ -195,32 +193,29 @@ class TorchNeuralNetwork(nn.Module):
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
         out_features = self.num_actions 
-        dropout_rate = 0.1
 
         layers = [
-            nn.LayerNorm(in_features),
+            # nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
-            nn.LayerNorm(hidden_features),
-            nn.GELU(),
-            nn.Dropout(p=dropout_rate)
+            # nn.LayerNorm(hidden_features),
+            nn.Tanh(),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
-                nn.LayerNorm(hidden_features),
-                nn.GELU(),
-                nn.Dropout(p=dropout_rate)
+                # nn.LayerNorm(hidden_features),
+                nn.Tanh(),
             ]
 
         layers += [
             nn.Linear(in_features=hidden_features, out_features=out_features),
-            nn.LayerNorm(out_features),
+            # nn.LayerNorm(out_features),
             nn.Sigmoid(),
         ]
 
         self.policy = nn.Sequential(*layers)
-        self.memory = deque()
+        self.memory = [] 
 
         self.apply(self._init_weights)
 
@@ -231,7 +226,8 @@ class TorchNeuralNetwork(nn.Module):
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
-            gain = 2 ** 0.5  # Gain for relu nonlinearity.
+            # gain = 2 ** 0.5  # Gain for relu nonlinearity.
+            gain = 5.0 / 3.0  # Gain for tanh nonlinearity.
             torch.nn.init.xavier_normal_(module.weight, gain=gain)
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
@@ -267,16 +263,14 @@ class TorchNeuralNetwork(nn.Module):
         action = np.zeros((self.num_engines * 2))
         self.actions_lookup[n] = action
 
-    def _memorize(self, state: torch.Tensor, action: int, reward: float = 0.0) -> None:
+    def _memorize(self, state: torch.Tensor, action: int) -> None:
         """Stores past events.
 
-        Stores current `state`, `action` based on state, and `reward`
-        the followed from the performed action. Reward is added later
-        on during the reward computation. 
+        Stores current `state`, `action` as well as placeholders for
+        `reward` and `done` to indicate if agent has solved the 
+        environment successfully.
         """
-        self.memory.append([state, action, reward])
-        if len(self.memory) > self.num_simulation_steps:
-            self.memory.popleft()
+        self.memory.append([state, action, None, None])
 
     @torch.no_grad()
     def _select_action(self, state: torch.Tensor) -> int:

@@ -59,9 +59,9 @@ class Booster(Booster2D):
 
             # Position
             pos_x, pos_y = self.body.position
-            pos_pad = self.config.env.landing_pad.position
             eta = 1.0 / 60.0
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            pos_pad = self.config.env.landing_pad.position
             distance_x = (pos_pad.x - pos_x) ** 2 
             distance_y = (pos_pad.y - pos_y) ** 2
             distance = (distance_x + distance_y) ** 0.5
@@ -76,26 +76,25 @@ class Booster(Booster2D):
 
             reward = 0.0
 
-            # Reward proximity
-            alpha = 0.01
-            reward += 1.0 / (1.0 + alpha * distance)
-
-            # Reward getting closer to target
-            if distance < self.distance_old:
-                # Reward agent if distance to landing pad gets smaller.
-                reward += 1.0 
-                self.distance_old = distance
+            # Reward agent if distance to landing pad gets smaller.
+            if distance_x < self.distance_old:
+                reward += 0.2 + 10.0 / (1.0 + distance)
             else:
-                reward -= 1.0
+                reward -= 0.1
 
-            # Punish strolling around. Encourages agent to land fast.
-            reward -= 0.05
+            if distance < 5.0:
+                reward += 1.0
+                
+            reward -= 0.1
+
             self.reward += reward
+            self.distance_old = distance_x
+
 
             ###
             # TODO: Only for RL required.
             # Add reward to most recent memory
-            self.model.memory[-1][-1] = reward
+            self.model.memory[-1][-2] = reward
             ###
 
     def detect_landing(self) -> None:
