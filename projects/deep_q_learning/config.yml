@@ -2,7 +2,7 @@
 # Configuration for Reinforcement Learning #
 ############################################
 
-random_seed: 421
+random_seed: 4211
 
 # Directory to save the frames to create a video.
 dirs:
@@ -25,13 +25,12 @@ optimizer:
   num_thrust_angles: 2  # Thrust angles of engines.
   learning_rate: 0.0004
   batch_size: 128
-  num_epochs: 1
-  memory_size: 200000
+  memory_size: 100000
   gamma: 0.95           # Discount rate
   epsilon: 1.0          # Epsilon-greedy value.
   epsilon_min: 0.01     # Minimal epsilon-greedy value.
   epsilon_decay: 0.9999
-  reward_scaling: -1  # NOTE: not used yet
+  num_warmup_steps: 100000
   lib: "torch"    # NOTE: This is fix.
 
 # Simulation environment 
@@ -68,7 +67,7 @@ env:
 
     init:
       position: # [m]
-        x: 20.0
+        x: 70.0
         y: 300.0
       linear_velocity: # [m / s]
         x: 0.0
@@ -86,11 +85,11 @@ env:
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 5.0                       # Standard deviation [m]
-        y: 5.0                       # Standard deviation [m]
+        x: 50.0                       # Standard deviation [m]
+        y: 50.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 5.0                        # Standard deviation [m / s]
-        y: 5.0                        # Standard deviation [m / s]
+        x: 1.0                        # Standard deviation [m / s]
+        y: 1.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 

@@ -42,7 +42,8 @@ class Booster(Booster2D):
         # Booster's reward (or fitness score)
         # TODO: Treat reward as a list to be compatible across all optimizers
         self.reward = 0.0  # reward -> total_reward
-        self.distance_old = float("inf")
+        self.distance_x_old = float("inf")
+        self.distance_y_old = float("inf")
 
         self.engine_running = True
 
@@ -77,19 +78,29 @@ class Booster(Booster2D):
             reward = 0.0
 
             # Reward agent if distance to landing pad gets smaller.
-            if distance_x < self.distance_old:
-                reward += 0.2 + 10.0 / (1.0 + distance)
+            # if distance < self.distance_old:
+            #     reward += 0.1 + 10.0 / (1.0 + distance)
+            # else:
+            #     reward -= 0.1
+            # reward += 1.0
+            # print(f"{distance = }")
+            # print(f"{distance_x = }")
+            # print(f"{distance_y = }")
+            # print()
+            if distance_x < self.distance_x_old:
+                self.distance_x_old = distance_x
+                if distance_y < self.distance_y_old:
+                    self.distance_y_old = distance_y
+                    reward += 0.1 + 100.0 / (1.0 + distance)
             else:
-                reward -= 0.1
+                reward -= 0.05
 
-            if distance < 5.0:
-                reward += 1.0
-                
-            reward -= 0.1
+            if distance < 20.0:
+                reward += 10.0
+
+            reward -= 0.05
 
             self.reward += reward
-            self.distance_old = distance_x
-
 
             ###
             # TODO: Only for RL required.

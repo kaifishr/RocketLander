@@ -29,7 +29,7 @@ class Framework:
         is_rendering:
     """
 
-    name = "RocketBooster"
+    name = "RocketLander"
 
     def __init__(self, config: Config) -> None:
         """Initializes Framework."""

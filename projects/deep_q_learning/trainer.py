@@ -87,3 +87,6 @@ class Trainer:
                     is_running = False
 
             step += 1
+
+            # if step % 5 == 0:     
+            #     self.optimizer.step()

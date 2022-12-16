@@ -127,6 +127,7 @@ class Environment(Framework):
 
             if add_noise:
 
+                # TODO: Use uniform noise.
                 noise = self.config.env.booster.noise
                 noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
                 noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
@@ -148,7 +149,9 @@ class Environment(Framework):
 
             # Reset reward.
             booster.reward = 0.0
-            booster.distance_old = float("inf")  # RL
+            # booster.distance_old = float("inf")  # RL
+            booster.distance_x_old = float("inf")  # RL
+            booster.distance_y_old = float("inf")  # RL
             booster.model.memory = []         # RL
 
             # Reactivate booster after collision in last generation.

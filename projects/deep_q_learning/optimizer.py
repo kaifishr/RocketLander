@@ -33,6 +33,7 @@ class DeepQOptimizer:
         """Initializes optimizer"""
 
         self.boosters = environment.boosters
+        self.config = config
 
         config = config.optimizer
         self.epsilon = config.epsilon
@@ -41,7 +42,6 @@ class DeepQOptimizer:
         self.gamma = config.gamma
         self.learning_rate = config.learning_rate
         self.batch_size = config.batch_size
-        self.num_epochs = config.num_epochs
         self.num_thrust_levels = config.num_thrust_levels
         self.num_thrust_angles = config.num_thrust_angles
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
@@ -163,7 +163,7 @@ class DeepQOptimizer:
         # Create training set from memory
         states, q_targets = self._create_training_set()
         
-        if len(self.replay_memory) > 100000:
+        if len(self.replay_memory) > self.config.optimizer.num_warmup_steps:
             self._train_network(states, q_targets)
 
             # Broadcast model weights to all agents
