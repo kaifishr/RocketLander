@@ -97,8 +97,8 @@ class Booster(Booster2D):
 
             if distance < 5.0:
                 reward += 10.0
-
-            reward -= 0.05
+            else:
+                reward -= 0.02
 
             self.reward += reward
 
@@ -159,8 +159,8 @@ class Booster(Booster2D):
             if self.engine_running:
 
                 # Pre-processing
-                state = self._pre_process(self.state)
-                # state = self.state  
+                # state = self._pre_process(self.state)
+                state = self.state  
 
                 # Raw network predictions
                 pred = self.model.predict(state)  # predicts action
@@ -204,15 +204,15 @@ class Booster(Booster2D):
         angular_vel = data[5]
 
         # Position
-        pos_x_min, pos_x_max = -200.0, 200.0
-        pos_y_min, pos_y_max = -5.0, 300.0
+        pos_x_min, pos_x_max = -100.0, 100.0
+        pos_y_min, pos_y_max = -5.0, 500.0
         pos_x = 2.0 * (pos_x - pos_x_min) / (pos_x_max - pos_x_min) - 1.0
         pos_y = 2.0 * (pos_y - pos_y_min) / (pos_y_max - pos_y_min) - 1.0
         data[0], data[1] = pos_x, pos_y
 
         # Velocity
-        vel_x_min, vel_x_max = -50.0, 50.0
-        vel_y_min, vel_y_max = 0.0, 100.0
+        vel_x_min, vel_x_max = -100.0, 100.0
+        vel_y_min, vel_y_max = -100.0, 100.0
         vel_x = 2.0 * (vel_x - vel_x_min) / (vel_x_max - vel_x_min) - 1.0
         vel_y = 2.0 * (vel_y - vel_y_min) / (vel_y_max - vel_y_min) - 1.0
         data[2], data[3] = vel_x, vel_y

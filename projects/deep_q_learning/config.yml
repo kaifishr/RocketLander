@@ -23,7 +23,7 @@ optimizer:
   num_simulation_steps: 600
   num_thrust_levels: 2  # Thrust levels of engines. 
   num_thrust_angles: 3  # Thrust angles of engines.
-  learning_rate: 0.0001
+  learning_rate: 0.0003
   batch_size: 128
   memory_size: 100000
   gamma: 0.95           # Discount rate
