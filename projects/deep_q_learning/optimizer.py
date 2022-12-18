@@ -1,16 +1,11 @@
 """Optimization class for Deep Q Reinforcement Learning."""
 import copy
-import math
 import random
 
 from collections import deque
 
 import numpy
 import torch
-from torch.utils.data import (
-    TensorDataset,
-    DataLoader
-)
 
 from src.utils.config import Config
 from src.environment import Environment

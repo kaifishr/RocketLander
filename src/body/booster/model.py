@@ -199,6 +199,8 @@ class TorchNeuralNetwork(nn.Module):
             nn.Linear(in_features=in_features, out_features=hidden_features),
             # nn.LayerNorm(hidden_features),
             nn.ReLU(),
+            # nn.GELU(),
+            # nn.Tanh(),
             nn.Dropout(p=0.05)
         ]
 
@@ -207,6 +209,8 @@ class TorchNeuralNetwork(nn.Module):
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
                 # nn.LayerNorm(hidden_features),
                 nn.ReLU(),
+                # nn.GELU(),
+                # nn.Tanh(),
                 nn.Dropout(p=0.05)
             ]
 

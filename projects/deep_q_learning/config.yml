@@ -1,8 +1,8 @@
-############################################
-# Configuration for Reinforcement Learning #
-############################################
+###########################################################
+# Configuration for (Asynchronous) Reinforcement Learning #
+###########################################################
 
-random_seed: 4211
+random_seed: 42111
 
 # Directory to save the frames to create a video.
 dirs:
@@ -22,8 +22,8 @@ optimizer:
   num_boosters: 1
   num_simulation_steps: 600
   num_thrust_levels: 2  # Thrust levels of engines. 
-  num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 0.0004
+  num_thrust_angles: 3  # Thrust angles of engines.
+  learning_rate: 0.0001
   batch_size: 128
   memory_size: 100000
   gamma: 0.95           # Discount rate
@@ -88,15 +88,15 @@ env:
         x: 50.0                       # Standard deviation [m]
         y: 50.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 1.0                        # Standard deviation [m / s]
-        y: 1.0                        # Standard deviation [m / s]
+        x: 10.0                        # Standard deviation [m / s]
+        y: 10.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       # num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 128
+      num_dim_hidden: 256
       num_hidden_layers: 2
 
 framework:

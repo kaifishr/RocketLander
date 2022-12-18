@@ -138,6 +138,7 @@ In a previous project called [*NeuralAnnealing*](https://github.com/kaifishr/Neu
 
 # TODOs
 
+- Normalize state values.
 - Set `done` to True if booster has landed.
 - Use global trainer class
 - Use optimizer base class

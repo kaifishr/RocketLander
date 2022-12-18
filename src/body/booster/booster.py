@@ -95,7 +95,7 @@ class Booster(Booster2D):
             else:
                 reward -= 0.05
 
-            if distance < 20.0:
+            if distance < 5.0:
                 reward += 10.0
 
             reward -= 0.05
@@ -159,8 +159,8 @@ class Booster(Booster2D):
             if self.engine_running:
 
                 # Pre-processing
-                # state = self._pre_process(self.state)
-                state = self.state  
+                state = self._pre_process(self.state)
+                # state = self.state  
 
                 # Raw network predictions
                 pred = self.model.predict(state)  # predicts action
@@ -175,10 +175,10 @@ class Booster(Booster2D):
         """Fetches state from booster that is fed into neural network."""
         self.state = np.array(
             (
-                self.body.position.x,
-                self.body.position.y,
-                self.body.linearVelocity.x,
-                self.body.linearVelocity.y,
+                self.body.position.x, # / 50.0,
+                self.body.position.y, # / 50.0,
+                self.body.linearVelocity.x, # / 50.0,
+                self.body.linearVelocity.y, # / 50.0,
                 self.body.transform.angle,
                 self.body.angularVelocity,
             )
@@ -200,8 +200,8 @@ class Booster(Booster2D):
         """
         pos_x, pos_y = data[0], data[1]
         vel_x, vel_y = data[2], data[3]
-        angular_vel = data[4]
-        angle = data[5]
+        angle = data[4]
+        angular_vel = data[5]
 
         # Position
         pos_x_min, pos_x_max = -200.0, 200.0
@@ -217,18 +217,18 @@ class Booster(Booster2D):
         vel_y = 2.0 * (vel_y - vel_y_min) / (vel_y_max - vel_y_min) - 1.0
         data[2], data[3] = vel_x, vel_y
 
+        # Angle
+        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi  # [pi rad]
+        angle = 2.0 * (angle - angle_min) / (angle_max - angle_min) - 1.0
+        data[4] = angle
+
         # Angular velocity
         angular_vel_min, angular_vel_max = -0.5 * math.pi, 0.5 * math.pi  # [pi rad / s]
         angular_vel = (
             2.0 * (angular_vel - angular_vel_min) / (angular_vel_max - angular_vel_min)
             - 1.0
         )
-        data[4] = angular_vel
-
-        # Angle
-        angle_min, angle_max = -0.5 * math.pi, 0.5 * math.pi  # [pi rad]
-        angle = 2.0 * (angle - angle_min) / (angle_max - angle_min) - 1.0
-        data[5] = angle
+        data[5] = angular_vel
 
         return data
 
