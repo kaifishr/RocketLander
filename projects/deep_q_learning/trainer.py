@@ -8,7 +8,7 @@ from src.utils.config import Config
 from src.utils.utils import save_checkpoint
 from src.environment import Environment
 
-from .optimizer import DeepQOptimizer 
+from .optimizer import DeepQOptimizer
 
 
 class Trainer:
@@ -74,11 +74,13 @@ class Trainer:
                 print(f"{episode = }")
 
                 # Save model
-                reward = self.optimizer.stats["reward"]
                 if self.config.checkpoints.save_model:
+                    reward = self.optimizer.stats["reward"]
                     if reward > max_reward:
                         model = self.optimizer.model
-                        save_checkpoint(model=model, config=self.config, episode=episode)
+                        save_checkpoint(
+                            model=model, config=self.config, episode=episode
+                        )
                         max_reward = reward
 
                 t0 = time.time()

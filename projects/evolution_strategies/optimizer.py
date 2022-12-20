@@ -23,7 +23,7 @@ class EvolutionStrategies:
 
     Implementation according to paper:
     https://arxiv.org/abs/1703.03864
-    
+
     Attr:
         boosters:
         learning_rate:
@@ -31,6 +31,7 @@ class EvolutionStrategies:
         standard_deviation:
         reward:
     """
+
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
 
@@ -70,19 +71,21 @@ class EvolutionStrategies:
             numpy.multiply(grad_w, 0.0, out=grad_w)
             numpy.multiply(grad_b, 0.0, out=grad_b)
 
-        # ... 3.2) Compute weighted sum 
+        # ... 3.2) Compute weighted sum
         for booster, reward in zip(self.boosters, rewards):
-            for (grad_w, grad_b), (noise_w, noise_b) in zip(self.gradients, booster.model.noise):
+            for (grad_w, grad_b), (noise_w, noise_b) in zip(
+                self.gradients, booster.model.noise
+            ):
                 numpy.add(grad_w, reward * noise_w, out=grad_w)
                 numpy.add(grad_b, reward * noise_b, out=grad_b)
 
-        # ... 4) Update parameters 
+        # ... 4) Update parameters
         eta = self.learning_rate / (self.num_agents * self.standard_deviation)
         for (weight, bias), (grad_w, grad_b) in zip(self.parameters, self.gradients):
             numpy.add(weight, eta * grad_w, out=weight)
             numpy.add(bias, eta * grad_b, out=bias)
 
-        # ... 5) Broadcast weights to agents. 
+        # ... 5) Broadcast weights to agents.
         for booster in self.boosters:
             booster.model.parameters = copy.deepcopy(self.parameters)
 
@@ -114,16 +117,20 @@ class EvolutionStrategies:
         """Adds noise the network's weights."""
         for (weight, bias), (noise_w, noise_b) in zip(model.parameters, model.noise):
 
-            noise_w[:] = numpy.random.normal(scale=self.standard_deviation, size=weight.shape)
-            numpy.add(weight, noise_w, out=weight) 
+            noise_w[:] = numpy.random.normal(
+                scale=self.standard_deviation, size=weight.shape
+            )
+            numpy.add(weight, noise_w, out=weight)
 
-            noise_b[:] = numpy.random.normal(scale=self.standard_deviation, size=bias.shape)
-            numpy.add(bias, noise_b, out=bias) 
+            noise_b[:] = numpy.random.normal(
+                scale=self.standard_deviation, size=bias.shape
+            )
+            numpy.add(bias, noise_b, out=bias)
 
 
 class EvolutionStrategies_:
     """Evolution strategies optimizer. Version 2.
-    
+
     Attr:
         boosters:
         learning_rate:
@@ -131,6 +138,7 @@ class EvolutionStrategies_:
         standard_deviation:
         reward:
     """
+
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
 
@@ -169,17 +177,19 @@ class EvolutionStrategies_:
 
         # ... 3.2) Compute weighted sum (TODO: make faster by saving noise to model)
         for booster, reward in zip(self.boosters, rewards):
-            for (grad_w, grad_b), (weight, bias) in zip(self.gradients, booster.model.parameters):
-                grad_w += reward * weight 
+            for (grad_w, grad_b), (weight, bias) in zip(
+                self.gradients, booster.model.parameters
+            ):
+                grad_w += reward * weight
                 grad_b += reward * bias
 
-        # ... 4) Update parameters 
+        # ... 4) Update parameters
         eta = self.learning_rate / (self.num_agents * self.standard_deviation)
         for (weight, bias), (grad_w, grad_b) in zip(self.parameters, self.gradients):
             weight += eta * grad_w
             bias += eta * grad_b
 
-        # ... 5) Broadcast weights to agents. 
+        # ... 5) Broadcast weights to agents.
         for booster in self.boosters:
             booster.model.parameters = copy.deepcopy(self.parameters)
 
@@ -187,8 +197,7 @@ class EvolutionStrategies_:
         self._add_noise()
 
     def _init_agents(self) -> None:
-        """Initializes agents for Evolution Strategies Optimization.
-        """
+        """Initializes agents for Evolution Strategies Optimization."""
         for booster in self.boosters:
             booster.model.parameters = copy.deepcopy(self.parameters)
             self._noise(booster.model)
@@ -201,5 +210,7 @@ class EvolutionStrategies_:
     def _noise(self, model: object) -> None:
         """Adds noise the network's weights."""
         for weight, bias in model.parameters:
-            weight += numpy.random.normal(scale=self.standard_deviation, size=weight.shape)
+            weight += numpy.random.normal(
+                scale=self.standard_deviation, size=weight.shape
+            )
             bias += numpy.random.normal(scale=self.standard_deviation, size=bias.shape)

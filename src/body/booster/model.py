@@ -140,7 +140,7 @@ class NumpyNeuralNetwork:
     def load_state_dict(self, state_dict: dict) -> None:
         """Loads state dict holding the network's weights and biases.
 
-        NOTE: Method ignores parameter dimension. 
+        NOTE: Method ignores parameter dimension.
         """
         self.weights = state_dict["weights"]
         self.biases = state_dict["biases"]
@@ -174,8 +174,11 @@ class TorchNeuralNetwork(nn.Module):
 
     Attributes:
     """
+
     num_engines = 3  # Number of engines.
-    num_states = 6   # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
+    num_states = (
+        6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
+    )
 
     def __init__(self, config: Config) -> None:
         """Initializes NeuralNetwork class."""
@@ -186,7 +189,9 @@ class TorchNeuralNetwork(nn.Module):
         self.num_simulation_steps = config.optimizer.num_simulation_steps
 
         # Number of actions plus `do nothing` action.
-        self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
+        self.num_actions = (
+            1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
+        )
 
         config = config.env.booster.neural_network
         in_features = config.num_dim_in
@@ -201,7 +206,7 @@ class TorchNeuralNetwork(nn.Module):
             nn.ReLU(),
             # nn.GELU(),
             # nn.Tanh(),
-            nn.Dropout(p=0.05)
+            nn.Dropout(p=0.05),
         ]
 
         for _ in range(num_hidden_layers):
@@ -211,7 +216,7 @@ class TorchNeuralNetwork(nn.Module):
                 nn.ReLU(),
                 # nn.GELU(),
                 # nn.Tanh(),
-                nn.Dropout(p=0.05)
+                nn.Dropout(p=0.05),
             ]
 
         layers += [
@@ -221,7 +226,7 @@ class TorchNeuralNetwork(nn.Module):
         ]
 
         self.policy = nn.Sequential(*layers)
-        self.memory = [] 
+        self.memory = []
 
         self.apply(self._init_weights)
 
@@ -232,7 +237,7 @@ class TorchNeuralNetwork(nn.Module):
 
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
-            gain = 2 ** 0.5  # Gain for relu nonlinearity.
+            gain = 2**0.5  # Gain for relu nonlinearity.
             # gain = 5.0 / 3.0  # Gain for tanh nonlinearity.
             torch.nn.init.xavier_normal_(module.weight, gain=gain)
             if module.bias is not None:
@@ -245,7 +250,9 @@ class TorchNeuralNetwork(nn.Module):
         """
         self.actions_lookup = {}
 
-        thrust_levels = numpy.linspace(1.0 / self.num_thrust_levels, 1.0, self.num_thrust_levels)
+        thrust_levels = numpy.linspace(
+            1.0 / self.num_thrust_levels, 1.0, self.num_thrust_levels
+        )
         thrust_angles = numpy.linspace(0.0, 1.0, self.num_thrust_angles)
 
         if self.num_thrust_angles == 1:
@@ -257,11 +264,11 @@ class TorchNeuralNetwork(nn.Module):
             for j in range(self.num_thrust_levels):
                 for k in range(self.num_thrust_angles):
                     # Action vector with thrust and angle information for each engine.
-                    action = np.zeros((self.num_engines * 2)) 
+                    action = np.zeros((self.num_engines * 2))
                     # Select thrust j for engine i
-                    action[2*i] = thrust_levels[j]
+                    action[2 * i] = thrust_levels[j]
                     # Select angle k for engine i
-                    action[2*i+1] = thrust_angles[k]  
+                    action[2 * i + 1] = thrust_angles[k]
                     self.actions_lookup[n] = action
                     n += 1
 
@@ -294,7 +301,7 @@ class TorchNeuralNetwork(nn.Module):
             # Exploration by choosing a random action.
             action_idx = random.randint(0, self.num_actions - 1)
         else:
-            # Exploitation by selecting action with highest 
+            # Exploitation by selecting action with highest
             # predicted utility at current state.
             self.eval()
             q_values = self.policy(state)
@@ -312,7 +319,7 @@ class TorchNeuralNetwork(nn.Module):
     @torch.no_grad()
     def predict(self, state: numpy.ndarray) -> numpy.ndarray:
         """Predicts action.
-        
+
         Args:
             state: Current state.
 
@@ -333,4 +340,4 @@ class TorchNeuralNetwork(nn.Module):
             Action vector / Q-values.
         """
         q_values = self.policy(state)
-        return q_values 
+        return q_values

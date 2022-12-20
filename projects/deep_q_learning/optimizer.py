@@ -15,14 +15,15 @@ class DeepQOptimizer:
     """Optimizer class for deep reinforcement learning.
 
     Attributes:
-        epsilon: The epsilon-greedy value. This value defines the probability, 
-            that the agent selects a random action instead of the action that 
+        epsilon: The epsilon-greedy value. This value defines the probability,
+            that the agent selects a random action instead of the action that
             maximizes the expected utility (Q-value).
         epsilon_min: Minimal value of the epsilon-greedy value.
         gamma: A discount factor determining how much the agent considers future rewards.
     """
-    num_engines = 3    # FIX
-    num_states = 6     # FIX
+
+    num_engines = 3  # FIX
+    num_states = 6  # FIX
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
@@ -39,14 +40,16 @@ class DeepQOptimizer:
         self.batch_size = config.batch_size
         self.num_thrust_levels = config.num_thrust_levels
         self.num_thrust_angles = config.num_thrust_angles
-        self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
+        self.num_actions = (
+            1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
+        )
 
         self.model = copy.deepcopy(self.boosters[0].model)
 
         self.criterion = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(
-            params=self.model.parameters(), 
-            lr=self.learning_rate, 
+            params=self.model.parameters(),
+            lr=self.learning_rate,
         )
 
         self.replay_memory = deque(maxlen=config.memory_size)
@@ -58,7 +61,7 @@ class DeepQOptimizer:
 
     def _init_agents(self) -> None:
         """Initializes agents for reinforcement learning.
-        
+
         Assigns same initial network parameters to all agents.
         """
         self._broadcast_agents()
@@ -69,7 +72,9 @@ class DeepQOptimizer:
     def _broadcast_agents(self) -> None:
         """Broadcasts base network parameters to all agents."""
         for booster in self.boosters:
-            for params1, params2 in zip(booster.model.parameters(), self.model.parameters()):
+            for params1, params2 in zip(
+                booster.model.parameters(), self.model.parameters()
+            ):
                 params1.data = params2.data
             #     # params1.data.copy_(params2.data)
             #     params1.data[...] = params2.data[...]
@@ -79,7 +84,7 @@ class DeepQOptimizer:
         """Decays epsilon-greedy value."""
 
         if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay 
+            self.epsilon *= self.epsilon_decay
         self.stats["epsilon"] = self.epsilon
 
         for booster in self.boosters:
@@ -87,9 +92,9 @@ class DeepQOptimizer:
 
     def _gather_data(self) -> None:
         """Gathers memory data from all agents.
-        
+
         Build replay memory with [state, action, reward, next_state, done]
-        with data from each booster. Terminal state in memory is set to `True` 
+        with data from each booster. Terminal state in memory is set to `True`
         if one of the following conditions is met:
 
             - crash
@@ -111,10 +116,9 @@ class DeepQOptimizer:
 
         Creates dataset from memory that each of the booster's network holds.
         """
-        # Use subset of replay memory for training as transitions are strongly correlated.  
+        # Use subset of replay memory for training as transitions are strongly correlated.
         replay_batch = random.sample(
-            self.replay_memory, 
-            min(len(self.replay_memory), self.batch_size)
+            self.replay_memory, min(len(self.replay_memory), self.batch_size)
         )
 
         # Normalize the rewards of batch.
@@ -137,7 +141,9 @@ class DeepQOptimizer:
         for i, (_, action, reward, next_state, done) in enumerate(replay_batch):
             q_targets[i, action] = reward
             if not done:  # Discount the reward by gamma as landing was not successful.
-                q_targets[i, action] = reward + self.gamma * torch.amax(q_targets_new[i]).item()
+                q_targets[i, action] = (
+                    reward + self.gamma * torch.amax(q_targets_new[i]).item()
+                )
             else:  # Full reward if booster landed successfully.
                 q_targets[i, action] = reward
 
@@ -161,7 +167,6 @@ class DeepQOptimizer:
         self.optimizer.step()
 
         self.model.eval()
-
 
     def step(self) -> None:
         """Runs single optimization step."""

@@ -57,7 +57,7 @@ class Booster(Booster2D):
             eta = 1.0 / 60.0
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
             pos_pad = self.config.env.landing_pad.position
-            distance_x = (pos_pad.x - pos_x) ** 2 
+            distance_x = (pos_pad.x - pos_x) ** 2
             distance_y = (pos_pad.y - pos_y) ** 2
             distance = (distance_x + distance_y) ** 0.5
 
@@ -102,7 +102,7 @@ class Booster(Booster2D):
             self.body.active = False
             self.predictions.fill(0.0)
             return
-    
+
     def detect_landing(self) -> None:
         """Detects successful landing of booster.
 
@@ -132,9 +132,9 @@ class Booster(Booster2D):
         if self.body.active:
             # Pre-processing.
             # state = self._pre_process(self.state)
-            state = self.state  
+            state = self.state
 
-            # Predict actions. 
+            # Predict actions.
             pred = self.model.predict(state)
 
             # Data post-processing

@@ -4,7 +4,6 @@ from src.environment import Environment
 
 
 class Optimizer:
-
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer base class."""
 
@@ -17,4 +16,6 @@ class Optimizer:
         """Broadcasts set of network parameters to all agents."""
         for booster in self.boosters:
             # booster.model.parameters = copy.deepcopy(self.model.parameters)
-            booster.model.load_state_dict(self.model.state_dict())  # TODO: Test this method.
+            booster.model.load_state_dict(
+                self.model.state_dict()
+            )  # TODO: Test this method.
