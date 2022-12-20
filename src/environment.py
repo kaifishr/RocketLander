@@ -76,6 +76,7 @@ class Environment(Framework):
         for booster in self.boosters:
             if booster.body.active:
                 if self._is_outside(booster):
+                    # booster.done = True
                     booster.body.active = False
                     booster.predictions.fill(0.0)
 
@@ -103,9 +104,9 @@ class Environment(Framework):
                     v_max_x = self.config.env.landing.v_max.x
                     v_max_y = self.config.env.landing.v_max.y
                     if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
+                        # booster.done = True
                         booster.body.active = False
                         booster.predictions.fill(0.0)
-                        # booster.reward = 0.0
 
     def reset(self, add_noise: bool = True) -> None:
         """Resets boosters in environment.
@@ -148,17 +149,15 @@ class Environment(Framework):
             booster.body.angularVelocity = angular_velocity
 
             # Reset reward.
-            booster.reward = 0.0
-            # booster.distance_old = float("inf")  # RL
-            booster.distance_x_old = float("inf")  # RL
-            booster.distance_y_old = float("inf")  # RL
-            booster.model.memory = []         # RL
+            booster.rewards = []                   
+            booster.distance_x_old = float("inf")
+            booster.distance_y_old = float("inf")
+
+            # Reset memory.
+            booster.model.memory = []
 
             # Reactivate booster after collision in last generation.
             booster.body.active = True
-
-            # Turn engines back on
-            booster.engine_running = True
 
     def detect_landing(self) -> None:
         """Calls stress landing detection of each booster."""
@@ -168,7 +167,7 @@ class Environment(Framework):
     def detect_stress(self) -> None:
         """Calls stress detection method of each booster."""
         for booster in self.boosters:
-            booster.detect_excess_stress()
+            booster.detect_stress()
 
     def fetch_state(self) -> None:
         """Fetches data for neural network of booster"""

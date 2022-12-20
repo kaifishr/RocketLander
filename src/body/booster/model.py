@@ -105,7 +105,7 @@ class NumpyNeuralNetwork:
         return act_fun
 
     @staticmethod
-    def _init_weights(size: tuple[int, int], nonlinearity: str) -> None:
+    def _init_weights(size: tuple, nonlinearity: str) -> None:
         """Initializes model weights.
 
         Xavier normal initialization for feedforward neural networks described in
@@ -272,11 +272,9 @@ class TorchNeuralNetwork(nn.Module):
     def _memorize(self, state: torch.Tensor, action: int) -> None:
         """Stores past events.
 
-        Stores current `state`, `action` as well as placeholders for
-        `reward` and `done` to indicate if agent has solved the 
-        environment successfully.
+        Stores current `state`, `action`.
         """
-        self.memory.append([state, action, None, None])
+        self.memory.append([state, action])
 
     @torch.no_grad()
     def _select_action(self, state: torch.Tensor) -> int:

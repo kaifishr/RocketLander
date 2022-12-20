@@ -37,27 +37,21 @@ class Booster(Booster2D):
         self.max_angle_cold_gas = config.env.booster.engine.cold_gas.max_angle
 
         # Observed state, also input data for neural network
-        self.state = []
+        self.state = None
 
         # Booster's reward (or fitness score)
-        # TODO: Treat reward as a list to be compatible across all optimizers
-        self.reward = 0.0  # reward -> total_reward
+        self.rewards = []  # reward_memory
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
-
-        self.engine_running = True
 
     def comp_reward(self) -> None:
         """Computes reward for current simulation step.
 
         Accumulates defined rewards for booster.
 
-        TODO: Install different reward functions depending on optimization method.
         TODO: Check reward if engines are turned off.
         """
         if self.body.active:
-            # if self.engine_running:
-
             # Position
             pos_x, pos_y = self.body.position
             eta = 1.0 / 60.0
@@ -67,47 +61,48 @@ class Booster(Booster2D):
             distance_y = (pos_pad.y - pos_y) ** 2
             distance = (distance_x + distance_y) ** 0.5
 
-            # Velocity
-            # vel = self.body.linearVelocity
-            # velocity = (vel.x**2 + vel.y**2) ** 0.5
-            # alpha = 0.1
-            # beta = 0.01
-            # Reward proximity to landing pad
-            # reward_pos = 1.0 / (1.0 + alpha * distance)
-
             reward = 0.0
 
             # Reward agent if distance to landing pad gets smaller.
-            # if distance < self.distance_old:
-            #     reward += 0.1 + 10.0 / (1.0 + distance)
-            # else:
-            #     reward -= 0.1
-            # reward += 1.0
-            # print(f"{distance = }")
-            # print(f"{distance_x = }")
-            # print(f"{distance_y = }")
-            # print()
-            if distance_x < self.distance_x_old:
+            if distance_x <= self.distance_x_old:
                 self.distance_x_old = distance_x
-                if distance_y < self.distance_y_old:
+                if distance_y <= self.distance_y_old:
                     self.distance_y_old = distance_y
-                    reward += 0.1 + 100.0 / (1.0 + distance)
-            else:
-                reward -= 0.05
-
-            if distance < 5.0:
-                reward += 10.0
+                    reward += 100.0 / (1.0 + distance)
             else:
                 reward -= 0.02
 
-            self.reward += reward
+            # # Reward soft landing.
+            # if distance < 10.0:
+            #     # Velocity
+            #     vel = self.body.linearVelocity
+            #     velocity = (vel.x**2 + vel.y**2) ** 0.5
+            #     if velocity < 5.0:
+            #         reward += 10
+            #     else:
+            #         reward -= 10
 
-            ###
-            # TODO: Only for RL required.
-            # Add reward to most recent memory
-            self.model.memory[-1][-2] = reward
-            ###
+            self.rewards.append(reward)
 
+    def detect_stress(self) -> None:
+        """Detects excess stress on booster.
+
+        Deactivates booster if stress limits are being exceeded.
+        """
+        stress = self.config.env.booster.stress
+
+        max_angle = self._deg_to_rad(stress.max_angle)
+        max_angular_velocity = self._deg_to_rad(stress.max_angular_velocity)
+
+        if abs(self.body.transform.angle) > max_angle:
+            self.body.active = False
+            self.predictions.fill(0.0)
+            return
+        elif abs(self.body.angularVelocity) > max_angular_velocity:
+            self.body.active = False
+            self.predictions.fill(0.0)
+            return
+    
     def detect_landing(self) -> None:
         """Detects successful landing of booster.
 
@@ -117,7 +112,7 @@ class Booster(Booster2D):
         # Define the maximum distance in x and y direction
         # within engine can be turned off (safely).
         dist_x_max = 5.0
-        dist_y_max = 1.0
+        dist_y_max = 2.0
 
         pos_x, pos_y = self.body.position
         eta = 1.0 / 60.0
@@ -129,60 +124,35 @@ class Booster(Booster2D):
         dist_y = abs(pos_pad.y - pos_y)
 
         if (dist_x < dist_x_max) and (dist_y < dist_y_max):
-            self.engine_running = False
-
-    def detect_excess_stress(self) -> None:
-        """Detects excess stress on booster.
-
-        Deactivates booster if stress limits are being exceeded.
-        """
-        stress = self.config.env.booster.stress
-
-        max_angle = self._deg_to_rad(stress.max_angle)
-        max_angular_velocity = self._deg_to_rad(stress.max_angular_velocity)
-
-        # Angle
-        if abs(self.body.transform.angle) > max_angle:
             self.body.active = False
             self.predictions.fill(0.0)
-            return
-        # Angular velocity
-        elif abs(self.body.angularVelocity) > max_angular_velocity:
-            self.body.active = False
-            self.predictions.fill(0.0)
-            return
 
     def comp_action(self) -> None:
         """Computes actions from observed sate."""
         if self.body.active:
+            # Pre-processing.
+            # state = self._pre_process(self.state)
+            state = self.state  
 
-            if self.engine_running:
+            # Predict actions. 
+            pred = self.model.predict(state)
 
-                # Pre-processing
-                # state = self._pre_process(self.state)
-                state = self.state  
-
-                # Raw network predictions
-                pred = self.model.predict(state)  # predicts action
-
-                # Data post-processing
-                self.predictions = self._post_process(pred)
-
-            else:
-                self.predictions.fill(0.0)
+            # Data post-processing
+            self.predictions = self._post_process(pred)
 
     def fetch_state(self):
         """Fetches state from booster that is fed into neural network."""
-        self.state = np.array(
-            (
-                self.body.position.x, # / 50.0,
-                self.body.position.y, # / 50.0,
-                self.body.linearVelocity.x, # / 50.0,
-                self.body.linearVelocity.y, # / 50.0,
-                self.body.transform.angle,
-                self.body.angularVelocity,
+        if self.body.active:
+            self.state = np.array(
+                (
+                    self.body.position.x,
+                    self.body.position.y,
+                    self.body.linearVelocity.x,
+                    self.body.linearVelocity.y,
+                    self.body.transform.angle,
+                    self.body.angularVelocity,
+                )
             )
-        )
 
     def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
         """Applies pre-processing to fetched data.
