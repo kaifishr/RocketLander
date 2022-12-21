@@ -69,7 +69,8 @@ class Trainer:
 
                 # Write stats to Tensorboard.
                 for name, scalar in self.optimizer.stats.items():
-                    self.writer.add_scalar(name, scalar, episode)
+                    if scalar is not None:
+                        self.writer.add_scalar(name, scalar, episode)
                 self.writer.add_scalar("Seconds", time.time() - t0, episode)
                 print(f"{episode = }")
 

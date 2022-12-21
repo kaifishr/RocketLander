@@ -17,9 +17,10 @@ class Optimizer:
 
         # Parameters to be visualized with Tensorboard. 
         self.stats = {
-            "reward": float("nan"), 
-            "loss": float("nan"), 
-            "epsilon": float("nan")
+            "reward": None, 
+            "loss": None, 
+            "epsilon": None,
+            "temperature": None,
         }
 
         # Scalars

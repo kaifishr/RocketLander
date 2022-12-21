@@ -178,6 +178,7 @@ class SimulatedAnnealing(Optimizer):
         # Get reward of booster.
         self.reward = sum(self.booster.rewards)
         self.stats["reward"] = self.reward
+        self.stats["temperature"] = self.temp
 
         delta_reward = self.reward - self.reward_old
 
