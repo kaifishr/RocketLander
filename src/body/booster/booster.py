@@ -43,7 +43,7 @@ class Booster(Booster2D):
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
 
-    def _install_reward(self) -> None:
+    def _install_reward_function(self) -> None:
         """Installs selected reward function."""
         self.config.reward_type = "final"
         reward_type = self.config.reward_type

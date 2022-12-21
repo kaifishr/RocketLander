@@ -4,12 +4,14 @@ import math
 import numpy
 import random
 
+from projects.src.optimizer import Optimizer
+
 from src.utils.config import Config
 from src.environment import Environment
 
 
-class SimulatedAnnealing_:
-    """Optimizer class for multi-agent simulated annealing."""
+class SimulatedAnnealing_(Optimizer):
+    """Optimizer class for asynchronous simulated annealing."""
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
@@ -102,11 +104,16 @@ class SimulatedAnnealing_:
             bias += mask * mutation
 
 
-class SimulatedAnnealing:
-    """Optimizer class for simulated annealing."""
+class SimulatedAnnealing(Optimizer):
+    """Optimizer class for simulated annealing.
+
+    TODO: For asynchronous SA, use same noise for each booster and only final reward.
+    TODO: For standard SA with single agent, reward type does not matter.
+    """
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
+        super().__init__()
 
         self.booster = environment.boosters[0]
         self.model = self.booster.model
@@ -136,31 +143,6 @@ class SimulatedAnnealing:
         self.reward = 0.0
         self.reward_old = 0.0
 
-    def step(self) -> None:
-        """Runs single simulated annealing step."""
-
-        # Get reward of booster.
-        self.reward = self.booster.reward
-
-        delta_reward = self.reward - self.reward_old
-
-        # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
-        if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
-            # Save network if current reward is higher
-            self.parameters_old = copy.deepcopy(self.model.parameters)
-            self.reward_old = self.reward
-        else:
-            # Do not accept current state. Return to previous state.
-            self.model.parameters = copy.deepcopy(self.parameters_old)
-
-        # Reduce temperature according to scheduler
-        self._scheduler()
-
-        # Perturb weights for next iteration.
-        self._perturb()
-
-        self.iteration += 1
-
     def _scheduler(self) -> None:
         """Decreases temperature according to exponential decay."""
         self.temp = self.temp_initial * math.exp(-self.gamma * self.iteration)
@@ -189,3 +171,29 @@ class SimulatedAnnealing:
             mask = numpy.random.random(size=bias.shape) < perturbation_prob
             mutation = perturbation_rate * numpy.random.normal(size=bias.shape)
             bias += mask * mutation
+
+    def step(self) -> None:
+        """Runs single optimization step."""
+
+        # Get reward of booster.
+        self.reward = sum(self.booster.rewards)
+        self.stats["reward"] = self.reward
+
+        delta_reward = self.reward - self.reward_old
+
+        # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
+        if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
+            # Save network if current reward is higher
+            self.parameters_old = copy.deepcopy(self.model.parameters)
+            self.reward_old = self.reward
+        else:
+            # Do not accept current state. Return to previous state.
+            self.model.parameters = copy.deepcopy(self.parameters_old)
+
+        # Reduce temperature according to scheduler
+        self._scheduler()
+
+        # Perturb weights for next iteration.
+        self._perturb()
+
+        self.iteration += 1

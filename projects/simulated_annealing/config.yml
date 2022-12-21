@@ -1,8 +1,25 @@
 #########################################
-# Configuration for Simulated Annealing #
+# Configuration for simulated annealing #
 #########################################
 
 random_seed: 42
+
+# Simulated annealing
+optimizer:
+  num_boosters: 1  # TODO: This is fix.
+  num_iterations: 50000  # Decrease temperature for `num_iterations`
+  num_simulation_steps: 500
+  perturbation_probability_initial: 1.0
+  perturbation_probability_final: 0.001
+  perturbation_rate_initial: 0.04
+  perturbation_rate_final: 0.04
+  temp_initial: 0.06
+  temp_final: 1.0e-6
+  # perturbation_rate: 0.04
+  lib: "numpy"    # NOTE: This is fix.
+
+trainer:
+  num_episodes: -1  # -1 for infinite episodes or positive integer.
 
 # Directory to save the frames to create a video.
 dirs:
@@ -14,23 +31,6 @@ checkpoints:
   save_model: false
   model_path: "weights"
 
-trainer:
-  num_generations: -1  # -1 for infinite generations or positive integer. TODO: -> num_epochs?
-
-# Simulated annealing
-optimizer:
-  num_boosters: 1  # TODO: This is fix.
-  num_iterations: 50000  # Decrease temperature for `num_iterations`
-  num_simulation_steps: 1000
-  perturbation_probability_initial: 1.0
-  perturbation_probability_final: 0.001
-  perturbation_rate_initial: 0.04
-  perturbation_rate_final: 0.04
-  temp_initial: 0.06
-  temp_final: 1.0e-6
-  # perturbation_rate: 0.04
-  lib: "numpy"    # NOTE: This is fix.
-
 # Simulation environment 
 env:
 
@@ -41,14 +41,14 @@ env:
     y: -9.81
 
   domain: # [m]
-    x_min: -200.0
-    x_max: 200.0
-    y_max: 500.0
+    x_min: -150.0
+    x_max: 150.0
+    y_max: 450.0
     y_min: -10.0
 
   landing_pad:
     position: # [m]
-      x: 0.0
+      x: -100.0
       y: 0.0
 
   landing:
@@ -65,25 +65,25 @@ env:
 
     init:
       position: # [m]
-        x: 0.0
+        x: 70.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
-        y: -30.0
+        y: -50.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
     engine:
       main: # Merlin engine
         max_force: 854000.0  # [N] 854 kN at sea level
-        max_angle: 20.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+        max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 100000.0  # [N]
-        max_angle: 10.0  # [deg]
+        max_angle: 30.0  # [deg]
 
     noise:  # TODO: move this to env?
       position: # [m] 
-        x: 30.0                       # Standard deviation [m]
+        x: 0.0                       # Standard deviation [m]
         y: 0.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
         x: 0.0                        # Standard deviation [m / s]
@@ -94,8 +94,8 @@ env:
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 8
-      num_hidden_layers: 3
+      num_dim_hidden: 64
+      num_hidden_layers: 2
 
 framework:
   screen:
