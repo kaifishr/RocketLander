@@ -2,7 +2,7 @@
 # Configuration for Simulated Annealing #
 #########################################
 
-random_seed: 192837461
+random_seed: 42
 
 # Directory to save the frames to create a video.
 dirs:

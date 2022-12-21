@@ -2,7 +2,7 @@
 # Configuration for (Asynchronous) Reinforcement Learning #
 ###########################################################
 
-random_seed: 53999902
+random_seed: 42
 
 # Directory to save the frames to create a video.
 dirs:
@@ -29,7 +29,7 @@ optimizer:
   gamma: 0.95           # Discount rate
   epsilon: 1.0          # Epsilon-greedy value.
   epsilon_min: 0.01     # Minimal epsilon-greedy value.
-  epsilon_decay: 0.99999
+  epsilon_decay: 0.9999
   num_warmup_steps: 100000
   lib: "torch"    # NOTE: This is fix.
 

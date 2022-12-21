@@ -18,7 +18,6 @@ class Booster(Booster2D):
 
     Inherits from Booster2D class. Contains booster's logic.
     """
-
     num_engines = 3
     num_dims = 2
 
@@ -44,12 +43,31 @@ class Booster(Booster2D):
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
 
+    def _install_reward(self) -> None:
+        """Installs selected reward function."""
+        self.config.reward_type = "final"
+        reward_type = self.config.reward_type
+
+        if reward_type == "final":
+            self.reward_function = self._final_reward_function
+        elif reward_type == "steps":
+            self.reward_function = self._steps_reward_function
+        else:
+            raise NotImplementedError(
+                f"Reward type `{reward_type}` not implemented."
+            )
+
+    def _final_reward_function(self) -> float:
+        """Reward function returning a final reward."""
+
+    def _steps_reward_function(self) -> float:
+        """Reward function reward at every step."""
+
     def comp_reward(self) -> None:
         """Computes reward for current simulation step.
 
         Accumulates defined rewards for booster.
 
-        TODO: Check reward if engines are turned off.
         """
         if self.body.active:
             # Position
@@ -64,6 +82,7 @@ class Booster(Booster2D):
             reward = 0.0
 
             # Reward agent if distance to landing pad gets smaller.
+            # TODO: Only assign +1 / -1 for approach and +10 for landing / -10 for crash / -10 for leaving etc..
             if distance_x <= self.distance_x_old:
                 self.distance_x_old = distance_x
                 if distance_y <= self.distance_y_old:

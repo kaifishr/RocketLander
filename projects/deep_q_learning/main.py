@@ -1,10 +1,11 @@
-"""Runs deep Q-learning."""
+"""Runs (asynchronous) deep Q-learning optimization."""
 import pathlib
 
 from src.utils.config import init_config
 from src.utils.utils import set_random_seed
 
-from .trainer import Trainer
+from projects.src.trainer import Trainer
+from projects.src.optimizer import DeepQOptimizer 
 
 
 if __name__ == "__main__":
@@ -13,5 +14,5 @@ if __name__ == "__main__":
     file_path = file_dir / file_name
     config = init_config(path=file_path)
     set_random_seed(seed=config.random_seed)
-    trainer = Trainer(config=config)
+    trainer = Trainer(optimizer=DeepQOptimizer, config=config)
     trainer.run()

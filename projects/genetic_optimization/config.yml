@@ -1,8 +1,19 @@
 ##########################################
-# Configuration for Genetic Optimization #
+# Configuration for genetic optimization #
 ##########################################
 
-random_seed: 192837461
+random_seed: 42
+
+# Genetic optimization
+optimizer:
+  num_boosters: 8
+  num_simulation_steps: 500
+  mutation_probability: 0.05
+  mutation_rate: 0.05
+  lib: "numpy"  # FIX
+
+trainer:
+  num_episodes: -1  # -1 for infinite episodes or positive integer.
 
 # Directory to save the frames to create a video.
 dirs:
@@ -13,20 +24,6 @@ checkpoints:
   load_model: false
   save_model: false
   model_path: "weights"
-
-trainer:
-  num_generations: -1  # -1 for infinite generations or positive integer.
-
-# Genetic optimization
-optimizer:
-  num_boosters: 16
-  num_simulation_steps: 1000
-  mutation_probability: 0.05
-  mutation_rate: 0.05
-  lib: "numpy"    # numpy, torch
-
-# Reinforcement learning
-# TODO
 
 # Simulation environment 
 env:
@@ -62,7 +59,7 @@ env:
 
     init:
       position: # [m]
-        x: 90.0
+        x: 70.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
@@ -72,27 +69,29 @@ env:
 
     engine:
       main: # Merlin engine
-        max_force: 800000.0  # [N] 854 kN at sea level
+        max_force: 854000.0  # [N] 854 kN at sea level
         max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
-        max_force: 100000.0  # [N]
+        max_force: 50000.0  # [N]
         max_angle: 30.0  # [deg]
 
     noise:  # TODO: move this to env?
+      # "identical" or "different". If every agent get the same starting noise.
+      type: "identical"
       position: # [m] 
-        x: 50.0                       # Standard deviation [m]
+        x: 40.0                       # Standard deviation [m]
         y: 20.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
-        x: 20.0                        # Standard deviation [m / s]
-        y: 20.0                        # Standard deviation [m / s]
+        x: 5.0                        # Standard deviation [m / s]
+        y: 5.0                        # Standard deviation [m / s]
       angular_velocity: 0.0             # Standard deviation [deg / s]
       angle: 0.0                      # Standard deviation [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
-      num_dim_hidden: 32
-      num_hidden_layers: 3
+      num_dim_hidden: 64
+      num_hidden_layers: 2
 
 framework:
   screen:

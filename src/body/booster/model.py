@@ -146,16 +146,19 @@ class NumpyNeuralNetwork:
         self.biases = state_dict["biases"]
 
     def __call__(self, x: numpy.ndarray):
-        return self.forward(x)
+        return self.predict(x)
 
     def eval(self):
         pass
 
-    def forward(self, x: numpy.ndarray):
+    def predict(self, x: numpy.ndarray):
         """Feedforward state.
 
         Args:
             x: State of booster.
+
+        Returns:
+            Action.
         """
         for weight, bias in self.parameters[:-1]:
             x = self.act_fun(np.matmul(x, weight.T) + bias.T)
