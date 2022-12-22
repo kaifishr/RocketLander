@@ -10,7 +10,7 @@ from src.utils.config import Config
 from src.environment import Environment
 
 
-class SimulatedAnnealing(Optimizer):
+class AsyncSimulatedAnnealing(Optimizer):
     """Optimizer class for asynchronous simulated annealing."""
 
     def __init__(self, environment: Environment, config: Config) -> None:
@@ -81,17 +81,19 @@ class SimulatedAnnealing(Optimizer):
         """Runs single simulated annealing step."""
 
         # Select booster with highest reward in current population.
-        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])  
-        rewards = numpy.array([booster.rewards[-1] for booster in self.boosters]) 
+        rewards = self._gather_rewards(reduction="sum")
         self.idx_best = rewards.argmax()
         reward = rewards[self.idx_best]
+
+        # Save stats.
         self.stats["reward"] = reward 
+        self.stats["temperature"] = self.temp
 
         delta_reward = reward - self.reward_old
 
-        # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
+        # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp).
         if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
-            # Save network if current reward is higher
+            # Save network if current reward is higher.
             self.parameters_old = copy.deepcopy(
                 self.boosters[self.idx_best].model.parameters
             )
@@ -110,8 +112,8 @@ class SimulatedAnnealing(Optimizer):
         self.iteration += 1
 
 
-class SimulatedAnnealing_(Optimizer):
-    """Optimizer class for simulated annealing."""
+class SimulatedAnnealing(Optimizer):
+    """Optimizer class for simulated annealing with single agent."""
 
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
@@ -175,7 +177,8 @@ class SimulatedAnnealing_(Optimizer):
 
         # Get reward of booster.
         self.reward = sum(self.booster.rewards)
-        # self.reward = self.booster.rewards[-1]  # final reward
+        # Alternatively, use only last reward.
+        # self.reward = self.booster.rewards[-1]
         self.stats["reward"] = self.reward
         self.stats["temperature"] = self.temp
 

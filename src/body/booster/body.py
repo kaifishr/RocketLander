@@ -35,6 +35,7 @@ class Booster2D:
         random_translation:
         body:
     """
+
     num_engines = 3
     num_dims = 2
 

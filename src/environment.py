@@ -122,7 +122,9 @@ class Environment(Framework):
                 noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
                 noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
                 noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-                noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
+                noise_angular_velocity = random.gauss(
+                    mu=0.0, sigma=noise.angular_velocity
+                )
 
         for booster in self.boosters:
 
@@ -140,7 +142,9 @@ class Environment(Framework):
                     noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
                     noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
                     noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-                    noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
+                    noise_angular_velocity = random.gauss(
+                        mu=0.0, sigma=noise.angular_velocity
+                    )
 
                 position += (noise_pos_x, noise_pos_y)
                 linear_velocity += (noise_vel_x, noise_vel_y)

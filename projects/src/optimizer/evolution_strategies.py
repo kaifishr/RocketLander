@@ -70,7 +70,7 @@ class EvolutionStrategies(Optimizer):
 
     def _noise(self, model: object) -> None:
         """Adds noise the network's weights.
-        
+
         Args:
             model: The neural network.
         """
@@ -94,7 +94,9 @@ class EvolutionStrategies(Optimizer):
 
         # Get rewards for each agent in population.
         # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])  # cumulative reward
-        rewards = numpy.array([booster.rewards[-1] for booster in self.boosters])  # final reward
+        rewards = numpy.array(
+            [booster.rewards[-1] for booster in self.boosters]
+        )  # final reward
         self.stats["reward"] = max(rewards)
 
         # Standardize rewards to be N(0, 1) gaussian.

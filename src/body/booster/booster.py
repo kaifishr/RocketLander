@@ -69,7 +69,7 @@ class Booster(Booster2D):
     #     alpha = 100.0
     #     beta = 100.0
 
-    #     # Distance to landing pad. 
+    #     # Distance to landing pad.
     #     pos_x, pos_y = self.body.position
     #     pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
     #     pos_pad = self.config.env.landing_pad.position
@@ -97,9 +97,9 @@ class Booster(Booster2D):
 
             eta = 1.0 / 60.0  # Correction factor.
             alpha = 100.0
-            beta = 50.0
+            beta = 10.0
 
-            # Distance to landing pad. 
+            # Distance to landing pad.
             pos_x, pos_y = self.body.position
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
             pos_pad = self.config.env.landing_pad.position
@@ -121,7 +121,7 @@ class Booster(Booster2D):
                     self.distance_y_old = distance_y
                     distance_reward = alpha / (1.0 + distance)
                     velocity_reward = beta / (1.0 + velocity)
-                    reward += distance_reward + velocity_reward * distance_reward
+                    reward += distance_reward + velocity_reward / (1.0 + distance)
             else:
                 reward -= 0.02
 

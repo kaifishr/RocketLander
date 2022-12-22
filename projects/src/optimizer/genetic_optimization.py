@@ -20,6 +20,7 @@ class GeneticOptimizer(Optimizer):
         mutation_prob
         mutation_rate
     """
+
     def __init__(self, environment: Environment, config: Config) -> None:
         """Initializes optimizer"""
         super().__init__()
@@ -36,9 +37,9 @@ class GeneticOptimizer(Optimizer):
 
         # Fetch rewards of each booster.
         # Cumulative rewards:
-        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])  
+        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])
         # Use final reward
-        rewards = numpy.array([booster.rewards[-1] for booster in self.boosters]) 
+        rewards = numpy.array([booster.rewards[-1] for booster in self.boosters])
         self.idx_best = rewards.argmax()
         self.stats["reward"] = rewards[self.idx_best]
 

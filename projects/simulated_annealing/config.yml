@@ -2,21 +2,20 @@
 # Configuration for simulated annealing #
 #########################################
 
-random_seed: 42
+random_seed: 420
 
 # Simulated annealing
 optimizer:
-  num_boosters: 4  # TODO: This is fix.
+  num_boosters: 4
   num_iterations: 50000  # Decrease temperature for `num_iterations`
   num_simulation_steps: 500
+  temp_initial: 0.06
+  temp_final: 1.0e-6
   perturbation_probability_initial: 1.0
   perturbation_probability_final: 0.001
   perturbation_rate_initial: 0.04
   perturbation_rate_final: 0.04
-  temp_initial: 0.06
-  temp_final: 1.0e-6
-  # perturbation_rate: 0.04
-  lib: "numpy"    # NOTE: This is fix.
+  lib: "numpy"    # Fix.
 
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.

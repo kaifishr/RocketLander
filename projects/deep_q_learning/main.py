@@ -5,7 +5,7 @@ from src.utils.config import init_config
 from src.utils.utils import set_random_seed
 
 from projects.src.trainer import Trainer
-from projects.src.optimizer import DeepQOptimizer 
+from projects.src.optimizer import DeepQOptimizer
 
 
 if __name__ == "__main__":
