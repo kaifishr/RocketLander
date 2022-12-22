@@ -15,16 +15,6 @@ optimizer:
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.
 
-# Directory to save the frames to create a video.
-dirs:
-  frames: "frames"
-
-# Parameters to save the booster's neural network.
-checkpoints:
-  load_model: false
-  save_model: false
-  model_path: "weights"
-
 # Simulation environment 
 env:
 
@@ -109,3 +99,13 @@ renderer:
       x: -0.5
       y: -0.05
   ppm: 2     # Pixels per meter (zoom)
+
+# Directory to save the frames to create a video.
+dirs:
+  frames: "frames"
+
+# Parameters to save the booster's neural network.
+checkpoints:
+  load_model: false
+  save_model: false
+  model_path: "weights"

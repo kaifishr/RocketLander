@@ -18,7 +18,7 @@ optimizer:
   # perturbation_rate: 0.04
   lib: "numpy"    # NOTE: This is fix.
   # Reward type: "final" or "cumulative"
-  reward_type: "cumulative"
+  reward_type: "cumulative"  # TODO: Remove this as an option.
 
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.

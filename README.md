@@ -30,6 +30,9 @@ cd RocketLander
 pip3 install -r requirements.txt
 ```
 
+
+# Getting Started
+
 To start a training session using a specified learning method, run one of the examples in the project folder. For example:
 
 ```console
@@ -38,6 +41,15 @@ python -m projects.reinforcement_learning.main
 python -m projects.evolution_strategies.main
 python -m projects.genetic_optimization.main
 python -m projects.simulated_annealing.main
+```
+
+Rendering and visualization can be turned off to greatly accelerate the optimization process by clicking on the PyGame window or by pressing `SPACEBAR`. Pressing `P` pauses the optimization process.
+
+Track important metrics such as the reward with Tensorboard:
+
+```console
+cd rocketlander
+tensorboard --logdir runs/
 ```
 
 

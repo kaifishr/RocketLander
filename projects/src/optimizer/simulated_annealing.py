@@ -176,14 +176,15 @@ class SimulatedAnnealing(Optimizer):
         """Runs single optimization step."""
 
         # Get reward of booster.
-        if self.reward_type == "cumulative":
-            self.reward = sum(self.booster.rewards)
-        elif self.reward_type == "final":
-            self.reward = self.booster.rewards[-1]
-        else:
-            raise NotImplementedError(
-                f"Reward type '{self.reward_type}' not implemented."
-            )
+        self.reward = self.booster.rewards[-1]  # final reward
+        # if self.reward_type == "cumulative":
+        #     self.reward = sum(self.booster.rewards)
+        # elif self.reward_type == "final":
+        #     self.reward = self.booster.rewards[-1]
+        # else:
+        #     raise NotImplementedError(
+        #         f"Reward type '{self.reward_type}' not implemented."
+        #     )
         self.stats["reward"] = self.reward
         self.stats["temperature"] = self.temp
 

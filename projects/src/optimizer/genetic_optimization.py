@@ -35,7 +35,10 @@ class GeneticOptimizer(Optimizer):
         """Selects best agent for reproduction."""
 
         # Fetch rewards of each booster.
-        rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])
+        # Cumulative rewards:
+        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])  
+        # Use final reward
+        rewards = numpy.array([booster.rewards[-1] for booster in self.boosters]) 
         self.idx_best = rewards.argmax()
         self.stats["reward"] = rewards[self.idx_best]
 
