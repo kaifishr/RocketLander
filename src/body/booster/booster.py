@@ -14,12 +14,10 @@ from .model import ModelLoader
 
 
 class Booster(Booster2D):
-    """Booster class
+    """Booster class.
 
     Inherits from Booster2D class. Contains booster's logic.
     """
-    num_engines = 3
-    num_dims = 2
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes Booster class."""

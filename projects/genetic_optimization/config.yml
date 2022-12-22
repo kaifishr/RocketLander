@@ -76,7 +76,7 @@ env:
         max_angle: 30.0  # [deg]
 
     noise:  # TODO: move this to env?
-      # "identical" or "different". If every agent get the same starting noise.
+      # "identical" or "different". Whether every agent gets the same starting noise.
       type: "identical"
       position: # [m] 
         x: 40.0                       # Standard deviation [m]

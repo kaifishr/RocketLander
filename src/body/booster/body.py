@@ -35,6 +35,8 @@ class Booster2D:
         random_translation:
         body:
     """
+    num_engines = 3
+    num_dims = 2
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes Booster2D class."""
