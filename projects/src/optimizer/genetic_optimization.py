@@ -53,7 +53,6 @@ class GeneticOptimizer(Optimizer):
             # Assign best model to each booster and mutate weights.
             booster.model = copy.deepcopy(model)  # TODO: Why not just weights?
             self._mutate_weights(booster.model)
-            # booster.model.mutate_weights()
 
     def _mutate_weights(self, model: object) -> None:
         """Mutates the network's weights.

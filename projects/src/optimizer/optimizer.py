@@ -25,6 +25,7 @@ class Optimizer:
 
         # Scalars
         self.iteration = 0
+        self.idx_best = 0
 
     def step(self) -> None:
         """Runs single optimization step."""

@@ -6,7 +6,7 @@ random_seed: 42
 
 # Simulated annealing
 optimizer:
-  num_boosters: 1  # TODO: This is fix.
+  num_boosters: 4  # TODO: This is fix.
   num_iterations: 50000  # Decrease temperature for `num_iterations`
   num_simulation_steps: 500
   perturbation_probability_initial: 1.0
@@ -17,21 +17,9 @@ optimizer:
   temp_final: 1.0e-6
   # perturbation_rate: 0.04
   lib: "numpy"    # NOTE: This is fix.
-  # Reward type: "final" or "cumulative"
-  reward_type: "cumulative"  # TODO: Remove this as an option.
 
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.
-
-# Directory to save the frames to create a video.
-dirs:
-  frames: "frames"
-
-# Parameters to save the booster's neural network.
-checkpoints:
-  load_model: false
-  save_model: false
-  model_path: "weights"
 
 # Simulation environment 
 env:
@@ -102,10 +90,6 @@ env:
       num_dim_hidden: 64
       num_hidden_layers: 2
 
-    # reward:
-    #   # Reward type. Either "continuous" or "step".
-    #   type: "continuous"
-
 framework:
   screen:
     width: 640
@@ -121,3 +105,13 @@ renderer:
       x: -0.5
       y: -0.05
   ppm: 2     # Pixels per meter (zoom)
+
+# Directory to save the frames to create a video.
+dirs:
+  frames: "frames"
+
+# Parameters to save the booster's neural network.
+checkpoints:
+  load_model: false
+  save_model: false
+  model_path: "weights"
