@@ -17,6 +17,8 @@ optimizer:
   temp_final: 1.0e-6
   # perturbation_rate: 0.04
   lib: "numpy"    # NOTE: This is fix.
+  # Reward type: "final" or "cumulative"
+  reward_type: "cumulative"
 
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.
@@ -99,6 +101,10 @@ env:
       num_dim_out: 6      # Predictions of thrust and angle for three engines.
       num_dim_hidden: 64
       num_hidden_layers: 2
+
+    # reward:
+    #   # Reward type. Either "continuous" or "step".
+    #   type: "continuous"
 
 framework:
   screen:

@@ -76,6 +76,7 @@ class Environment(Framework):
         for booster in self.boosters:
             if booster.body.active:
                 if self._is_outside(booster):
+                    booster.done = True
                     booster.body.active = False
                     booster.predictions.fill(0.0)
 
@@ -100,6 +101,7 @@ class Environment(Framework):
                     v_max_x = self.config.env.landing.v_max.x
                     v_max_y = self.config.env.landing.v_max.y
                     if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
+                        booster.done = True
                         booster.body.active = False
                         booster.predictions.fill(0.0)
 
@@ -160,6 +162,7 @@ class Environment(Framework):
 
             # Reactivate booster after collision in last generation.
             booster.body.active = True
+            booster.done = False
 
     def detect_landing(self) -> None:
         """Calls stress landing detection of each booster."""
@@ -222,13 +225,13 @@ class Environment(Framework):
         # Check boundary conditions.
 
         # Detect leaving the domain.
-        self.detect_escape()
+        self.detect_escape()  # TODO: Call in reward function
 
         # Detect high stresses on the booster.
-        self.detect_stress()
+        self.detect_stress()  # TODO: Call in reward function
 
         # Detect collision with ground.
-        self.detect_impact()
+        self.detect_impact()  # TODO: Call in reward function
 
         # Detect landing and turn engines off.
-        self.detect_landing()
+        self.detect_landing()  # TODO: Call in reward function

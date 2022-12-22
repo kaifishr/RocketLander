@@ -33,33 +33,59 @@ class Booster(Booster2D):
         self.max_force_cold_gas = config.env.booster.engine.cold_gas.max_force
         self.max_angle_cold_gas = config.env.booster.engine.cold_gas.max_angle
 
-        # Observed state, also input data for neural network
+        # Observed state, also input data for neural network.
         self.state = None
 
+        # Parameter indicating if booster either left domain or crashed.
+        self.done = False
+
         # Booster's reward (or fitness score)
-        self.rewards = []  # reward_memory
+        self.rewards = []  # TODO: rewards -> reward_memory
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
 
-    def _install_reward_function(self) -> None:
-        """Installs selected reward function."""
-        self.config.reward_type = "final"
-        reward_type = self.config.reward_type
+        # self._install_reward_function()
 
-        if reward_type == "final":
-            self.reward_function = self._final_reward_function
-        elif reward_type == "steps":
-            self.reward_function = self._steps_reward_function
-        else:
-            raise NotImplementedError(
-                f"Reward type `{reward_type}` not implemented."
-            )
+    # def _install_reward_function(self) -> None:
+    #     """Installs selected reward function."""
+    #     reward = self.config.env.booster.reward
 
-    def _final_reward_function(self) -> float:
-        """Reward function returning a final reward."""
+    #     if reward.type == "final":
+    #         self.reward_function = self._final_reward_function
+    #     elif reward.type == "step":
+    #         self.reward_function = self._step_reward_function
+    #     else:
+    #         raise NotImplementedError(
+    #             f"Reward type `{reward.type}` not implemented."
+    #         )
 
-    def _steps_reward_function(self) -> float:
-        """Reward function reward at every step."""
+    # def _step_reward_function(self) -> float:
+    #     """Reward function reward at every step."""
+
+    # def _continuous_reward_function(self) -> float:
+    #     """Continuous reward function."""
+
+    #     eta = 1.0 / 60.0  # Correction factor.
+    #     alpha = 100.0
+    #     beta = 100.0
+
+    #     # Distance to landing pad. 
+    #     pos_x, pos_y = self.body.position
+    #     pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+    #     pos_pad = self.config.env.landing_pad.position
+    #     distance_x = (pos_pad.x - pos_x) ** 2
+    #     distance_y = (pos_pad.y - pos_y) ** 2
+    #     distance = (distance_x + distance_y) ** 0.5
+
+    #     # Velocity
+    #     vel = self.body.linearVelocity
+    #     velocity = (vel.x**2 + vel.y**2) ** 0.5
+
+    #     distance_reward = alpha / (1.0 + distance)
+    #     velocity_reward = beta / (1.0 + velocity)
+    #     reward = distance_reward * velocity_reward
+
+    #     self.rewards.append(reward)
 
     def comp_reward(self) -> None:
         """Computes reward for current simulation step.
@@ -68,41 +94,55 @@ class Booster(Booster2D):
 
         """
         if self.body.active:
-            # Position
+
+            eta = 1.0 / 60.0  # Correction factor.
+            alpha = 100.0
+            # beta = 100.0
+
+            # Distance to landing pad. 
             pos_x, pos_y = self.body.position
-            eta = 1.0 / 60.0
             pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
             pos_pad = self.config.env.landing_pad.position
             distance_x = (pos_pad.x - pos_x) ** 2
             distance_y = (pos_pad.y - pos_y) ** 2
             distance = (distance_x + distance_y) ** 0.5
 
+            # Velocity.
+            # vel = self.body.linearVelocity
+            # velocity = (vel.x**2 + vel.y**2) ** 0.5
+
             reward = 0.0
 
             # Reward agent if distance to landing pad gets smaller.
-            # TODO: Only assign +1 / -1 for approach and +10 for landing / -10 for crash / -10 for leaving etc..
+            # Reward agent if distance to landing pad gets smaller.
             if distance_x <= self.distance_x_old:
                 self.distance_x_old = distance_x
                 if distance_y <= self.distance_y_old:
                     self.distance_y_old = distance_y
-                    reward += 100.0 / (1.0 + distance)
+                    distance_reward = alpha / (1.0 + distance)
+                    # velocity_reward = beta / (1.0 + velocity)
+                    reward += distance_reward # * velocity_reward
             else:
                 reward -= 0.02
 
-            # # Reward soft landing.
-            # if distance < 10.0:
-            #     # Velocity
-            #     vel = self.body.linearVelocity
-            #     velocity = (vel.x**2 + vel.y**2) ** 0.5
-            #     if velocity < 5.0:
-            #         reward += 10
-            #     else:
-            #         reward -= 10
+            # if self._detected_escape():
+            #     reward -= 10.0
+
+            # if self._detected_stress():
+            #     reward -= 10.0
+
+            # if self._detected_impact():
+            #     reward -= 100.0
+
+            # if self._detected_landing():
+            #     reward += 100.0
 
             self.rewards.append(reward)
 
     def detect_stress(self) -> None:
         """Detects excess stress on booster.
+
+        TODO: Use this in reward function directly.
 
         Deactivates booster if stress limits are being exceeded.
         """
@@ -122,6 +162,8 @@ class Booster(Booster2D):
 
     def detect_landing(self) -> None:
         """Detects successful landing of booster.
+
+        TODO: Use this in reward function directly.
 
         Turns off engines after successful landing. Turning off engines while
         staying active, the booster can still get rewards.

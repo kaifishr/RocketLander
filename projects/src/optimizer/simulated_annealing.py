@@ -28,6 +28,7 @@ class SimulatedAnnealing_(Optimizer):
         self.temp_initial = self.config.temp_initial
         self.temp_final = self.config.temp_final
         self.temp = self.temp_initial
+        self.reward_type = config.reward_type
 
         # Compute gamma to go from `temp_initial` to `temp_final` in `num_iterations`.
         num_iterations = config.optimizer.num_iterations
@@ -43,32 +44,6 @@ class SimulatedAnnealing_(Optimizer):
         self.reward_old = 0.0
 
         self.idx_best = 0
-
-    def step(self) -> None:
-        """Runs single simulated annealing step."""
-
-        # Select booster with highest reward in current population.
-        rewards = [booster.reward for booster in self.boosters]
-        self.idx_best = numpy.argmax(rewards)
-        self.reward = rewards[self.idx_best]
-
-        delta_reward = self.reward - self.reward_old
-
-        # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
-        if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
-            # Save network if current reward is higher
-            self.params_old = copy.deepcopy(
-                self.boosters[self.idx_best].model.parameters
-            )
-            self.reward_old = self.reward
-
-        # Reduce temperature according to scheduler
-        self._scheduler()
-
-        # Perturb weights for next iteration.
-        self._perturb()
-
-        self.iteration += 1
 
     def _scheduler(self) -> None:
         """Decreases temperature exponentially."""
@@ -103,12 +78,38 @@ class SimulatedAnnealing_(Optimizer):
             mutation = self.perturbation_rate * numpy.random.normal(size=bias.shape)
             bias += mask * mutation
 
+    def step(self) -> None:
+        """Runs single simulated annealing step."""
+
+        # Select booster with highest reward in current population.
+        rewards = [booster.reward for booster in self.boosters]
+        self.idx_best = numpy.argmax(rewards)
+        self.reward = rewards[self.idx_best]
+
+        delta_reward = self.reward - self.reward_old
+
+        # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
+        if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
+            # Save network if current reward is higher
+            self.params_old = copy.deepcopy(
+                self.boosters[self.idx_best].model.parameters
+            )
+            self.reward_old = self.reward
+
+        # Reduce temperature according to scheduler
+        self._scheduler()
+
+        # Perturb weights for next iteration.
+        self._perturb()
+
+        self.iteration += 1
+
 
 class SimulatedAnnealing(Optimizer):
     """Optimizer class for simulated annealing.
 
     TODO: For asynchronous SA, use same noise for each booster and only final reward.
-    TODO: For standard SA with single agent, reward type does not matter.
+    TODO: For standard SA with single agent, noise and reward type does not matter.
     """
 
     def __init__(self, environment: Environment, config: Config) -> None:
@@ -118,20 +119,18 @@ class SimulatedAnnealing(Optimizer):
         self.booster = environment.boosters[0]
         self.model = self.booster.model
 
-        self.config = config.optimizer
+        config = config.optimizer
 
-        self.perturbation_probability_initial = (
-            self.config.perturbation_probability_initial
-        )
-        self.perturbation_probability_final = self.config.perturbation_probability_final
-        self.perturbation_rate_initial = self.config.perturbation_rate_initial
-        self.perturbation_rate_final = self.config.perturbation_rate_final
-        # self.perturbation_rate = self.config.perturbation_rate
-        self.temp_initial = self.config.temp_initial
-        self.temp_final = self.config.temp_final
+        self.perturbation_probability_initial = config.perturbation_probability_initial
+        self.perturbation_probability_final = config.perturbation_probability_final
+        self.perturbation_rate_initial = config.perturbation_rate_initial
+        self.perturbation_rate_final = config.perturbation_rate_final
+        self.temp_initial = config.temp_initial
+        self.temp_final = config.temp_final
         self.temp = self.temp_initial
+        self.reward_type = config.reward_type
 
-        num_iterations = config.optimizer.num_iterations
+        num_iterations = config.num_iterations
         self.gamma = (1.0 / num_iterations) * math.log(
             self.temp_initial / self.temp_final
         )
@@ -142,6 +141,7 @@ class SimulatedAnnealing(Optimizer):
         # Maximum reward of current epoch.
         self.reward = 0.0
         self.reward_old = 0.0
+
 
     def _scheduler(self) -> None:
         """Decreases temperature according to exponential decay."""
@@ -176,7 +176,14 @@ class SimulatedAnnealing(Optimizer):
         """Runs single optimization step."""
 
         # Get reward of booster.
-        self.reward = sum(self.booster.rewards)
+        if self.reward_type == "cumulative":
+            self.reward = sum(self.booster.rewards)
+        elif self.reward_type == "final":
+            self.reward = self.booster.rewards[-1]
+        else:
+            raise NotImplementedError(
+                f"Reward type '{self.reward_type}' not implemented."
+            )
         self.stats["reward"] = self.reward
         self.stats["temperature"] = self.temp
 
