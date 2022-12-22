@@ -1,25 +1,12 @@
 ###########################################################
-# Configuration for (Asynchronous) Reinforcement Learning #
+# Configuration for (asynchronous) reinforcement learning #
 ###########################################################
 
 random_seed: 42
 
-# Directory to save the frames to create a video.
-dirs:
-  frames: "frames"
-
-# Parameters to save the booster's neural network.
-checkpoints:
-  load_model: false
-  save_model: false
-  model_path: "weights"
-
-trainer:
-  num_episodes: -1  # -1 for infinite generations or positive integer
-
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 1
+  num_boosters: 4
   num_simulation_steps: 500
   num_thrust_levels: 2  # Thrust levels of engines. 
   num_thrust_angles: 2  # Thrust angles of engines.
@@ -31,7 +18,10 @@ optimizer:
   epsilon_min: 0.01     # Minimal epsilon-greedy value.
   epsilon_decay: 0.9999
   num_warmup_steps: 100000
-  lib: "torch"    # NOTE: This is fix.
+  lib: "torch"    # Fix.
+
+trainer:
+  num_episodes: -1  # -1 for infinite generations or positive integer
 
 # Simulation environment 
 env:
@@ -59,7 +49,8 @@ env:
       y: -5.0
 
   booster:
-    fixed_rotation: true    # Fix rotation for faster learning.
+    # Fix rotation for faster learning.
+    fixed_rotation: true
 
     stress:
       max_angle: 10  # [deg]
@@ -85,10 +76,11 @@ env:
 
     noise:  # TODO: move this to env?
       # "identical" or "different". Whether every agent gets the same starting noise.
+      is_activated: true
       type: "different"
       position: # [m] 
-        x: 50.0                       # Standard deviation [m]
-        y: 50.0                       # Standard deviation [m]
+        x: 30.0                       # Standard deviation [m]
+        y: 30.0                       # Standard deviation [m]
       linear_velocity: # [m/s]
         x: 0.0                        # Standard deviation [m / s]
         y: 10.0                        # Standard deviation [m / s]
@@ -116,3 +108,13 @@ renderer:
       x: -0.5
       y: -0.05
   ppm: 2     # Pixels per meter (zoom)
+
+# Directory to save the frames to create a video.
+dirs:
+  frames: "frames"
+
+# Parameters to save the booster's neural network.
+checkpoints:
+  load_model: false
+  save_model: false
+  model_path: "weights"

@@ -77,6 +77,7 @@ env:
 
     noise:  # TODO: move this to env?
       # "identical" or "different". Whether every agent gets the same starting noise.
+      is_activated: true
       type: "identical"
       position: # [m] 
         x: 40.0                       # Standard deviation [m]

@@ -67,16 +67,16 @@ $$R = R_{\text{proximity}} \cdot R_{\text{velocity}}$$
 We can implicitly model a fuel restriction by lowering the number of simulation steps. This time restriction resembles an implicit fuel restriction, encouraging the booster to land more quickly.
 
 
-## Reinforcement Learning
+## Asynchronous Reinforcement Learning
 
 Reinforcement Learning is without a doubt one of the most interesting subfields of machine learning in which an agent (here the booster) learns to make decisions in an environment by interacting with it and receiving rewards for its actions.
 
 In reinforcement learning, the goal of the agent is to learn a policy, represented by the booster's neural network, that maximizes a reward over time. The neural network maps the booster's state to pairs of actions and Q-values, which the agent uses to determine the best action to take in a given situation. This is typically done by trial and error, with the agent learning from its mistakes and adjusting its policy-based actions over time to improve its performance. 
 
 
-### Deep Q-Learning
+### Asynchronous Deep Q-Learning
 
-For this project I used [Deep Q-learning](https://en.wikipedia.org/wiki/Q-learning) which is one of the core concepts in reinforcement learning. The implemented deep Q-learning algorithm uses a batch of episodes recorded by multiple boosters in parallel to learn a policy that maximizes the reward.
+For this project I used asynchronous [Deep Q-learning](https://en.wikipedia.org/wiki/Q-learning) which is one of the core concepts in reinforcement learning. The implemented deep Q-learning algorithm uses a batch of episodes recorded by multiple boosters in parallel to learn a policy that maximizes the reward.
 
 For the training of the agent we proceed as follows. We start by initializing our policy (the neural network) randomly. To ensure the agent explores its environment, we inject noise into its action space. That means, we either choose a random action from our discrete action space, or we take the action with the highest predicted utility predicted by the policy neural network at a given state As an aside, this is different from evolutionary strategies presented above, where we inject noise directly into the parameter space of the agent. Aside end. 
 
@@ -127,7 +127,7 @@ The algorithm begins with a population of candidate solutions, from which the ag
 Here, we use the mutation operation during the optimization process to learn to land a rocket booster. Mutation operations act on all members of a population. The mutation operation is defined by the probability with which a parameter mutation is going to happen and the rate or strength with which the mutation acts on the parameter.
 
 
-## Simulated Annealing
+## Asynchronous Simulated Annealing
 
 In 1983, Kirkpatrick et al., combined the insights of heating and cooling materials to change their physical properties with the Monte Carlo-based Metropolis-Hastings algorithm, to find approximate solutions to the traveling salesman problem. This combination led to the technique of simulated annealing. It has been shown, that with a sufficiently high initial temperature and sufficiently long cooling time, the system's minimum-energy state is reached.
 
@@ -138,10 +138,6 @@ In a previous project called [*NeuralAnnealing*](https://github.com/kaifishr/Neu
 
 # TODOs
 
-- Normalize state values.
-- Set `done` to True if booster has landed.
-- Use global trainer class
-- Use optimizer base class
 - Add explicit fuel constraint.
 - Add dynamic landing legs.
 

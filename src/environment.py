@@ -26,7 +26,7 @@ class Environment(Framework):
     to control the drones.
 
     Attributes:
-        boosters:
+        boosters: List of booster objects.
     """
 
     def __init__(self, config: Config) -> None:
@@ -37,10 +37,9 @@ class Environment(Framework):
 
         self.landing_pad = LandingPad(world=self.world, config=config)
 
-        num_boosters = config.optimizer.num_boosters
-        self.boosters = [
-            Booster(world=self.world, config=config) for _ in range(num_boosters)
-        ]
+        self.boosters = []
+        for _ in range(config.optimizer.num_boosters):
+            self.boosters.append(Booster(world=self.world, config=config))
 
         # Add reference of boosters to world class for easier rendering handling.
         self.world.boosters = self.boosters
@@ -65,6 +64,7 @@ class Environment(Framework):
             return True
         elif pos_y > y_max:
             return True
+
         return False
 
     def detect_escape(self) -> None:
@@ -76,15 +76,11 @@ class Environment(Framework):
         for booster in self.boosters:
             if booster.body.active:
                 if self._is_outside(booster):
-                    # booster.done = True
                     booster.body.active = False
                     booster.predictions.fill(0.0)
 
     def detect_impact(self):
         """Detects impact with landing pad.
-
-        TODO: Move threshold computation to __init__()
-        TODO: This should be part of stress on the vehicle method.
 
         Deactivates booster in case of impact.
 
@@ -104,57 +100,48 @@ class Environment(Framework):
                     v_max_x = self.config.env.landing.v_max.x
                     v_max_y = self.config.env.landing.v_max.y
                     if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
-                        # booster.done = True
                         booster.body.active = False
                         booster.predictions.fill(0.0)
 
-    def reset(self, add_noise: bool = True) -> None:
+    def reset(self) -> None:
         """Resets boosters in environment.
 
         Resets kinematic variables as well as score
         and activity state. If enabled, adds noise to
         kinematic variables.
-
-        Args:
-            use_noise: If true, adds noise to kinematic variables.
         """
-        # Use for EA, SA
-        # TODO: Use uniform noise.
+        deg_to_rad = math.pi / 180.0
         noise = self.config.env.booster.noise
-        noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
-        noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
-        noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
-        noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
-        noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-        noise_angular_velocity = random.gauss(
-            mu=0.0, sigma=noise.angular_velocity
-        )
+
+        if noise.is_activated:
+            if noise.type == "identical":
+                noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
+                noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
+                noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
+                noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
+                noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
+                noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
 
         for booster in self.boosters:
 
-            # Reset kinematic variables
+            # Reset kinematic variables.
             position = copy.copy(booster.init_position)
             linear_velocity = copy.copy(booster.init_linear_velocity)
             angular_velocity = copy.copy(booster.init_angular_velocity)
             angle = copy.copy(booster.init_angle)
 
-            if add_noise:
-
-                # Use for RL, ES
-                # TODO: Use uniform noise.
-                # noise = self.config.env.booster.noise
-                # noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
-                # noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
-                # noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
-                # noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
-                # noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-                # noise_angular_velocity = random.gauss(
-                #     mu=0.0, sigma=noise.angular_velocity
-                # )
+            # Add Gaussian noise.
+            if noise.is_activated:
+                if noise.type == "different":
+                    noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
+                    noise_pos_y = random.gauss(mu=0.0, sigma=noise.position.y)
+                    noise_vel_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
+                    noise_vel_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
+                    noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
+                    noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
 
                 position += (noise_pos_x, noise_pos_y)
                 linear_velocity += (noise_vel_x, noise_vel_y)
-                deg_to_rad = math.pi / 180.0
                 angle += deg_to_rad * noise_angle
                 angular_velocity += deg_to_rad * noise_angular_velocity
 
@@ -217,31 +204,31 @@ class Environment(Framework):
         TODO: If that stays here, make methods private.
         TODO: Move loop from trainer here?
         """
-        # ... 7) Fetch data of each booster used for neural network
+        # Fetch data of each booster used for neural network.
         self.fetch_state()
 
-        # ... 8) Run neural network prediction for given state
+        # Run neural network prediction for given state.
         self.comp_action()
 
-        # ... 9) Apply network predictions to booster
+        # Apply network predictions to booster.
         self.apply_action()
 
-        # ... 1) Physics and (optional) rendering
+        # Physics and (optional) rendering.
         self.step()
 
-        # ... 6) Compute current fitness / score of booster
+        # Compute current fitness / score of booster.
         self.comp_reward()
 
-        # ... Boundary conditions
+        # Check boundary conditions.
 
-        # ... 2) Detect leaving the domain.
+        # Detect leaving the domain.
         self.detect_escape()
 
-        # ... 3) Detect high stresses on the booster.
+        # Detect high stresses on the booster.
         self.detect_stress()
 
-        # ... 4) Detect collision with ground.
+        # Detect collision with ground.
         self.detect_impact()
 
-        # ... 5) Detect landing and turn engines off.
+        # Detect landing and turn engines off.
         self.detect_landing()

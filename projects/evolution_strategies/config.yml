@@ -71,7 +71,7 @@ env:
 
     engine:
       main: # Merlin engine
-        max_force: 800000.0  # [N] 854 kN at sea level
+        max_force: 854000.0  # [N] 854 kN at sea level
         max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 50000.0  # [N]
@@ -79,6 +79,7 @@ env:
 
     noise:  # TODO: move this to env?
       # "identical" or "different". Whether every agent gets the same starting noise.
+      is_activated: true
       type: "identical"
       position: # [m] 
         x: 40.0                       # Standard deviation [m]
