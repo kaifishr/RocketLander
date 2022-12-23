@@ -2,15 +2,15 @@
 # Configuration for genetic optimization #
 ##########################################
 
-random_seed: 42
+random_seed: 420
 
 # Genetic optimization
 optimizer:
   num_boosters: 8
   num_simulation_steps: 500
-  mutation_probability: 0.05
-  mutation_rate: 0.05
-  lib: "numpy"  # FIX
+  mutation_probability: 0.08
+  mutation_rate: 0.03
+  lib: "numpy"  # Fix.
 
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.

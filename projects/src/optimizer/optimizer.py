@@ -9,7 +9,7 @@ class Optimizer:
     """Optimizer base class.
 
     Attributes:
-        ...
+        stats: Dictionary holding stats.
     """
 
     num_engines = 3

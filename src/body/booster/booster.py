@@ -44,49 +44,6 @@ class Booster(Booster2D):
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
 
-        # self._install_reward_function()
-
-    # def _install_reward_function(self) -> None:
-    #     """Installs selected reward function."""
-    #     reward = self.config.env.booster.reward
-
-    #     if reward.type == "final":
-    #         self.reward_function = self._final_reward_function
-    #     elif reward.type == "step":
-    #         self.reward_function = self._step_reward_function
-    #     else:
-    #         raise NotImplementedError(
-    #             f"Reward type `{reward.type}` not implemented."
-    #         )
-
-    # def _step_reward_function(self) -> float:
-    #     """Reward function reward at every step."""
-
-    # def _continuous_reward_function(self) -> float:
-    #     """Continuous reward function."""
-
-    #     eta = 1.0 / 60.0  # Correction factor.
-    #     alpha = 100.0
-    #     beta = 100.0
-
-    #     # Distance to landing pad.
-    #     pos_x, pos_y = self.body.position
-    #     pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
-    #     pos_pad = self.config.env.landing_pad.position
-    #     distance_x = (pos_pad.x - pos_x) ** 2
-    #     distance_y = (pos_pad.y - pos_y) ** 2
-    #     distance = (distance_x + distance_y) ** 0.5
-
-    #     # Velocity
-    #     vel = self.body.linearVelocity
-    #     velocity = (vel.x**2 + vel.y**2) ** 0.5
-
-    #     distance_reward = alpha / (1.0 + distance)
-    #     velocity_reward = beta / (1.0 + velocity)
-    #     reward = distance_reward * velocity_reward
-
-    #     self.rewards.append(reward)
-
     def comp_reward(self) -> None:
         """Computes reward for current simulation step.
 

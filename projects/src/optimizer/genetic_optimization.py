@@ -29,17 +29,9 @@ class GeneticOptimizer(Optimizer):
         self.mutation_prob = config.optimizer.mutation_probability
         self.mutation_rate = config.optimizer.mutation_rate
 
-        # Index of currently fittest agent.
-        self.idx_best = 0
-
     def _select(self) -> None:
         """Selects best agent for reproduction."""
-
-        # Fetch rewards of each booster.
-        # Cumulative rewards:
-        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])
-        # Use final reward
-        rewards = numpy.array([booster.rewards[-1] for booster in self.boosters])
+        rewards = self._gather_rewards(reduction="sum")
         self.idx_best = rewards.argmax()
         self.stats["reward"] = rewards[self.idx_best]
 
@@ -47,12 +39,12 @@ class GeneticOptimizer(Optimizer):
         """Mutates network parameters of each agent."""
 
         # Get neural network of fittest booster to reproduce.
-        model = self.boosters[self.idx_best].model
+        parameters = self.boosters[self.idx_best].model.parameters
 
         # Pass best model to other boosters and mutate their weights.
         for booster in self.boosters:
-            # Assign best model to each booster and mutate weights.
-            booster.model = copy.deepcopy(model)  # TODO: Why not just weights?
+            # Assign parameters of best model to each booster and mutate weights.
+            booster.model.parameters = copy.deepcopy(parameters)
             self._mutate_weights(booster.model)
 
     def _mutate_weights(self, model: object) -> None:
@@ -74,7 +66,7 @@ class GeneticOptimizer(Optimizer):
     def step(self) -> None:
         """Runs single genetic optimization step."""
 
-        # Select fittest agent (booster) based on reward.
+        # Select fittest agent based on reward.
         self._select()
 
         # Reproduce and mutate weights of best agent.

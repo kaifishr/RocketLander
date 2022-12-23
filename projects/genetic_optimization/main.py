@@ -4,8 +4,8 @@ import pathlib
 from src.utils.config import init_config
 from src.utils.utils import set_random_seed
 
-from projects.src.trainer import Trainer
-from projects.src.optimizer import GeneticOptimizer
+from projects.src import Trainer
+from projects.src import GeneticOptimizer
 
 
 if __name__ == "__main__":
