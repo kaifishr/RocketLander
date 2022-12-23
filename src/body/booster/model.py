@@ -65,13 +65,6 @@ class NumpyNeuralNetwork:
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
 
-        # nonlinearity = "leaky_relu"
-        # nonlinearity = "sigmoid"
-        nonlinearity = "tanh"
-
-        # Install activation function
-        self.act_fun = self._install_activation_function(nonlinearity)
-
         # Parameters
         self.parameters = []
 
@@ -89,6 +82,12 @@ class NumpyNeuralNetwork:
         # Output layer weights
         size = (out_features, hidden_features)
         self.parameters.append(self._init_weights(size=size, nonlinearity="sigmoid"))
+
+        # Install activation function
+        # nonlinearity = "leaky_relu"
+        # nonlinearity = "sigmoid"
+        nonlinearity = "tanh"
+        self.act_fun = self._install_activation_function(nonlinearity)
 
     def _install_activation_function(self, nonlinearity: str):
         """Installs activation function."""
@@ -179,9 +178,7 @@ class TorchNeuralNetwork(nn.Module):
     """
 
     num_engines = 3  # Number of engines.
-    num_states = (
-        6  # State of booster (pos_x, pos_y, vel_x, vel_y, angle, angular_velocity)
-    )
+    num_states = 6  # State of booster (r_x, r_y, v_x, v_y, angle, angular_velocity)
 
     def __init__(self, config: Config) -> None:
         """Initializes NeuralNetwork class."""
@@ -203,28 +200,20 @@ class TorchNeuralNetwork(nn.Module):
         out_features = self.num_actions
 
         layers = [
-            # nn.LayerNorm(in_features),
             nn.Linear(in_features=in_features, out_features=hidden_features),
-            # nn.LayerNorm(hidden_features),
             nn.ReLU(),
-            # nn.GELU(),
-            # nn.Tanh(),
             nn.Dropout(p=0.05),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
-                # nn.LayerNorm(hidden_features),
                 nn.ReLU(),
-                # nn.GELU(),
-                # nn.Tanh(),
                 nn.Dropout(p=0.05),
             ]
 
         layers += [
             nn.Linear(in_features=hidden_features, out_features=out_features),
-            # nn.LayerNorm(out_features),
             nn.Sigmoid(),
         ]
 
@@ -241,16 +230,12 @@ class TorchNeuralNetwork(nn.Module):
     def _init_weights(self, module) -> None:
         if isinstance(module, nn.Linear):
             gain = 2**0.5  # Gain for relu nonlinearity.
-            # gain = 5.0 / 3.0  # Gain for tanh nonlinearity.
             torch.nn.init.xavier_normal_(module.weight, gain=gain)
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
 
     def _init_action_lookup(self):
-        """Creates lookup table of discrete action space.
-
-        TODO: Check thrust angles for number of angles = 1.
-        """
+        """Creates lookup table of discrete action space."""
         self.actions_lookup = {}
 
         thrust_levels = numpy.linspace(

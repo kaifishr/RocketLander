@@ -70,10 +70,9 @@ class DeepQOptimizer(Optimizer):
             for params1, params2 in zip(
                 booster.model.parameters(), self.model.parameters()
             ):
+                # Here it is sufficient to assign the parameters by reference.
                 params1.data = params2.data
-            #     # params1.data.copy_(params2.data)
-            #     params1.data[...] = params2.data[...]
-            # booster.model.load_state_dict(state_dict=self.model.state_dict())
+                # params1.data.copy_(params2.data)
 
     def _epsilon_scheduler(self) -> None:
         """Decays epsilon-greedy value."""

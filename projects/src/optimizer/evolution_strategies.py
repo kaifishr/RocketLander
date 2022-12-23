@@ -22,7 +22,6 @@ class EvolutionStrategies(Optimizer):
     Attr:
         boosters:
         learning_rate:
-        momentum:
         standard_deviation:
     """
 
@@ -32,7 +31,6 @@ class EvolutionStrategies(Optimizer):
 
         self.boosters = environment.boosters
         self.learning_rate = config.optimizer.learning_rate
-        self.momentum = config.optimizer.momentum
         self.standard_deviation = config.optimizer.standard_deviation
 
         self.parameters = copy.deepcopy(self.boosters[0].model.parameters)
@@ -90,10 +88,9 @@ class EvolutionStrategies(Optimizer):
         """Performs a single optimization step."""
 
         # Get rewards for each agent in population.
-        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters])  # cumulative reward
-        rewards = numpy.array(
-            [booster.rewards[-1] for booster in self.boosters]
-        )  # final reward
+        # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters]) # cumulative reward
+        # rewards = numpy.array([booster.rewards[-1] for booster in self.boosters])  # final reward
+        rewards = self._gather_rewards(reduction="sum")
         self.stats["reward"] = max(rewards)
 
         # Standardize rewards to be N(0, 1) gaussian.
