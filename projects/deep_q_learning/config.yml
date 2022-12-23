@@ -76,18 +76,19 @@ env:
         max_force: 50000.0   # [N]
         max_angle: 10.0      # [deg]
 
-    noise:  # TODO: move this to env?
-      # "identical" or "different". Whether every agent gets the same starting noise.
+    noise:
+      # Specifies standard deviation of Gaussian noise added to agents initial state.
       is_activated: true
-      type: "different"
-      position: # [m] 
-        x: 30.0                       # Standard deviation [m]
-        y: 30.0                       # Standard deviation [m]
-      linear_velocity: # [m/s]
-        x: 0.0                        # Standard deviation [m / s]
-        y: 10.0                        # Standard deviation [m / s]
-      angular_velocity: 0.0             # Standard deviation [deg / s]
-      angle: 0.0                      # Standard deviation [deg]
+      # Specifies whether every agent gets the same starting noise: "identical" or "different"
+      type: "identical"
+      position: # [m]
+        x: 40.0
+        y: 20.0
+      linear_velocity: # [m / s]
+        x: 5.0
+        y: 5.0
+      angular_velocity: 0.0  # [deg / s]
+      angle: 0.0  # [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.

@@ -53,8 +53,8 @@ class Booster(Booster2D):
         if self.body.active:
 
             eta = 1.0 / 60.0  # Correction factor.
-            alpha = 1.0
-            beta = 0.1
+            alpha = 0.05
+            beta = 0.01
 
             # Distance to landing pad.
             pos_x, pos_y = self.body.position
@@ -77,9 +77,9 @@ class Booster(Booster2D):
                     self.distance_y_old = distance_y
                     r_distance = 1.0 / (1.0 + alpha * distance)
                     r_velocity = 1.0 / (1.0 + beta * velocity)
-                    reward += (r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity))
+                    reward += r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity)
             else:
-                reward -= 0.02
+                reward -= 0.05
 
             # if self._detected_escape():
             #     reward -= 10.0

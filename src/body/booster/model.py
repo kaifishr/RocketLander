@@ -23,13 +23,10 @@ class ModelLoader:
         self.config = config
 
     def __call__(self):
-        """Loads and returns model.
-        Args:
-            lib: Library "numpy" or "pytorch".
-        """
+        """Loads and returns model."""
         lib = self.config.optimizer.lib
 
-        # Instantiate network
+        # Instantiate network.
         if lib == "numpy":
             model = NumpyNeuralNetwork(self.config)
         elif lib == "torch":
@@ -38,7 +35,7 @@ class ModelLoader:
         else:
             raise NotImplementedError(f"Network for {lib} not implemented.")
 
-        # Load pre-trained model
+        # Load pre-trained model.
         if self.config.checkpoints.load_model:
             load_checkpoint(model=model, config=self.config)
 
@@ -51,8 +48,7 @@ class NumpyNeuralNetwork:
     Attributes:
         mutation_prob:
         mutation_rate:
-        weights:
-        biases:
+        parameters:
     """
 
     def __init__(self, config: Config) -> None:

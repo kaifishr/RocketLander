@@ -66,11 +66,11 @@ To encourage the booster to land as close as possible to the center of the landi
 
 For the distance from booster to landing pad $d = \sqrt{(r_{x, \text{pad}} - r_{x, \text{booster}})^2 + (r_{y, \text{pad}} - r_{y, \text{booster}})^2}$, this can be formulated as follows:
 
-$$R_{\text{proximity}} = \frac{1}{1 + \alpha d}$$
+$$R_{\text{proximity}} = \frac{1}{1 + \alpha \cdot d}$$
 
-with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, we define a term that takes the booster's instantaneous velocity $v = \sqrt{v_\text{x}^2 - v_\text{y}^2}$ into account,
+with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, we define a term that takes the booster's instantaneous velocity $v = \sqrt{v_x^2 - v_y^2}$ into account,
 
-$$R_{\text{velocity}} = \frac{1}{1 + \beta v}$$
+$$R_{\text{velocity}} = \frac{1}{1 + \beta \cdot v}$$
 
 with the $x$- and $y$-components of the booster's velocity. The reward is coupled with the booster's distance to the landing pad to encourage a soft landing. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity.
 
@@ -79,9 +79,9 @@ Now we can use an *XNOR* coupling of both reward terms to create a reward functi
 <!-- $$R = R_{\text{proximity}} + R_{\text{velocity}}$$ -->
 $$R = R_{\text{proximity}} \cdot R_{\text{velocity}} + (1 - R_{\text{proximity}}) \cdot (1 - R_{\text{velocity}})$$
 
-The agent also receives a large positive reward for a successful landing. On the other hand, if the vehicle exceeds a certain stress levels, experienced an impact, or left the domain, the agent receives a negative reward.
+In addition to the reward above, the agent also receives a large positive reward for a successful landing and a negative reward if the vehicle exceeds a certain stress level, experiences an impact, or leaves the domain.
 
-We can implicitly model a fuel restriction by lowering the number of simulation steps. This time restriction resembles an implicit fuel restriction, encouraging the booster to land more quickly.
+To encourage the booster to land faster, the agent receives a small negative reward at every step. By reducing the number of simulation steps, we can model an implicit fuel restriction as the agent still tries to maximize the reward. This time restriction also motivates the booster to land more quickly.
 
 
 ## Asynchronous Reinforcement Learning
