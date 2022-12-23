@@ -53,8 +53,8 @@ class Booster(Booster2D):
         if self.body.active:
 
             eta = 1.0 / 60.0  # Correction factor.
-            alpha = 100.0
-            beta = 10.0
+            alpha = 1.0
+            beta = 0.1
 
             # Distance to landing pad.
             pos_x, pos_y = self.body.position
@@ -71,14 +71,13 @@ class Booster(Booster2D):
             reward = 0.0
 
             # Reward agent if distance to landing pad gets smaller.
-            # Reward agent if distance to landing pad gets smaller.
             if distance_x <= self.distance_x_old:
                 self.distance_x_old = distance_x
                 if distance_y <= self.distance_y_old:
                     self.distance_y_old = distance_y
-                    distance_reward = alpha / (1.0 + distance)
-                    velocity_reward = beta / (1.0 + velocity)
-                    reward += distance_reward + velocity_reward / (1.0 + distance)
+                    r_distance = 1.0 / (1.0 + alpha * distance)
+                    r_velocity = 1.0 / (1.0 + beta * velocity)
+                    reward += (r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity))
             else:
                 reward -= 0.02
 
@@ -95,6 +94,56 @@ class Booster(Booster2D):
             #     reward += 100.0
 
             self.rewards.append(reward)
+    # def comp_reward(self) -> None:
+    #     """Computes reward for current simulation step.
+
+    #     Accumulates defined rewards for booster.
+
+    #     """
+    #     if self.body.active:
+
+    #         eta = 1.0 / 60.0  # Correction factor.
+    #         alpha = 100.0
+    #         beta = 10.0
+
+    #         # Distance to landing pad.
+    #         pos_x, pos_y = self.body.position
+    #         pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+    #         pos_pad = self.config.env.landing_pad.position
+    #         distance_x = (pos_pad.x - pos_x) ** 2
+    #         distance_y = (pos_pad.y - pos_y) ** 2
+    #         distance = (distance_x + distance_y) ** 0.5
+
+    #         # Velocity.
+    #         vel = self.body.linearVelocity
+    #         velocity = (vel.x**2 + vel.y**2) ** 0.5
+
+    #         reward = 0.0
+
+    #         # Reward agent if distance to landing pad gets smaller.
+    #         if distance_x <= self.distance_x_old:
+    #             self.distance_x_old = distance_x
+    #             if distance_y <= self.distance_y_old:
+    #                 self.distance_y_old = distance_y
+    #                 distance_reward = alpha / (1.0 + distance)
+    #                 velocity_reward = beta / (1.0 + velocity)
+    #                 reward += distance_reward + velocity_reward / (1.0 + distance)
+    #         else:
+    #             reward -= 0.02
+
+    #         # if self._detected_escape():
+    #         #     reward -= 10.0
+
+    #         # if self._detected_stress():
+    #         #     reward -= 10.0
+
+    #         # if self._detected_impact():
+    #         #     reward -= 100.0
+
+    #         # if self._detected_landing():
+    #         #     reward += 100.0
+
+    #         self.rewards.append(reward)
 
     def detect_stress(self) -> None:
         """Detects excess stress on booster.
