@@ -79,8 +79,12 @@ class Booster(Booster2D):
                     r_velocity = 1.0 / (1.0 + beta * velocity)
                     reward += r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity)
             else:
-                reward -= 0.05
+                reward -= 0.1
 
+            # Encourage agent to land quickly.
+            reward -= 0.05
+
+            # TODO: Move detection methods to booster.
             # if self._detected_escape():
             #     reward -= 10.0
 
@@ -94,6 +98,7 @@ class Booster(Booster2D):
             #     reward += 100.0
 
             self.rewards.append(reward)
+
     # def comp_reward(self) -> None:
     #     """Computes reward for current simulation step.
 
@@ -360,7 +365,7 @@ class Booster(Booster2D):
             )
             self.body.ApplyForce(f, p, True)
 
-    def _print_booster_info(self) -> None:
+    def __repr__(self) -> str:
         """Prints booster data."""
         info = (
             f"{self.body.transform = }\n"
@@ -372,4 +377,4 @@ class Booster(Booster2D):
             f"{self.body.linearVelocity = }\n"
             f"{self.body.angularVelocity = }\n"
         )
-        print(info)
+        return info
