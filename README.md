@@ -62,15 +62,17 @@ In this project, the terms *booster*, *agent*, *individual*, and *candidate* are
 
 Independent of the optimization method the same reward function is used to measure the success of the agent during each episode. The reward function receives the booster's current position and velocity as input and outputs a scalar value. A simple reward function for landing a rocket booster can be designed as follows. 
 
-To encourage the booster to land as close as possible to the center of the landing pad, we can assign a high reward for proximity. For example, we can assign a reward of $1$ for a landing at the center of the landing pad, and reduce the reward to $0$ as the distance between the booster and the landing pad increases. This can be formulated as follows:
+To encourage the booster to land as close as possible to the center of the landing pad, we can assign a high reward for proximity. For example, we can assign a reward of $1$ for a landing at the center of the landing pad, and reduce the reward to $0$ as the distance between the booster and the landing pad increases. 
 
-$$R_{\text{proximity}} = \frac{1}{1 + \alpha\sqrt{(r_{x, \text{pad}} - r_{x, \text{booster}})^2 + (r_{y, \text{pad}} - r_{y, \text{booster}})^2}}$$
+For the distance from booster to landing pad $d = \sqrt{(r_{x, \text{pad}} - r_{x, \text{booster}})^2 + (r_{y, \text{pad}} - r_{y, \text{booster}})^2}$, this can be formulated as follows:
+
+$$R_{\text{proximity}} = \frac{1}{1 + \alpha d}$$
 
 with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, there is also a term that takes the booster's velocity into account,
 
-$$R_{\text{velocity}} = \frac{1}{1 + \beta\sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
+$$R_{\text{velocity}} = \frac{R_{\text{proximity}}}{1 + \beta\sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
 
-with the $x$- and $y$-components of the booster's velocity. The reward goes to $0$ for high velocities and to $1$ if the booster is not moving. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity. 
+with the $x$- and $y$-components of the booster's velocity. The reward is coupled with the booster's distance to the landing pad to encourage a soft landing. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity. 
 
 Combining both terms, we obtain a reward function that encourages a soft landing at the center of the landing pad:
 
