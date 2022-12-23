@@ -18,6 +18,7 @@ class AsyncSimulatedAnnealing(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
+        self.model = self.boosters[0].model
 
         config = config.optimizer
 

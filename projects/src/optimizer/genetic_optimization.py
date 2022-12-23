@@ -26,6 +26,8 @@ class GeneticOptimizer(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
+        self.model = self.boosters[0].model
+
         self.mutation_prob = config.optimizer.mutation_probability
         self.mutation_rate = config.optimizer.mutation_rate
 

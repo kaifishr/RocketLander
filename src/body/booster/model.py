@@ -131,16 +131,15 @@ class NumpyNeuralNetwork:
 
     def state_dict(self) -> dict:
         """Returns a dictionary containing the network's weights and biases."""
-        state = {"weights": self.weights, "biases": self.biases}
-        return state
+        state = {"parameters": self.parameters}
+        return state 
 
     def load_state_dict(self, state_dict: dict) -> None:
         """Loads state dict holding the network's weights and biases.
 
-        NOTE: Method ignores parameter dimension.
+        NOTE: Method does not check parameter dimension.
         """
-        self.weights = state_dict["weights"]
-        self.biases = state_dict["biases"]
+        self.parameters = state_dict["parameters"]
 
     def __call__(self, x: numpy.ndarray):
         return self.predict(x)

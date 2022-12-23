@@ -30,6 +30,8 @@ class EvolutionStrategies(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
+        self.model = self.boosters[0].model
+
         self.learning_rate = config.optimizer.learning_rate
         self.standard_deviation = config.optimizer.standard_deviation
 

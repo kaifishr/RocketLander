@@ -40,13 +40,15 @@ class Trainer:
 
     def run(self) -> None:
         """Runs training."""
-
+        
+        config = self.config
         num_episodes = self.config.trainer.num_episodes
         num_simulation_steps = self.config.optimizer.num_simulation_steps
+        save_model = self.config.checkpoints.save_model
 
         step = 0
         episode = 0
-        max_reward = 0.0
+        max_reward = float("-inf")
 
         is_running = True
         t0 = time.time()
@@ -75,13 +77,11 @@ class Trainer:
                 print(f"{episode = }", end="\r")
 
                 # Save model
-                if self.config.checkpoints.save_model:
+                if save_model and episode > 10:
                     reward = self.optimizer.stats["reward"]
                     if reward > max_reward:
                         model = self.optimizer.model
-                        save_checkpoint(
-                            model=model, config=self.config, episode=episode
-                        )
+                        save_checkpoint(model=model, config=config)
                         max_reward = reward
 
                 t0 = time.time()

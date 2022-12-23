@@ -61,6 +61,7 @@ def load_checkpoint(model: object, config: Config) -> None:
     if model_path.is_file():
         state_dict = torch.load(f=model_path)
         model.load_state_dict(state_dict=state_dict)
+        print("loaded!")
     else:
         print(
             f"Model checkpoint '{checkpoint_name}' not found. "

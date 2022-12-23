@@ -104,8 +104,9 @@ renderer:
 dirs:
   frames: "frames"
 
-# Parameters to save the booster's neural network.
+# Save or load pre-trained neural network.
 checkpoints:
   load_model: false
-  save_model: false
+  save_model: false 
   model_path: "weights"
+  model_name: ""
