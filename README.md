@@ -64,15 +64,19 @@ Independent of the optimization method the same reward function is used to measu
 
 To encourage the booster to land as close as possible to the center of the landing pad, we can assign a high reward for proximity. For example, we can assign a reward of $1$ for a landing at the center of the landing pad, and reduce the reward to $0$ as the distance between the booster and the landing pad increases. This can be formulated as follows:
 
-$$R_{\text{proximity}} = \frac{1}{1 + \alpha \sqrt{(r_{x, \text{pad}} - r_{x, \text{booster}})^2 + (r_{y, \text{pad}} - r_{y, \text{booster}})^2}}$$
+$$R_{\text{proximity}} = \frac{1}{1 + \alpha\sqrt{(r_{x, \text{pad}} - r_{x, \text{booster}})^2 + (r_{y, \text{pad}} - r_{y, \text{booster}})^2}}$$
 
 with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, there is also a term that takes the booster's velocity into account,
 
-$$R_{\text{velocity}} = \frac{1}{1 + \beta \sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
+$$R_{\text{velocity}} = \frac{1}{1 + \beta\sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
 
-with the $x$- and $y$-components of the booster's velocity. The reward goes to $0$ for high velocities and to $1$ if the booster is not moving. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity. By multiplying these terms together, we obtain a reward function that ranges from $0$ to $1$ and encourages a soft landing at the center of the landing pad:
+with the $x$- and $y$-components of the booster's velocity. The reward goes to $0$ for high velocities and to $1$ if the booster is not moving. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity. 
 
-$$R = R_{\text{proximity}} \cdot R_{\text{velocity}}$$
+Combining both terms, we obtain a reward function that encourages a soft landing at the center of the landing pad:
+
+$$R = R_{\text{proximity}} + R_{\text{velocity}}$$
+
+The agent also receives a large positive reward for a successful landing. On the other hand, if the vehicle exceeds a certain stress levels, experienced an impact, or left the domain, the agent receives a negative reward.
 
 We can implicitly model a fuel restriction by lowering the number of simulation steps. This time restriction resembles an implicit fuel restriction, encouraging the booster to land more quickly.
 
@@ -99,8 +103,6 @@ Q-learning is a type of reinforcement learning algorithm that is typically used 
 
 When applying Q-learning to the problem of landing a booster, we need to discretize the action space and represent it as a lookup table from which the agent can choose an action. For example, if the main engine operates at two thrust levels and our booster can be fired at three different angles $\{-15°, 0°, 15°\}$, the discrete action space for the booster would consist of six possible actions, as shown below:
 
-<center> 
-
 |#|Thrust level | Angle|
 |:---:|:---:|:---:|
 |1|50% | -15°|
@@ -109,8 +111,6 @@ When applying Q-learning to the problem of landing a booster, we need to discret
 |4|100% | -15°|
 |5|100% | 0°|
 |6|100% | 15°|
-
-</center> 
 
 However, when dealing with engines that can operate at multiple levels of thrust and deflection angles (such as main engines and cold gas thrusters), discretizing the action space can make learning inefficient. This is due to the curse of dimensionality, which is a phenomenon that occurs when the number of dimensions in a problem grows exponentially, making it difficult to find good solutions.
 
