@@ -11,10 +11,9 @@ from src.utils.config import Config
 
 def set_random_seed(seed: int = 0) -> None:
     """Sets random seed."""
-    if seed:
-        torch.manual_seed(seed)
-        random.seed(seed)
-        numpy.random.seed(seed)
+    numpy.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
 
 
 def capture_screen(screen, iteration: int) -> None:

@@ -3,13 +3,6 @@
 Implements the black box optimization algorithm Evolution Strategies (ES). 
 
 See also: https://arxiv.org/abs/1703.03864
-
-TODO: 
-    - Test sparse noise:
-
-        mask = numpy.random.random(size=weight.shape) < self.noise_probability
-        noise = self.standard_deviation * numpy.random.normal(size=weight.shape)
-        weight += mask * noise
 """
 import copy
 import numpy
@@ -31,7 +24,6 @@ class EvolutionStrategies(Optimizer):
         learning_rate:
         momentum:
         standard_deviation:
-        noise_probability:
     """
 
     def __init__(self, environment: Environment, config: Config) -> None:
@@ -42,7 +34,6 @@ class EvolutionStrategies(Optimizer):
         self.learning_rate = config.optimizer.learning_rate
         self.momentum = config.optimizer.momentum
         self.standard_deviation = config.optimizer.standard_deviation
-        self.noise_probability = config.optimizer.noise_probability
 
         self.parameters = copy.deepcopy(self.boosters[0].model.parameters)
         self.gradients = copy.deepcopy(self.boosters[0].model.parameters)
@@ -70,6 +61,12 @@ class EvolutionStrategies(Optimizer):
 
     def _noise(self, model: object) -> None:
         """Adds noise the network's weights.
+
+        NOTE: Here we also could use sparse noise:
+            noise_probability = 0.5
+            mask = numpy.random.random(size=weight.shape) < noise_probability
+            noise = numpy.random.normal(scale=scale, size=weight.shape)
+            numpy.add(weight, mask * noise, out=weight)
 
         Args:
             model: The neural network.

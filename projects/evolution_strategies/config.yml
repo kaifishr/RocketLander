@@ -10,22 +10,10 @@ optimizer:
   num_simulation_steps: 500
   learning_rate: 0.2
   standard_deviation: 0.8  # Standard deviation of samples around current parameters.
-  noise_probability: 1.0  # Allows for sparse noise.
-  momentum: 0.99  # NOT IN USE
-  lib: "numpy" 
+  lib: "numpy"  # Fix.
 
 trainer:
   num_episodes: -1  # -1 for infinite episodes or positive integer.
-
-# Directory to save the frames to create a video.
-dirs:
-  frames: "frames"
-
-# Save or load pre-trained neural network.
-checkpoints:
-  load_model: false
-  save_model: false
-  model_path: "weights"
 
 # Simulation environment 
 env:
@@ -111,3 +99,13 @@ renderer:
       x: -0.5
       y: -0.05
   ppm: 2     # Pixels per meter (zoom)
+
+# Directory to save the frames to create a video.
+dirs:
+  frames: "frames"
+
+# Save or load pre-trained neural network.
+checkpoints:
+  load_model: false
+  save_model: false
+  model_path: "weights"
