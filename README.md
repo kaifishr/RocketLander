@@ -15,7 +15,7 @@ I tried to make the simulation relatively realistic, even though that may confli
 
 In this framework, a booster is considered an agent that is equipped with a neural network (the agent's "brain") to learn how to propulsively land itself. The network is trained using reinforcement learning, evolution strategies, genetic optimization, or simulated annealing.
 
-The neural network controls the actions of the booster. At each time step, the network receives the current state of the booster, which includes its position ($r_x$, $r_y$), velocity ($v_x$, $v_y$), angle ($\theta$), and angular velocity ($\omega$), as input. Based on this information, the network predicts an action, such as the levels of thrust and engine deflection.
+The neural network controls the actions of the booster. At each time step, the network receives the current state of the booster, which includes its position ($r_x$, $r_y$), velocity ($v_x$, $v_y$), angle ( $\theta$ ), and angular velocity ($\omega$), as input. Based on this information, the network predicts an action, such as the levels of thrust and engine deflection.
 
 
 # Installation
