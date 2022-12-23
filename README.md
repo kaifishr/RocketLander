@@ -68,15 +68,16 @@ For the distance from booster to landing pad $d = \sqrt{(r_{x, \text{pad}} - r_{
 
 $$R_{\text{proximity}} = \frac{1}{1 + \alpha d}$$
 
-with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, there is also a term that takes the booster's velocity into account,
+with the $x$- and $y$-coordinates of the landing pad and the booster. To avoid a rapid unscheduled disassembly of the booster, we define a term that takes the booster's instantaneous velocity $v = \sqrt{v_\text{x}^2 - v_\text{y}^2}$ into account,
 
-$$R_{\text{velocity}} = \frac{R_{\text{proximity}}}{1 + \beta\sqrt{v_\text{x}^2 - v_\text{y}^2}}$$
+$$R_{\text{velocity}} = \frac{1}{1 + \beta v}$$
 
-with the $x$- and $y$-components of the booster's velocity. The reward is coupled with the booster's distance to the landing pad to encourage a soft landing. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity. 
+with the $x$- and $y$-components of the booster's velocity. The reward is coupled with the booster's distance to the landing pad to encourage a soft landing. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity.
 
-Combining both terms, we obtain a reward function that encourages a soft landing at the center of the landing pad:
+Now we can use an *XNOR* coupling of both reward terms to create a reward function that encourages a fast approach combined with a soft landing at the center of the landing pad:
 
-$$R = R_{\text{proximity}} + R_{\text{velocity}}$$
+<!-- $$R = R_{\text{proximity}} + R_{\text{velocity}}$$ -->
+$$R = R_{\text{proximity}} \cdot R_{\text{velocity}} + (1 - R_{\text{proximity}}) \cdot (1 - R_{\text{velocity}})$$
 
 The agent also receives a large positive reward for a successful landing. On the other hand, if the vehicle exceeds a certain stress levels, experienced an impact, or left the domain, the agent receives a negative reward.
 
