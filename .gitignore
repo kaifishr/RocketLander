@@ -143,3 +143,6 @@ dmypy.json
 *.vsix
 
 **/runs/**
+
+# Ignore network parameters.
+*.pth
