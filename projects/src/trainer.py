@@ -72,7 +72,7 @@ class Trainer:
                     if scalar is not None:
                         self.writer.add_scalar(name, scalar, episode)
                 self.writer.add_scalar("Seconds", time.time() - t0, episode)
-                print(f"{episode = }")
+                print(f"{episode = }", end="\r")
 
                 # Save model
                 if self.config.checkpoints.save_model:

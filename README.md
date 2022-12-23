@@ -9,8 +9,6 @@
     <img src="docs/booster.png" width="240" height=""/>
 </p>
 
-$\textbf{\text{\textcolor{red}{TODO: Replace image with short gif of a landing booster.}}}$
-
 The framework uses [*PyBox2D*](https://box2d.org/) a 2D physics library for rigid physics simulations, and [*PyGame*](https://www.pygame.org/) for rendering and visualization. 
 
 I tried to make the simulation relatively realistic, even though that may conflict with [Box2D's recommendation](https://box2d.org/documentation/index.html#autotoc_md17) on object sizes. The booster has a height of about $46$ meters, a weight of about $25$ metric tons, and is made up of three parts. A long and low-density hull section containing mostly empty fuel tanks, a short but high-density engine section, and static medium-density landing legs.

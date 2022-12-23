@@ -65,6 +65,10 @@ class NumpyNeuralNetwork:
         hidden_features = config.num_dim_hidden
         num_hidden_layers = config.num_hidden_layers
 
+        # Install activation function
+        nonlinearity = "tanh"  # tanh, sigmoid, leaky_relu
+        self.act_fun = self._install_activation_function(nonlinearity)
+
         # Parameters
         self.parameters = []
 
@@ -82,12 +86,6 @@ class NumpyNeuralNetwork:
         # Output layer weights
         size = (out_features, hidden_features)
         self.parameters.append(self._init_weights(size=size, nonlinearity="sigmoid"))
-
-        # Install activation function
-        # nonlinearity = "leaky_relu"
-        # nonlinearity = "sigmoid"
-        nonlinearity = "tanh"
-        self.act_fun = self._install_activation_function(nonlinearity)
 
     def _install_activation_function(self, nonlinearity: str):
         """Installs activation function."""
