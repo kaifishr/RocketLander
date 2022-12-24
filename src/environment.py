@@ -44,6 +44,26 @@ class Environment(Framework):
         # Add reference of boosters to world class for easier rendering handling.
         self.world.boosters = self.boosters
 
+    def _fetch_state(self) -> None:
+        """Fetches data for neural network of booster"""
+        for booster in self.boosters:
+            booster.fetch_state()
+
+    def _comp_action(self) -> None:
+        """Computes next set of actions."""
+        for booster in self.boosters:
+            booster.comp_action()
+
+    def _apply_action(self) -> None:
+        """Applies action coming from neural network to all boosters."""
+        for booster in self.boosters:
+            booster.apply_action()
+
+    def _comp_reward(self) -> None:
+        """Computes reward for booster."""
+        for booster in self.boosters:
+            booster.comp_reward()
+
     def reset(self) -> None:
         """Resets boosters in environment.
 
@@ -107,26 +127,6 @@ class Environment(Framework):
             booster.body.active = True
             # booster.done = False
 
-    def fetch_state(self) -> None:
-        """Fetches data for neural network of booster"""
-        for booster in self.boosters:
-            booster.fetch_state()
-
-    def comp_action(self) -> None:
-        """Computes next set of actions."""
-        for booster in self.boosters:
-            booster.comp_action()
-
-    def apply_action(self) -> None:
-        """Applies action coming from neural network to all boosters."""
-        for booster in self.boosters:
-            booster.apply_action()
-
-    def comp_reward(self) -> None:
-        """Computes reward for booster."""
-        for booster in self.boosters:
-            booster.comp_reward()
-
     def is_active(self) -> bool:
         """Checks if at least one booster is active."""
         for booster in self.boosters:
@@ -141,16 +141,16 @@ class Environment(Framework):
         TODO: Move loop from trainer here?
         """
         # Fetch data of each booster used for neural network.
-        self.fetch_state()
+        self._fetch_state()
 
         # Run neural network prediction for given state.
-        self.comp_action()
+        self._comp_action()
 
         # Apply network predictions to booster.
-        self.apply_action()
+        self._apply_action()
 
         # Physics and (optional) rendering.
         self.step()
 
         # Compute current fitness / score of booster.
-        self.comp_reward()
+        self._comp_reward()
