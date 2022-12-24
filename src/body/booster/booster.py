@@ -37,7 +37,7 @@ class Booster(Booster2D):
         self.state = None
 
         # Parameter indicating if booster either left domain or crashed.
-        self.done = False
+        # self.done = False
 
         # Booster's reward (or fitness score)
         self.rewards = []  # TODO: rewards -> reward_memory
@@ -53,7 +53,7 @@ class Booster(Booster2D):
         if self.body.active:
 
             eta = 1.0 / 60.0  # Correction factor.
-            alpha = 0.05
+            alpha = 0.1
             beta = 0.01
 
             # Distance to landing pad.
@@ -84,118 +84,136 @@ class Booster(Booster2D):
             # Encourage agent to land quickly.
             reward -= 0.05
 
-            # TODO: Move detection methods to booster.
-            # if self._detected_escape():
-            #     reward -= 10.0
+            if self._detected_escape():
+                reward -= 10.0
 
-            # if self._detected_stress():
-            #     reward -= 10.0
+            if self._detected_stress():
+                reward -= 10.0
 
-            # if self._detected_impact():
-            #     reward -= 100.0
+            if self._detected_impact():
+                reward -= 10.0
 
-            # if self._detected_landing():
-            #     reward += 100.0
+            if self._detected_landing():
+                reward += 10.0
 
             self.rewards.append(reward)
 
-    # def comp_reward(self) -> None:
-    #     """Computes reward for current simulation step.
+    def _is_outside_domain(self) -> bool:
+        """Checks if center of mass of booster is outside domain."""
 
-    #     Accumulates defined rewards for booster.
+        # Get domain boundaries
+        x_min = self.config.env.domain.x_min
+        x_max = self.config.env.domain.x_max
+        y_min = self.config.env.domain.y_min
+        y_max = self.config.env.domain.y_max
 
-    #     """
-    #     if self.body.active:
+        # Compare booster position to all four domain boundaries
+        pos_x, pos_y = self.body.position
 
-    #         eta = 1.0 / 60.0  # Correction factor.
-    #         alpha = 100.0
-    #         beta = 10.0
+        if pos_x < x_min:
+            return True
+        elif pos_y < y_min:
+            return True
+        elif pos_x > x_max:
+            return True
+        elif pos_y > y_max:
+            return True
 
-    #         # Distance to landing pad.
-    #         pos_x, pos_y = self.body.position
-    #         pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
-    #         pos_pad = self.config.env.landing_pad.position
-    #         distance_x = (pos_pad.x - pos_x) ** 2
-    #         distance_y = (pos_pad.y - pos_y) ** 2
-    #         distance = (distance_x + distance_y) ** 0.5
+        return False
 
-    #         # Velocity.
-    #         vel = self.body.linearVelocity
-    #         velocity = (vel.x**2 + vel.y**2) ** 0.5
+    def _detected_escape(self) -> bool:
+        """Detects when booster escapes from the domain.
 
-    #         reward = 0.0
+        Deactivates booster if center of gravity crosses the
+        domain boundary.
+        """
+        if self.body.active:
+            if self._is_outside_domain():
+                self.body.active = False
+                self.predictions.fill(0.0)
+                return True
 
-    #         # Reward agent if distance to landing pad gets smaller.
-    #         if distance_x <= self.distance_x_old:
-    #             self.distance_x_old = distance_x
-    #             if distance_y <= self.distance_y_old:
-    #                 self.distance_y_old = distance_y
-    #                 distance_reward = alpha / (1.0 + distance)
-    #                 velocity_reward = beta / (1.0 + velocity)
-    #                 reward += distance_reward + velocity_reward / (1.0 + distance)
-    #         else:
-    #             reward -= 0.02
+        return False
 
-    #         # if self._detected_escape():
-    #         #     reward -= 10.0
+    def _detected_impact(self) -> bool:
+        """Detects impact with landing pad.
 
-    #         # if self._detected_stress():
-    #         #     reward -= 10.0
+        Deactivates booster in case of impact.
 
-    #         # if self._detected_impact():
-    #         #     reward -= 100.0
+        An impact has occurred when a booster is one
+        length unit above the ground at a higher than
+        defined velocity.
+        """
+        if self.body.active:
+            distance_threshold = 2.0
+            eta = 1.0 / 60.0  # Correction factor.
+            pad = self.config.env.landing_pad.position
+            pos_y = self.body.position.y
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            if (pos_y - pad.y) < distance_threshold:
+                vel_x, vel_y = self.body.linearVelocity
+                v_max_x = self.config.env.landing.v_max.x
+                v_max_y = self.config.env.landing.v_max.y
+                if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
+                    self.body.active = False
+                    self.predictions.fill(0.0)
+                    return True
 
-    #         # if self._detected_landing():
-    #         #     reward += 100.0
+        return False
 
-    #         self.rewards.append(reward)
-
-    def detect_stress(self) -> None:
-        """Detects excess stress on booster.
-
-        TODO: Use this in reward function directly.
+    def _detected_stress(self) -> bool:
+        """Detects high stress on vehicle.
 
         Deactivates booster if stress limits are being exceeded.
         """
-        stress = self.config.env.booster.stress
+        if self.body.active:
+            stress = self.config.env.booster.stress
 
-        max_angle = self._deg_to_rad(stress.max_angle)
-        max_angular_velocity = self._deg_to_rad(stress.max_angular_velocity)
+            max_angle = self._deg_to_rad(stress.max_angle)
+            max_angular_velocity = self._deg_to_rad(stress.max_angular_velocity)
 
-        if abs(self.body.transform.angle) > max_angle:
-            self.body.active = False
-            self.predictions.fill(0.0)
-            return
-        elif abs(self.body.angularVelocity) > max_angular_velocity:
-            self.body.active = False
-            self.predictions.fill(0.0)
-            return
+            if abs(self.body.transform.angle) > max_angle:
+                self.body.active = False
+                self.predictions.fill(0.0)
+                return True
+            elif abs(self.body.angularVelocity) > max_angular_velocity:
+                self.body.active = False
+                self.predictions.fill(0.0)
+                return True
 
-    def detect_landing(self) -> None:
+        return False
+
+    def _detected_landing(self) -> bool:
         """Detects successful landing of booster.
 
-        TODO: Use this in reward function directly.
-
-        Turns off engines after successful landing. Turning off engines while
-        staying active, the booster can still get rewards.
+        Deactivates booster after successful landing.
+        A successful landing is defined by a maximal
+        distance within the engines can be turned off.
         """
-        # Define the maximum distance in x and y direction
-        # within engine can be turned off (safely).
-        dist_x_max = 5.0
-        dist_y_max = 2.0
+        if self.body.active:
+            # A landing is successful if booster is 
+            # within 10 meters or less from the center.
+            dist_x_max = 10.0
 
-        pos_x, pos_y = self.body.position
-        eta = 1.0 / 60.0
-        pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            # Turn of engines if booster is less 
+            # than 0.5 meters above the ground.
+            dist_y_max = 0.5
 
-        pos_pad = self.config.env.landing_pad.position
+            eta = 1.0 / 60.0  # Correction factor.
+            pos_x, pos_y = self.body.position
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
 
-        dist_x = abs(pos_pad.x - pos_x)
-        dist_y = abs(pos_pad.y - pos_y)
+            pos_pad = self.config.env.landing_pad.position
 
-        if (dist_x < dist_x_max) and (dist_y < dist_y_max):
-            self.body.active = False
-            self.predictions.fill(0.0)
+            dist_x = abs(pos_pad.x - pos_x)
+            dist_y = abs(pos_pad.y - pos_y)
+
+            if (dist_x < dist_x_max) and (dist_y < dist_y_max):
+                self.body.active = False
+                self.predictions.fill(0.0)
+                return True
+        
+        return False
 
     def comp_action(self) -> None:
         """Computes actions from observed sate."""

@@ -25,9 +25,9 @@ env:
     y: -9.81
 
   domain: # [m]
-    x_min: -200.0
-    x_max: 200.0
-    y_max: 500.0
+    x_min: -150.0
+    x_max: 150.0
+    y_max: 450.0
     y_min: -10.0
 
   landing_pad:
@@ -37,15 +37,15 @@ env:
 
   landing:
     v_max: # [m / s]
-      x: 5.0
-      y: -5.0
+      x: 10.0
+      y: -15.0
 
   booster:
     fixed_rotation: true    # Fix rotation for faster learning.
 
     stress:
-      max_angle: 10  # [deg]
-      max_angular_velocity: 180  # [deg / s]
+      max_angle: 45  # [deg]
+      max_angular_velocity: 90  # [deg / s]
 
     init:
       position: # [m]
@@ -74,8 +74,8 @@ env:
         x: 40.0
         y: 20.0
       linear_velocity: # [m / s]
-        x: 5.0
-        y: 5.0
+        x: 0.0
+        y: 10.0
       angular_velocity: 0.0  # [deg / s]
       angle: 0.0  # [deg]
 

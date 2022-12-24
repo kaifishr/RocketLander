@@ -44,67 +44,6 @@ class Environment(Framework):
         # Add reference of boosters to world class for easier rendering handling.
         self.world.boosters = self.boosters
 
-    def _is_outside(self, booster: Booster) -> bool:
-        """Checks if center of mass of booster is outside domain."""
-
-        # Get domain boundaries
-        x_min = self.config.env.domain.x_min
-        x_max = self.config.env.domain.x_max
-        y_min = self.config.env.domain.y_min
-        y_max = self.config.env.domain.y_max
-
-        # Compare booster position to all four domain boundaries
-        pos_x, pos_y = booster.body.position
-
-        if pos_x < x_min:
-            return True
-        elif pos_y < y_min:
-            return True
-        elif pos_x > x_max:
-            return True
-        elif pos_y > y_max:
-            return True
-
-        return False
-
-    def detect_escape(self) -> None:
-        """Detects when booster escapes from the domain.
-
-        Deactivates booster if center of gravity crosses the
-        domain boundary.
-        """
-        for booster in self.boosters:
-            if booster.body.active:
-                if self._is_outside(booster):
-                    booster.done = True
-                    booster.body.active = False
-                    booster.predictions.fill(0.0)
-
-    def detect_impact(self):
-        """Detects impact with landing pad.
-
-        Deactivates booster in case of impact.
-
-        An impact has occurred when a booster is one
-        length unit above the ground at a higher than
-        defined velocity.
-
-        For contact calculation a circle with radius R = (a^2+b^2)^0.5 (contact
-        threshold) around the rocket is assumed. The rocket has 'contact' if the
-        vertical distance from the center of mass to the ground is smaller than R.
-        """
-        for booster in self.boosters:
-            if booster.body.active:
-                pad = self.config.env.landing_pad.position
-                if (booster.body.position.y - pad.y) < booster.contact_threshold:
-                    vel_x, vel_y = booster.body.linearVelocity
-                    v_max_x = self.config.env.landing.v_max.x
-                    v_max_y = self.config.env.landing.v_max.y
-                    if (vel_y < v_max_y) or (abs(vel_x) > v_max_x):
-                        booster.done = True
-                        booster.body.active = False
-                        booster.predictions.fill(0.0)
-
     def reset(self) -> None:
         """Resets boosters in environment.
 
@@ -134,7 +73,7 @@ class Environment(Framework):
             angular_velocity = copy.copy(booster.init_angular_velocity)
             angle = copy.copy(booster.init_angle)
 
-            # Add Gaussian noise.
+            # Add Gaussian noise to initial values.
             if noise.is_activated:
                 if noise.type == "different":
                     noise_pos_x = random.gauss(mu=0.0, sigma=noise.position.x)
@@ -164,29 +103,14 @@ class Environment(Framework):
             # Reset memory.
             booster.model.memory = []
 
-            # Reactivate booster after collision in last generation.
+            # Reactivate booster.
             booster.body.active = True
-            booster.done = False
-
-    def detect_landing(self) -> None:
-        """Calls stress landing detection of each booster."""
-        for booster in self.boosters:
-            booster.detect_landing()
-
-    def detect_stress(self) -> None:
-        """Calls stress detection method of each booster."""
-        for booster in self.boosters:
-            booster.detect_stress()
+            # booster.done = False
 
     def fetch_state(self) -> None:
         """Fetches data for neural network of booster"""
         for booster in self.boosters:
             booster.fetch_state()
-
-    def comp_reward(self) -> None:
-        """Computes reward for booster."""
-        for booster in self.boosters:
-            booster.comp_reward()
 
     def comp_action(self) -> None:
         """Computes next set of actions."""
@@ -197,6 +121,11 @@ class Environment(Framework):
         """Applies action coming from neural network to all boosters."""
         for booster in self.boosters:
             booster.apply_action()
+
+    def comp_reward(self) -> None:
+        """Computes reward for booster."""
+        for booster in self.boosters:
+            booster.comp_reward()
 
     def is_active(self) -> bool:
         """Checks if at least one booster is active."""
@@ -225,17 +154,3 @@ class Environment(Framework):
 
         # Compute current fitness / score of booster.
         self.comp_reward()
-
-        # Check boundary conditions.
-
-        # Detect leaving the domain.
-        self.detect_escape()  # TODO: Call in reward function
-
-        # Detect high stresses on the booster.
-        self.detect_stress()  # TODO: Call in reward function
-
-        # Detect collision with ground.
-        self.detect_impact()  # TODO: Call in reward function
-
-        # Detect landing and turn engines off.
-        self.detect_landing()  # TODO: Call in reward function
