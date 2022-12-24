@@ -36,11 +36,8 @@ class Booster(Booster2D):
         # Observed state, also input data for neural network.
         self.state = None
 
-        # Parameter indicating if booster either left domain or crashed.
-        # self.done = False
-
         # Booster's reward (or fitness score)
-        self.rewards = []  # TODO: rewards -> reward_memory
+        self.rewards = []
         self.distance_x_old = float("inf")
         self.distance_y_old = float("inf")
 
@@ -52,13 +49,12 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
-            eta = 1.0 / 60.0  # Correction factor.
-            alpha = 0.1
+            alpha = 0.05
             beta = 0.01
 
             # Distance to landing pad.
             pos_x, pos_y = self.body.position
-            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + self.eta
             pos_pad = self.config.env.landing_pad.position
             distance_x = (pos_pad.x - pos_x) ** 2
             distance_y = (pos_pad.y - pos_y) ** 2
@@ -146,10 +142,9 @@ class Booster(Booster2D):
         """
         if self.body.active:
             distance_threshold = 2.0
-            eta = 1.0 / 60.0  # Correction factor.
             pad = self.config.env.landing_pad.position
             pos_y = self.body.position.y
-            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + self.eta
             if (pos_y - pad.y) < distance_threshold:
                 vel_x, vel_y = self.body.linearVelocity
                 v_max_x = self.config.env.landing.v_max.x
@@ -199,9 +194,8 @@ class Booster(Booster2D):
             # than 0.5 meters above the ground.
             dist_y_max = 0.5
 
-            eta = 1.0 / 60.0  # Correction factor.
             pos_x, pos_y = self.body.position
-            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + eta
+            pos_y -= 0.5 * self.hull.height - self.legs.y_ground + self.eta
 
             pos_pad = self.config.env.landing_pad.position
 

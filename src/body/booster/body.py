@@ -38,6 +38,7 @@ class Booster2D:
 
     num_engines = 3
     num_dims = 2
+    eta = 1.0 / 60.0  # step_size = 0.0167 # ~ 1.0 / 60.0
 
     def __init__(self, world: b2World, config: Config) -> None:
         """Initializes Booster2D class."""
@@ -86,7 +87,7 @@ class Booster2D:
         )
 
         # Compute contact sphere for impact detection
-        eta = 2.0 * (1.0 / 60.0)  # step_size = 0.0167 # ~ 1.0 / 60.0
+        eta = 2.0 * self.eta 
         a = self.legs.x_ground_high + 0.5 * self.hull.width
         b = 0.5 * self.hull.height - self.legs.y_ground
         self.contact_threshold = (a**2 + b**2) ** 0.5 + eta

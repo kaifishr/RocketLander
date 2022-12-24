@@ -125,7 +125,6 @@ class Environment(Framework):
 
             # Reactivate booster.
             booster.body.active = True
-            # booster.done = False
 
     def is_active(self) -> bool:
         """Checks if at least one booster is active."""
@@ -135,11 +134,7 @@ class Environment(Framework):
         return False
 
     def step_(self):
-        """Steps the environment.
-
-        TODO: If that stays here, make methods private.
-        TODO: Move loop from trainer here?
-        """
+        """Steps the environment."""
         # Fetch data of each booster used for neural network.
         self._fetch_state()
 
