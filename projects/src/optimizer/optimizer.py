@@ -17,8 +17,8 @@ class Optimizer:
 
     def __init__(self, environment: Environment = None, config: Config = None) -> None:
         """Initializes optimizer base class."""
-        # self.boosters = environment.boosters
-        # self.config = config
+        self.boosters = None
+        self.config = config
 
         # Parameters to be visualized with Tensorboard.
         self.stats = {

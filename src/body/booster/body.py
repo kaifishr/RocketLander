@@ -87,7 +87,7 @@ class Booster2D:
         )
 
         # Compute contact sphere for impact detection
-        eta = 2.0 * self.eta 
+        eta = 2.0 * self.eta
         a = self.legs.x_ground_high + 0.5 * self.hull.width
         b = 0.5 * self.hull.height - self.legs.y_ground
         self.contact_threshold = (a**2 + b**2) ** 0.5 + eta

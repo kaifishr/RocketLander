@@ -128,7 +128,7 @@ class NumpyNeuralNetwork:
     def state_dict(self) -> dict:
         """Returns a dictionary containing the network's weights and biases."""
         state = {"parameters": self.parameters}
-        return state 
+        return state
 
     def load_state_dict(self, state_dict: dict) -> None:
         """Loads state dict holding the network's weights and biases.

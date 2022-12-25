@@ -8,13 +8,13 @@ random_seed: 42
 optimizer:
   num_boosters: 4
   num_simulation_steps: 700
-  num_iterations: 50000  # Decrease temperature for `num_iterations`
+  num_iterations: 60000  # Decrease temperature for `num_iterations`
   temp_initial: 0.06
   temp_final: 1.0e-6
   perturbation_probability_initial: 1.0
-  perturbation_probability_final: 0.001
-  perturbation_rate_initial: 0.04
-  perturbation_rate_final: 0.04
+  perturbation_probability_final: 0.01
+  perturbation_rate_initial: 0.1
+  perturbation_rate_final: 0.01
   lib: "numpy"    # Fix.
 
 trainer:
@@ -33,7 +33,7 @@ env:
     x_min: -150.0
     x_max: 150.0
     y_max: 450.0
-    y_min: -10.0
+    y_min: -5.0
 
   landing_pad:
     position: # [m]
@@ -65,7 +65,7 @@ env:
     engine:
       main: # Merlin engine
         max_force: 854000.0  # [N] 854 kN at sea level
-        max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+        max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 50000.0  # [N]
         max_angle: 15.0  # [deg]
@@ -76,11 +76,11 @@ env:
       # Specifies whether every agent gets the same starting noise: "identical" or "different"
       type: "identical"
       position: # [m]
-        x: 40.0
+        x: 20.0
         y: 20.0
       linear_velocity: # [m / s]
         x: 0.0
-        y: 10.0
+        y: 5.0
       angular_velocity: 0.0  # [deg / s]
       angle: 0.0  # [deg]
 

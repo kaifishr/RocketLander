@@ -49,8 +49,8 @@ class Booster(Booster2D):
         """
         if self.body.active:
 
-            alpha = 0.05
-            beta = 0.01
+            # alpha = 0.6
+            # beta = 0.001
 
             # Distance to landing pad.
             pos_x, pos_y = self.body.position
@@ -61,8 +61,8 @@ class Booster(Booster2D):
             distance = (distance_x + distance_y) ** 0.5
 
             # Velocity.
-            vel = self.body.linearVelocity
-            velocity = (vel.x**2 + vel.y**2) ** 0.5
+            # vel = self.body.linearVelocity
+            # velocity = (vel.x**2 + vel.y**2) ** 0.5
 
             reward = 0.0
 
@@ -71,26 +71,28 @@ class Booster(Booster2D):
                 self.distance_x_old = distance_x
                 if distance_y <= self.distance_y_old:
                     self.distance_y_old = distance_y
-                    r_distance = 1.0 / (1.0 + alpha * distance)
-                    r_velocity = 1.0 / (1.0 + beta * velocity)
-                    reward += r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity)
+                    # r_distance = 1.0 / (1.0 + alpha * distance)
+                    # r_velocity = 1.0 / (1.0 + beta * velocity)
+                    # reward += r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity)
+                    # reward += 1.0
+                    reward += 100.0 / (1.0 + distance)
             else:
-                reward -= 0.1
+                reward -= 0.01
 
             # Encourage agent to land quickly.
-            reward -= 0.05
+            # reward -= 0.01
 
             if self._detected_escape():
-                reward -= 10.0
+                reward -= 50.0
 
-            if self._detected_stress():
-                reward -= 10.0
+            # if self._detected_stress():
+            #     reward -= 100.0
 
             if self._detected_impact():
-                reward -= 10.0
+                reward -= 50.0
 
             if self._detected_landing():
-                reward += 10.0
+                reward += 100.0
 
             self.rewards.append(reward)
 
@@ -186,11 +188,11 @@ class Booster(Booster2D):
         distance within the engines can be turned off.
         """
         if self.body.active:
-            # A landing is successful if booster is 
-            # within 10 meters or less from the center.
-            dist_x_max = 10.0
+            # A landing is successful if booster is
+            # within 20 meters or less from the center.
+            dist_x_max = 20.0
 
-            # Turn of engines if booster is less 
+            # Turn of engines if booster is less
             # than 0.5 meters above the ground.
             dist_y_max = 0.5
 
@@ -206,7 +208,7 @@ class Booster(Booster2D):
                 self.body.active = False
                 self.predictions.fill(0.0)
                 return True
-        
+
         return False
 
     def comp_action(self) -> None:
@@ -238,9 +240,6 @@ class Booster(Booster2D):
 
     def _pre_process(self, data: numpy.ndarray) -> numpy.ndarray:
         """Applies pre-processing to fetched data.
-
-        TODO: Use online method to compute running mean and standard deviation
-              for data normalization.
 
         Normalizes fetched data.
 

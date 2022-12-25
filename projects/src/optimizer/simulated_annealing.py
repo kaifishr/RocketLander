@@ -18,7 +18,7 @@ class AsyncSimulatedAnnealing(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
-        self.model = self.boosters[0].model
+        # self.model = self.boosters[0].model
 
         config = config.optimizer
 
@@ -38,8 +38,6 @@ class AsyncSimulatedAnnealing(Optimizer):
         self.parameters_old = copy.deepcopy(self.boosters[0].model.parameters)
 
         self.reward_old = 0.0
-        self.iteration = 0
-        self.idx_best = 0
 
     def _scheduler(self) -> None:
         """Decreases temperature according to exponential decay."""
@@ -61,11 +59,12 @@ class AsyncSimulatedAnnealing(Optimizer):
         perturbation_rate = (pert_rate_init - pert_rate_final) * eta + pert_rate_final
 
         for booster in self.boosters:
-            booster.model.parameters = copy.deepcopy(self.parameters_old)
             self._perturb_weights(booster.model, perturbation_prob, perturbation_rate)
 
     @staticmethod
-    def _perturb_weights(model: object, perturbation_prob: float, perturbation_rate: float) -> None:
+    def _perturb_weights(
+        model: object, perturbation_prob: float, perturbation_rate: float
+    ) -> None:
         """Perturbs the network's weights."""
 
         for weight, bias in model.parameters:
@@ -87,7 +86,7 @@ class AsyncSimulatedAnnealing(Optimizer):
         reward = rewards[self.idx_best]
 
         # Save stats.
-        self.stats["reward"] = reward 
+        self.stats["reward"] = reward
         self.stats["temperature"] = self.temp
 
         delta_reward = reward - self.reward_old
@@ -104,7 +103,7 @@ class AsyncSimulatedAnnealing(Optimizer):
             for booster in self.boosters:
                 booster.model.parameters = copy.deepcopy(self.parameters_old)
 
-        # Reduce temperature according to scheduler
+        # Reduce temperature according to scheduler.
         self._scheduler()
 
         # Perturb weights for next iteration.
@@ -140,9 +139,7 @@ class SimulatedAnnealing(Optimizer):
 
         self.parameters_old = copy.deepcopy(self.model.parameters)
 
-        self.reward = 0.0
         self.reward_old = 0.0
-        self.iteration = 0
 
     def _scheduler(self) -> None:
         """Decreases temperature according to exponential decay."""
@@ -177,19 +174,17 @@ class SimulatedAnnealing(Optimizer):
         """Runs single optimization step."""
 
         # Get reward of booster.
-        self.reward = sum(self.booster.rewards)
-        # Alternatively, use only last reward.
-        # self.reward = self.booster.rewards[-1]
-        self.stats["reward"] = self.reward
+        reward = sum(self.booster.rewards)
+        self.stats["reward"] = reward
         self.stats["temperature"] = self.temp
 
-        delta_reward = self.reward - self.reward_old
+        delta_reward = reward - self.reward_old
 
         # Accept configuration if reward is higher or with probability p = exp(delta_reward / temp)
         if (delta_reward > 0) or (math.exp(delta_reward / self.temp) > random.random()):
-            # Save network if current reward is higher
+            # Save network if current reward is higher.
             self.parameters_old = copy.deepcopy(self.model.parameters)
-            self.reward_old = self.reward
+            self.reward_old = reward
         else:
             # Do not accept current state. Return to previous state.
             self.model.parameters = copy.deepcopy(self.parameters_old)

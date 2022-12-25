@@ -6,6 +6,7 @@ from src.utils.utils import set_random_seed
 
 from projects.src.trainer import Trainer
 from projects.src.optimizer import AsyncSimulatedAnnealing
+from projects.src.optimizer import SimulatedAnnealing
 
 
 if __name__ == "__main__":
@@ -15,4 +16,5 @@ if __name__ == "__main__":
     config = init_config(path=file_path)
     set_random_seed(seed=config.random_seed)
     trainer = Trainer(optimizer=AsyncSimulatedAnnealing, config=config)
+    # trainer = Trainer(optimizer=SimulatedAnnealing, config=config)
     trainer.run()

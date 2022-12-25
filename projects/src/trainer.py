@@ -40,7 +40,7 @@ class Trainer:
 
     def run(self) -> None:
         """Runs training."""
-        
+
         config = self.config
         num_episodes = self.config.trainer.num_episodes
         num_simulation_steps = self.config.optimizer.num_simulation_steps
@@ -77,7 +77,7 @@ class Trainer:
                 print(f"{episode = }", end="\r")
 
                 # Save model
-                if save_model and episode > 10:
+                if save_model and episode > 1000:
                     reward = self.optimizer.stats["reward"]
                     if reward > max_reward:
                         model = self.optimizer.model
