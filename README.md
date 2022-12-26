@@ -33,7 +33,7 @@ pip3 install -r requirements.txt
 To start a training session using a specified learning method, run one of the examples in the project folder. For example:
 
 ```console
-cd falconlander
+cd FalconLander 
 python -m projects.reinforcement_learning.main
 python -m projects.evolution_strategies.main
 python -m projects.genetic_optimization.main
@@ -45,7 +45,7 @@ Rendering and visualization can be turned off to greatly accelerate the optimiza
 Track important metrics such as the reward with Tensorboard:
 
 ```console
-cd falconlander
+cd FalconLander 
 tensorboard --logdir runs/
 ```
 
