@@ -1,7 +1,6 @@
 """Optimization class for simulated annealing."""
 import copy
 import math
-import numpy
 import random
 
 from projects.src.optimizer import Optimizer
@@ -18,6 +17,7 @@ class AsyncSimulatedAnnealing(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
+        self.model = self.boosters[0].model
 
         config = config.optimizer
 

@@ -108,6 +108,6 @@ dirs:
 # Save or load pre-trained neural network.
 checkpoints:
   load_model: false
-  save_model: false 
+  save_model: true 
   model_path: "weights"
   model_name: "ga"
