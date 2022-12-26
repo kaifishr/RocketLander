@@ -6,17 +6,17 @@ random_seed: 42
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 4
-  num_simulation_steps: 500
+  num_boosters: 1
+  num_simulation_steps: 700
   num_thrust_levels: 2  # Thrust levels of engines. 
   num_thrust_angles: 2  # Thrust angles of engines.
-  learning_rate: 0.0003
+  learning_rate: 0.0004
   batch_size: 4096
   memory_size: 200000
   gamma: 0.95           # Discount rate
   epsilon: 1.0          # Epsilon-greedy value.
   epsilon_min: 0.01     # Minimal epsilon-greedy value.
-  epsilon_decay: 0.9999
+  epsilon_decay: 0.999
   num_warmup_steps: 100000
   lib: "torch"
 
@@ -70,7 +70,7 @@ env:
       # Merlin engine. 854 kN thrust at sea level. Gimbal angle, about ~15 degrees.
       main: 
         max_force: 854000.0  # [N]
-        max_angle: 20.0      # [deg]
+        max_angle: 15.0      # [deg]
       # Cold gas propulsion system.
       cold_gas:
         max_force: 50000.0   # [N]

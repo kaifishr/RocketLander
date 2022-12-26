@@ -80,18 +80,19 @@ class Booster(Booster2D):
                     reward += 100.0 / (1.0 + distance)
             else:
                 reward -= 0.01
+                # reward -= 1.0
 
             if self._detected_escape():
-                reward -= 10.0
+                reward -= 100.0
 
             if self._detected_stress():
-                reward -= 10.0
+                reward -= 100.0
 
             if self._detected_impact():
-                reward -= 10.0
+                reward -= 100.0
 
             if self._detected_landing():
-                reward += 10.0
+                reward += 100.0
 
             self.rewards.append(reward)
 
