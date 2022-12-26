@@ -18,7 +18,6 @@ class AsyncSimulatedAnnealing(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
-        # self.model = self.boosters[0].model
 
         config = config.optimizer
 
@@ -60,22 +59,6 @@ class AsyncSimulatedAnnealing(Optimizer):
 
         for booster in self.boosters:
             self._perturb_weights(booster.model, perturbation_prob, perturbation_rate)
-
-    @staticmethod
-    def _perturb_weights(
-        model: object, perturbation_prob: float, perturbation_rate: float
-    ) -> None:
-        """Perturbs the network's weights."""
-
-        for weight, bias in model.parameters:
-
-            mask = numpy.random.random(size=weight.shape) < perturbation_prob
-            mutation = perturbation_rate * numpy.random.normal(size=weight.shape)
-            weight += mask * mutation
-
-            mask = numpy.random.random(size=bias.shape) < perturbation_prob
-            mutation = perturbation_rate * numpy.random.normal(size=bias.shape)
-            bias += mask * mutation
 
     def step(self) -> None:
         """Runs single simulated annealing step."""
@@ -160,15 +143,7 @@ class SimulatedAnnealing(Optimizer):
         pert_rate_final = self.perturbation_rate_final
         perturbation_rate = (pert_rate_init - pert_rate_final) * eta + pert_rate_final
 
-        for weight, bias in self.model.parameters:
-
-            mask = numpy.random.random(size=weight.shape) < perturbation_prob
-            mutation = perturbation_rate * numpy.random.normal(size=weight.shape)
-            weight += mask * mutation
-
-            mask = numpy.random.random(size=bias.shape) < perturbation_prob
-            mutation = perturbation_rate * numpy.random.normal(size=bias.shape)
-            bias += mask * mutation
+        self._perturb_weights(self.model, perturbation_prob, perturbation_rate)
 
     def step(self) -> None:
         """Runs single optimization step."""

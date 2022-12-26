@@ -60,7 +60,7 @@ env:
     engine:
       main: # Merlin engine
         max_force: 854000.0  # [N] 854 kN at sea level
-        max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+        max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 50000.0  # [N]
         max_angle: 15.0  # [deg]
@@ -107,7 +107,7 @@ dirs:
 
 # Save or load pre-trained neural network.
 checkpoints:
-  load_model: false 
-  save_model: true 
+  load_model: true 
+  save_model: false 
   model_path: "weights"
-  model_name: ""
+  model_name: "ckpt_es"

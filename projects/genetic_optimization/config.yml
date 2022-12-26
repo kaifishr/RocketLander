@@ -28,7 +28,7 @@ env:
     x_min: -150.0
     x_max: 150.0
     y_max: 450.0
-    y_min: -10.0
+    y_min: -5.0
 
   landing_pad:
     position: # [m]
@@ -60,7 +60,7 @@ env:
     engine:
       main: # Merlin engine
         max_force: 854000.0  # [N] 854 kN at sea level
-        max_angle: 30.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
+        max_angle: 15.0  # [deg] Gimbal angle, about ~15 degrees for Falcon 9
       cold_gas:  # Cold gas propulsion system.
         max_force: 50000.0  # [N]
         max_angle: 15.0  # [deg]
@@ -110,4 +110,4 @@ checkpoints:
   load_model: false
   save_model: false 
   model_path: "weights"
-  model_name: ""
+  model_name: "ga"

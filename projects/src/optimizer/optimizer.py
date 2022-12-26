@@ -11,7 +11,6 @@ class Optimizer:
     Attributes:
         stats: Dictionary holding stats.
     """
-
     num_engines = 3
     num_states = 6
 
@@ -49,6 +48,25 @@ class Optimizer:
         else:
             raise NotImplementedError(f"Reduction '{reduction}' not implemented.")
         return numpy.array(rewards)
+
+    @staticmethod
+    def _perturb_weights(model: object, prob: float, rate: float) -> None:
+        """Perturbs the network's weights.
+
+        Args:
+            model: Neural network model.
+            prob: Probability for perturbation.
+            rate: Rate of perturbation.
+        """
+        for weight, bias in model.parameters:
+
+            mask = numpy.random.random(size=weight.shape) < prob
+            mutation = rate * numpy.random.normal(size=weight.shape)
+            weight += mask * mutation
+
+            mask = numpy.random.random(size=bias.shape) < prob
+            mutation = rate * numpy.random.normal(size=bias.shape)
+            bias += mask * mutation
 
     def step(self) -> None:
         """Runs single optimization step."""

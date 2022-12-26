@@ -26,7 +26,7 @@ def capture_screen(screen, iteration: int) -> None:
     Returns:
         None
     """
-    filename = Path("frames") / f"screen_{iteration:04d}"
+    filename = Path("frames") / f"screen_{iteration:04d}.png"
     pygame.image.save(screen, filename)
 
 
@@ -55,7 +55,7 @@ def load_checkpoint(model: object, config: Config) -> None:
         config: Configuration.
     """
     model_name = config.checkpoints.model_name
-    checkpoint_name = f"ckpt{f'_{model_name}' if model_name else ''}"
+    checkpoint_name = f"{f'{model_name}' if model_name else 'ckpt'}"
     model_path = Path(config.checkpoints.model_path) / f"{checkpoint_name}.pth"
 
     if model_path.is_file():

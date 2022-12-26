@@ -142,7 +142,10 @@ dmypy.json
 # Built Visual Studio Code Extensions
 *.vsix
 
-**/runs/**
 
 # Ignore network parameters.
 *.pth
+
+# Other folders. 
+**/runs/**
+/frames

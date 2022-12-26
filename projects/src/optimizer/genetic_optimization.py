@@ -26,7 +26,6 @@ class GeneticOptimizer(Optimizer):
         super().__init__()
 
         self.boosters = environment.boosters
-        self.model = self.boosters[0].model
 
         self.mutation_prob = config.optimizer.mutation_probability
         self.mutation_rate = config.optimizer.mutation_rate
@@ -47,23 +46,7 @@ class GeneticOptimizer(Optimizer):
         for booster in self.boosters:
             # Assign parameters of best model to each booster and mutate weights.
             booster.model.parameters = copy.deepcopy(parameters)
-            self._mutate_weights(booster.model)
-
-    def _mutate_weights(self, model: object) -> None:
-        """Mutates the network's weights.
-
-        Args:
-            model: Neural network model.
-        """
-        for weight, bias in model.parameters:
-
-            mask = numpy.random.random(size=weight.shape) < self.mutation_prob
-            mutation = self.mutation_rate * numpy.random.normal(size=weight.shape)
-            weight += mask * mutation
-
-            mask = numpy.random.random(size=bias.shape) < self.mutation_prob
-            mutation = self.mutation_rate * numpy.random.normal(size=bias.shape)
-            bias += mask * mutation
+            self._perturb_weights(booster.model, self.mutation_prob, self.mutation_rate)
 
     def step(self) -> None:
         """Runs single genetic optimization step."""

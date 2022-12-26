@@ -73,7 +73,7 @@ class Trainer:
                 for name, scalar in self.optimizer.stats.items():
                     if scalar is not None:
                         self.writer.add_scalar(name, scalar, episode)
-                self.writer.add_scalar("Seconds", time.time() - t0, episode)
+                self.writer.add_scalar("seconds", time.time() - t0, episode)
                 print(f"{episode = }", end="\r")
 
                 # Save model
