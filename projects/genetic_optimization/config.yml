@@ -72,10 +72,10 @@ env:
       type: "identical"
       position: # [m]
         x: 40.0
-        y: 20.0
+        y: 10.0
       linear_velocity: # [m / s]
         x: 0.0
-        y: 10.0
+        y: 5.0
       angular_velocity: 0.0  # [deg / s]
       angle: 0.0  # [deg]
 
@@ -107,7 +107,8 @@ dirs:
 
 # Save or load pre-trained neural network.
 checkpoints:
-  load_model: false
-  save_model: true 
+  load_model: true 
+  save_model: false 
+  every_num_episodes: 1000
   model_path: "weights"
-  model_name: "ga"
+  model_name: "ckpt_ga"

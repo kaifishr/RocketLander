@@ -6,14 +6,14 @@ random_seed: 42
 
 # Simulated annealing
 optimizer:
-  num_boosters: 4
+  num_boosters: 1
   num_simulation_steps: 700
-  num_iterations: 60000  # Decrease temperature for `num_iterations`
+  num_iterations: 100000  # Decrease temperature for `num_iterations`
   temp_initial: 0.06
   temp_final: 1.0e-6
   perturbation_probability_initial: 1.0
   perturbation_probability_final: 0.01
-  perturbation_rate_initial: 0.1
+  perturbation_rate_initial: 0.05
   perturbation_rate_final: 0.01
   lib: "numpy"    # Fix.
 
@@ -76,8 +76,8 @@ env:
       # Specifies whether every agent gets the same starting noise: "identical" or "different"
       type: "identical"
       position: # [m]
-        x: 20.0
-        y: 20.0
+        x: 40.0
+        y: 10.0
       linear_velocity: # [m / s]
         x: 0.0
         y: 5.0
@@ -112,7 +112,8 @@ dirs:
 
 # Save or load pre-trained neural network.
 checkpoints:
-  load_model: false 
-  save_model: true 
+  load_model: false
+  save_model: false
+  every_num_episodes: 1000
   model_path: "weights"
-  model_name: "sa"
+  model_name: ""

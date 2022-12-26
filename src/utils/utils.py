@@ -41,7 +41,7 @@ def save_checkpoint(model: object, config: Config) -> None:
         generation: Current generation.
     """
     model_name = config.checkpoints.model_name
-    checkpoint_name = f"ckpt{f'_{model_name}' if model_name else ''}"
+    checkpoint_name = f"{f'{model_name}' if model_name else 'ckpt'}"
     model_path = Path(config.checkpoints.model_path) / f"{checkpoint_name}.pth"
 
     torch.save(obj=model.state_dict(), f=model_path)

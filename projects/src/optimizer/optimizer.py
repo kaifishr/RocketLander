@@ -11,6 +11,7 @@ class Optimizer:
     Attributes:
         stats: Dictionary holding stats.
     """
+
     num_engines = 3
     num_states = 6
 

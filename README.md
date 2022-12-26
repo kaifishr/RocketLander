@@ -1,12 +1,11 @@
 # **RocketLander** ✨🚀✨
 
-
 # Introduction
 
-*RocketLander* is a comprehensive framework equipped with optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable an orbital rocket booster to land autonomously. *RocketLander* is designed to be simple to use and can be easily extended. 
+*RocketLander* is a comprehensive framework equipped with optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable an orbital rocket booster to land autonomously. *RocketLander* is designed to be simple to use and can be easily extended.
 
 <p align="center">
-    <img src="docs/booster.png" width="240" height=""/>
+    <img src="docs/landing.gif" width="320" height=""/>
 </p>
 
 The framework uses [*PyBox2D*](https://box2d.org/) a 2D physics library for rigid physics simulations, and [*PyGame*](https://www.pygame.org/) for rendering and visualization. 
@@ -74,12 +73,17 @@ $$R_{\text{velocity}} = \frac{1}{1 + \beta \cdot v}$$
 
 with the $x$- and $y$-components of the booster's velocity. The reward is coupled with the booster's distance to the landing pad to encourage a soft landing. The hyperparameters, $\alpha$ and $\beta$, allow us to emphasize the rewards coming from proximity or velocity.
 
-Now we can use an *XNOR* coupling of both reward terms to create a reward function that encourages a fast approach combined with a soft landing at the center of the landing pad:
+Now we can use a soft *XNOR* coupling of both reward terms to create a reward function that encourages a fast approach combined with a soft landing at the center of the landing pad:
 
-<!-- $$R = R_{\text{proximity}} + R_{\text{velocity}}$$ -->
 $$R = R_{\text{proximity}} \cdot R_{\text{velocity}} + (1 - R_{\text{proximity}}) \cdot (1 - R_{\text{velocity}})$$
 
-In addition to the reward above, the agent also receives a large positive reward for a successful landing and a negative reward if the vehicle exceeds a certain stress level, experiences an impact, or leaves the domain.
+As a simple alternative, the following reward function that takes only the distance to the landing pad into account also works reasonably well: 
+
+$$R = \gamma R_{\text{proximity}}$$
+
+where $\gamma$ controls how much the reward is taken into account.
+
+In addition to the reward functions above, the agent also receives a large positive reward for a successful landing and a negative reward if the vehicle exceeds a certain stress level, experiences an impact, or leaves the domain.
 
 To encourage the booster to land faster, the agent receives a small negative reward at every step. By reducing the number of simulation steps, we can model an implicit fuel restriction as the agent still tries to maximize the reward. This time restriction also motivates the booster to land more quickly.
 

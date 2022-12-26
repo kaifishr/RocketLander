@@ -71,28 +71,27 @@ class Booster(Booster2D):
                 self.distance_x_old = distance_x
                 if distance_y <= self.distance_y_old:
                     self.distance_y_old = distance_y
+                    # Soft XNOR coupling:
                     # r_distance = 1.0 / (1.0 + alpha * distance)
                     # r_velocity = 1.0 / (1.0 + beta * velocity)
                     # reward += r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity)
                     # reward += 1.0
+                    # Simple:
                     reward += 100.0 / (1.0 + distance)
             else:
                 reward -= 0.01
 
-            # Encourage agent to land quickly.
-            # reward -= 0.01
-
             if self._detected_escape():
-                reward -= 50.0
+                reward -= 10.0
 
-            # if self._detected_stress():
-            #     reward -= 100.0
+            if self._detected_stress():
+                reward -= 10.0
 
             if self._detected_impact():
-                reward -= 50.0
+                reward -= 10.0
 
             if self._detected_landing():
-                reward += 100.0
+                reward += 10.0
 
             self.rewards.append(reward)
 

@@ -45,10 +45,10 @@ class Trainer:
         num_episodes = self.config.trainer.num_episodes
         num_simulation_steps = self.config.optimizer.num_simulation_steps
         save_model = self.config.checkpoints.save_model
+        every_num_episodes = self.config.checkpoints.every_num_episodes
 
         step = 0
         episode = 0
-        max_reward = float("-inf")
 
         is_running = True
         t0 = time.time()
@@ -77,12 +77,9 @@ class Trainer:
                 print(f"{episode = }", end="\r")
 
                 # Save model
-                if save_model and episode > 1000:
-                    reward = self.optimizer.stats["reward"]
-                    if reward > max_reward:
-                        model = self.optimizer.model
-                        save_checkpoint(model=model, config=config)
-                        max_reward = reward
+                if save_model and (episode % every_num_episodes == 0):
+                    model = self.optimizer.model
+                    save_checkpoint(model=model, config=config)
 
                 t0 = time.time()
 
