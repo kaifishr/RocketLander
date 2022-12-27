@@ -51,6 +51,7 @@ class Booster(Booster2D):
 
             # alpha = 0.6
             # beta = 0.001
+            gamma = 100.0
 
             # Distance to landing pad.
             pos_x, pos_y = self.body.position
@@ -77,7 +78,7 @@ class Booster(Booster2D):
                     # reward += r_distance * r_velocity + (1.0 - r_distance) * (1.0 - r_velocity)
                     # reward += 1.0
                     # Simple:
-                    reward += 100.0 / (1.0 + distance)
+                    reward += gamma / (1.0 + distance)
             else:
                 reward -= 0.01
                 # reward -= 1.0
