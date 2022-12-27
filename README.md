@@ -1,8 +1,8 @@
-# **FalconLander** ✨🚀✨
+# **RocketLander** ✨🚀✨
 
 # Introduction
 
-*FalconLander* is a comprehensive framework equipped with optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable a simplified version of a [Falcon 9](https://www.spacex.com/vehicles/falcon-9/) rocket booster to land autonomously. *FalconLander* is designed to be simple to use and can be easily extended.
+*RocketLander* is a comprehensive framework equipped with optimization algorithms, such as reinforcement learning, evolution strategies, genetic optimization, and simulated annealing, to enable a simplified version of a [Falcon 9](https://www.spacex.com/vehicles/falcon-9/) rocket booster to land autonomously. *RocketLander* is designed to be simple to use and can be easily extended.
 
 <p align="center">
     <img src="docs/landing.gif" width="320" height=""/>
@@ -19,11 +19,11 @@ The neural network controls the actions of the booster. At each time step, the n
 
 # Installation
 
-To run *FalconLander*, install the latest master directly from GitHub. For a basic install, run:
+To run *RocketLander*, install the latest master directly from GitHub. For a basic install, run:
 
 ```console
-git clone https://github.com/kaifishr/FalconLander
-cd FalconLander 
+git clone https://github.com/kaifishr/RocketLander
+cd RocketLander 
 pip3 install -r requirements.txt
 ```
 
@@ -33,7 +33,7 @@ pip3 install -r requirements.txt
 To start a training session using a specified learning method, run one of the examples in the project folder. For example:
 
 ```console
-cd FalconLander 
+cd RocketLander
 python -m projects.reinforcement_learning.main
 python -m projects.evolution_strategies.main
 python -m projects.genetic_optimization.main
@@ -45,7 +45,7 @@ Rendering and visualization can be turned off to greatly accelerate the optimiza
 Track important metrics such as the reward with Tensorboard:
 
 ```console
-cd FalconLander 
+cd RocketLander
 tensorboard --logdir runs/
 ```
 
@@ -183,13 +183,13 @@ PyBox2D [tutorial](https://github.com/pybox2d/cython-box2d/blob/master/docs/sour
 If you find this project useful, please use BibTeX to cite it as:
 
 ```bibtex
-@article{fischer2022falconlander,
-  title   = "FalconLander",
+@article{fischer2022rocketlander,
+  title   = "RocketLander",
   author  = "Fischer, Kai",
   journal = "GitHub repository",
   year    = "2022",
   month   = "December",
-  url     = "https://github.com/kaifishr/FalconLander"
+  url     = "https://github.com/kaifishr/RocketLander"
 }
 ```
 
