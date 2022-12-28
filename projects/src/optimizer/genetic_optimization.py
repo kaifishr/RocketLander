@@ -4,7 +4,6 @@ Implements genetic optimization inspired by biological evolution.
 
 """
 import copy
-import numpy
 
 from projects.src.optimizer import Optimizer
 

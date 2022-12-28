@@ -92,7 +92,7 @@ class EvolutionStrategies(Optimizer):
         # Get rewards for each agent in population.
         # rewards = numpy.array([sum(booster.rewards) for booster in self.boosters]) # cumulative reward
         # rewards = numpy.array([booster.rewards[-1] for booster in self.boosters])  # final reward
-        rewards = self._gather_rewards(reduction="sum")
+        rewards = self._gather_rewards(reduction="mean")
         self.stats["reward"] = max(rewards)
 
         # Standardize rewards to be N(0, 1) gaussian.

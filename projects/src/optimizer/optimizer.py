@@ -32,18 +32,20 @@ class Optimizer:
         self.iteration = 0
         self.idx_best = 0
 
-    def _gather_rewards(self, reduction: str = "sum") -> numpy.ndarray:
+    def _gather_rewards(self, reduction: str = "mean") -> numpy.ndarray:
         """Gathers rewards of all agents.
 
         Args:
             reduction: Specifies the reduction applied to the rewards:
-            `sum` or `last`. `last`: only last reward will be considered.
+            `mean`, `sum` or `last`. `last`: only last reward will be considered.
 
         Returns:
             Numpy array of reduced rewards.
         """
-        if reduction == "sum":
-            rewards = [sum(booster.rewards) for booster in self.boosters]
+        if reduction == "mean":
+            rewards = [numpy.mean(booster.rewards) for booster in self.boosters]
+        elif reduction == "sum":
+            rewards = [numpy.sum(booster.rewards) for booster in self.boosters]
         elif reduction == "last":
             rewards = [booster.rewards[-1] for booster in self.boosters]
         else:
