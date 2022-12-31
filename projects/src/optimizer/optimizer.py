@@ -37,13 +37,15 @@ class Optimizer:
 
         Args:
             reduction: Specifies the reduction applied to the rewards:
-            `sum` or `last`. `last`: only last reward will be considered.
+            `mean`, `sum` or `last`. `last`: only last reward will be considered.
 
         Returns:
             Numpy array of reduced rewards.
         """
         if reduction == "sum":
-            rewards = [sum(booster.rewards) for booster in self.boosters]
+            rewards = [numpy.sum(booster.rewards) for booster in self.boosters]
+        elif reduction == "mean":
+            rewards = [numpy.mean(booster.rewards) for booster in self.boosters]
         elif reduction == "last":
             rewards = [booster.rewards[-1] for booster in self.boosters]
         else:

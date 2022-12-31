@@ -7,7 +7,7 @@ random_seed: 42
 # Genetic optimization
 optimizer:
   num_boosters: 8
-  num_simulation_steps: 700
+  num_simulation_steps: 500
   mutation_probability: 0.02
   mutation_rate: 0.02
   lib: "numpy"
@@ -32,13 +32,13 @@ env:
 
   landing_pad:
     position: # [m]
-      x: -100.0
+      x: 0.0
       y: 0.0
 
   landing:
     v_max: # [m / s]
-      x: 10.0
-      y: -15.0
+      x: 5.0
+      y: -5.0
 
   booster:
     fixed_rotation: true    # Fix rotation for faster learning.
@@ -49,7 +49,7 @@ env:
 
     init:
       position: # [m]
-        x: 70.0
+        x: 0.0
         y: 400.0
       linear_velocity: # [m/s]
         x: 0.0
@@ -71,8 +71,8 @@ env:
       # Specifies whether every agent gets the same starting noise: "identical" or "different"
       type: "identical"
       position: # [m]
-        x: 40.0
-        y: 10.0
+        x: 80.0
+        y: 0.0
       linear_velocity: # [m / s]
         x: 0.0
         y: 5.0
@@ -107,7 +107,7 @@ dirs:
 
 # Save or load pre-trained neural network.
 checkpoints:
-  load_model: true 
+  load_model: false 
   save_model: false 
   every_num_episodes: 1000
   model_path: "weights"

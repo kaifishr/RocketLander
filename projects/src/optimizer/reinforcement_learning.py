@@ -164,7 +164,7 @@ class DeepQOptimizer(Optimizer):
 
     def step(self) -> None:
         """Runs single optimization step."""
-        self.stats["reward"] = max([sum(booster.rewards) for booster in self.boosters])
+        self.stats["reward"] = max(self._gather_rewards(reduction="sum"))
 
         # Gather data from all agents.
         self._gather_data()
