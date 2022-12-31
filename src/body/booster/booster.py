@@ -80,7 +80,7 @@ class Booster(Booster2D):
                     reward += gamma / (1.0 + distance)
             else:
                 # reward -= 0.01
-                reward -= 1.0
+                reward -= 0.5
 
             if self._detected_escape():
                 reward -= 100.0
