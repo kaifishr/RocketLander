@@ -6,18 +6,18 @@ random_seed: 42
 
 # Deep Q-Learning 
 optimizer:
-  num_boosters: 1
-  num_simulation_steps: 500
+  num_boosters: 4
+  num_simulation_steps: 1000
   num_thrust_levels: 2  # Thrust levels of engines. 
-  num_thrust_angles: 2  # Thrust angles of engines.
+  num_thrust_angles: 3  # Thrust angles of engines.
   learning_rate: 0.001
-  batch_size: 4096
-  memory_size: 200000
-  gamma: 0.95           # Discount rate
-  epsilon: 1.0          # Epsilon-greedy value.
+  batch_size: 256
+  memory_size: 1000000
+  gamma: 0.99           # Discount rate
+  epsilon: 0.95          # Epsilon-greedy value.
   epsilon_min: 0.01     # Minimal epsilon-greedy value.
-  epsilon_decay: 0.9999
-  num_warmup_steps: 100000
+  epsilon_decay: 0.99999
+  num_warmup_steps: 50000
   lib: "torch"
 
 trainer:
@@ -54,15 +54,15 @@ env:
 
     stress:
       max_angle: 10  # [deg]
-      max_angular_velocity: 180  # [deg / s]
+      max_angular_velocity: 90  # [deg / s]
 
     init:
       position: # [m]
-        x: 70.0
-        y: 400.0
+        x: 50.0
+        y: 250.0
       linear_velocity: # [m / s]
         x: 0.0
-        y: -50.0
+        y: -20.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
@@ -80,19 +80,19 @@ env:
       # Specifies standard deviation of Gaussian noise added to agents initial state.
       is_activated: true
       # Specifies whether every agent gets the same starting noise: "identical" or "different"
-      type: "identical"
+      type: "different"
       position: # [m]
-        x: 40.0
-        y: 10.0
+        x: 0.0
+        y: 0.0
       linear_velocity: # [m / s]
         x: 0.0
-        y: 5.0
+        y: 0.0
       angular_velocity: 0.0  # [deg / s]
       angle: 0.0  # [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
-      num_dim_hidden: 256
+      num_dim_hidden: 64
       num_hidden_layers: 2
 
 framework:
