@@ -7,14 +7,14 @@ random_seed: 42
 # Deep Q-Learning 
 optimizer:
   num_boosters: 4
-  num_simulation_steps: 1000
+  num_simulation_steps: 500
   num_thrust_levels: 2  # Thrust levels of engines. 
-  num_thrust_angles: 3  # Thrust angles of engines.
+  num_thrust_angles: 2  # Thrust angles of engines.
   learning_rate: 0.001
   batch_size: 256
   memory_size: 1000000
   gamma: 0.99           # Discount rate
-  epsilon: 0.95          # Epsilon-greedy value.
+  epsilon: 1.0          # Epsilon-greedy value.
   epsilon_min: 0.01     # Minimal epsilon-greedy value.
   epsilon_decay: 0.99999
   num_warmup_steps: 50000
@@ -92,7 +92,7 @@ env:
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
-      num_dim_hidden: 64
+      num_dim_hidden: 32
       num_hidden_layers: 2
 
 framework:
