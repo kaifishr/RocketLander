@@ -27,14 +27,14 @@ cd RocketLander
 pip3 install -r requirements.txt
 ```
 
-
 # Getting Started
 
 To start a training session using a specified learning method, run one of the examples in the project folder. For example:
 
 ```console
 cd RocketLander
-python -m projects.reinforcement_learning.main
+python -m projects.deep_q_learning.main
+python -m projects.policy_gradient.main
 python -m projects.evolution_strategies.main
 python -m projects.genetic_optimization.main
 python -m projects.simulated_annealing.main
@@ -90,16 +90,15 @@ To encourage the booster to land faster, the agent receives a small negative rew
 
 ## Asynchronous Reinforcement Learning
 
-Reinforcement Learning is without a doubt one of the most interesting subfields of machine learning in which an agent (here the booster) learns to make decisions in an environment by interacting with it and receiving rewards for its actions.
+Reinforcement Learning is without a doubt one of the most interesting subfields of machine learning in which an agent (here the booster) learns to make decisions in an environment by interacting with it and receiving rewards for its actions. This project comes with [Deep Q-learning](https://en.wikipedia.org/wiki/Q-learning) and the Policy Gradient reinforcement learning algorithm. 
 
 In reinforcement learning, the goal of the agent is to learn a policy, represented by the booster's neural network, that maximizes a reward over time. The neural network maps the booster's state to pairs of actions and Q-values, which the agent uses to determine the best action to take in a given situation. This is typically done by trial and error, with the agent learning from its mistakes and adjusting its policy-based actions over time to improve its performance. 
 
+The implemented reinforcement learning algorithms use a batch of episodes recorded by multiple boosters in parallel to learn a policy that maximizes the reward.
 
-### Asynchronous Deep Q-Learning
+To train an agent with deep Q-learning we proceed as follows. We start by initializing our policy (the neural network) randomly. To ensure the agent explores its environment, we inject noise into its action space. That means, we either choose a random action from our discrete action space, or we take the action with the highest predicted utility predicted by the policy neural network at a given state. 
 
-For this project I used asynchronous [Deep Q-learning](https://en.wikipedia.org/wiki/Q-learning) which is one of the core concepts in reinforcement learning. The implemented deep Q-learning algorithm uses a batch of episodes recorded by multiple boosters in parallel to learn a policy that maximizes the reward.
-
-For the training of the agent we proceed as follows. We start by initializing our policy (the neural network) randomly. To ensure the agent explores its environment, we inject noise into its action space. That means, we either choose a random action from our discrete action space, or we take the action with the highest predicted utility predicted by the policy neural network at a given state As an aside, this is different from evolutionary strategies presented above, where we inject noise directly into the parameter space of the agent. Aside end. 
+As an aside, this is different from evolutionary strategies presented above, where we inject noise directly into the parameter space of the agent. Aside end. 
 
 As the agent interacts with the environment, we record its state, action, and the reward received at each time step. We can then use backpropagation to encourage state-action pairs that result in positive or high rewards and discourage those with negative or low rewards. 
 

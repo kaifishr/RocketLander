@@ -1,25 +1,20 @@
-##################################################################
-# Configuration for (asynchronous) Deep Q Reinforcement Learning #
-##################################################################
+###########################################################################
+# Configuration for (asynchronous) Policy Gradient Reinforcement Learning #
+###########################################################################
 
-random_seed: 42
+random_seed: 41
 
-# Deep Q-Learning 
+# Policy Gradient
 optimizer:
-  num_boosters: 1
-  num_simulation_steps: 500
-  num_thrust_levels: 2    # Thrust levels of engines. 
-  num_thrust_angles: 2    # Thrust angles of engines.
-  learning_rate: 0.0003
-  batch_size: 256
-  memory_size: 100000
-  gamma: 0.99             # Discount rate
-  epsilon: 1.0            # Epsilon-greedy value.
-  epsilon_min: 0.01       # Minimal epsilon-greedy value.
-  epsilon_decay: 0.9999
-  num_warmup_steps: 10000
-  lib: "torch"            # Fix.
-  net: "deep_q"           # Fix.
+  num_boosters: 4
+  num_simulation_steps: 200    # Length of episode.
+  num_thrust_levels: 3        # Thrust levels of engines. 
+  num_thrust_angles: 3        # Thrust angles of engines.
+  learning_rate: 0.0005
+  batch_size: 128
+  gamma: 1.0                 # Discount rate.
+  lib: "torch"                # Fix.
+  net: "policy_gradient"      # Fix.
 
 trainer:
   num_episodes: -1  # -1 for infinite generations or positive integer
@@ -83,18 +78,18 @@ env:
       # Specifies whether every agent gets the same starting noise: "identical" or "different"
       type: "different"
       position: # [m]
-        x: 0.0
-        y: 0.0
+        x: 10.0
+        y: 10.0
       linear_velocity: # [m / s]
-        x: 0.0
-        y: 0.0
+        x: 1.0
+        y: 1.0
       angular_velocity: 0.0  # [deg / s]
       angle: 0.0  # [deg]
 
     neural_network: # model
       num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
-      num_dim_hidden: 32
-      num_hidden_layers: 2
+      num_dim_hidden: 64
+      num_hidden_layers: 1
 
 framework:
   screen:

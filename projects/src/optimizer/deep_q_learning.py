@@ -39,9 +39,7 @@ class DeepQOptimizer(Optimizer):
         self.batch_size = config.batch_size
         self.num_thrust_levels = config.num_thrust_levels
         self.num_thrust_angles = config.num_thrust_angles
-        self.num_actions = (
-            1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
-        )
+        self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
 
         self.model = copy.deepcopy(self.boosters[0].model)
 

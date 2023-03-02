@@ -25,15 +25,21 @@ class ModelLoader:
     def __call__(self):
         """Loads and returns model."""
         lib = self.config.optimizer.lib
+        net = self.config.optimizer.net
 
         # Instantiate network.
         if lib == "numpy":
             model = NumpyNeuralNetwork(self.config)
         elif lib == "torch":
-            model = TorchNeuralNetwork(self.config)
+            if net == "deep_q":
+                model = DeepQNetwork(self.config)
+            elif net == "policy_gradient":
+                model = PolicyGradientNetwork(self.config)
+            else:
+                raise NotImplementedError(f"Model '{net}' not implemented.")
             model.train(False)
         else:
-            raise NotImplementedError(f"Network for {lib} not implemented.")
+            raise NotImplementedError(f"Network for '{lib}' not implemented.")
 
         # Load pre-trained model.
         if self.config.checkpoints.load_model:
@@ -161,7 +167,7 @@ class NumpyNeuralNetwork:
         return x
 
 
-class TorchNeuralNetwork(nn.Module):
+class DeepQNetwork(nn.Module):
     """Policy network for deep Q-learning.
 
     Simple fully-connected neural network for deep Q reinforcement learning.
@@ -182,9 +188,7 @@ class TorchNeuralNetwork(nn.Module):
         self.num_simulation_steps = config.optimizer.num_simulation_steps
 
         # Number of actions plus `do nothing` action.
-        self.num_actions = (
-            1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
-        )
+        self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
 
         config = config.env.booster.neural_network
         in_features = config.num_dim_in
@@ -194,20 +198,18 @@ class TorchNeuralNetwork(nn.Module):
 
         layers = [
             nn.Linear(in_features=in_features, out_features=hidden_features),
-            nn.ReLU(),
-            nn.Dropout(p=0.05),
+            nn.GELU(),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
-                nn.ReLU(),
-                nn.Dropout(p=0.05),
+                nn.GELU(),
             ]
 
         layers += [
             nn.Linear(in_features=hidden_features, out_features=out_features),
-            nn.Sigmoid(),
+            # nn.Softmax(dim=-1),
         ]
 
         self.policy = nn.Sequential(*layers)
@@ -231,9 +233,7 @@ class TorchNeuralNetwork(nn.Module):
         """Creates lookup table of discrete action space."""
         self.actions_lookup = {}
 
-        thrust_levels = numpy.linspace(
-            1.0 / self.num_thrust_levels, 1.0, self.num_thrust_levels
-        )
+        thrust_levels = numpy.linspace(1.0 / self.num_thrust_levels, 1.0, self.num_thrust_levels)
         thrust_angles = numpy.linspace(0.0, 1.0, self.num_thrust_angles)
 
         if self.num_thrust_angles == 1:
@@ -311,7 +311,7 @@ class TorchNeuralNetwork(nn.Module):
         action = self._select_action(state)
         return action
 
-    def forward(self, state: list) -> torch.Tensor:
+    def forward(self, state: torch.Tensor) -> torch.Tensor:
         """Predicts action based for current state.
 
         Args:
@@ -322,3 +322,157 @@ class TorchNeuralNetwork(nn.Module):
         """
         q_values = self.policy(state)
         return q_values
+
+
+class PolicyGradientNetwork(nn.Module):
+    """Policy network for Policy Gradient reinforcement learning.
+
+    Network processes number of states inputs and returns a discrete action.
+
+    Attributes:
+    """
+
+    num_engines = 3  # Number of engines.
+    num_states = 6  # State of booster (r_x, r_y, v_x, v_y, angle, angular_velocity)
+
+    def __init__(self, config: Config) -> None:
+        """Initializes NeuralNetwork class."""
+        super().__init__()
+
+        self.num_thrust_levels = config.optimizer.num_thrust_levels
+        self.num_thrust_angles = config.optimizer.num_thrust_angles
+        self.num_simulation_steps = config.optimizer.num_simulation_steps
+
+        # Number of actions plus `do nothing` action.
+        self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles
+
+        config = config.env.booster.neural_network
+        in_features = config.num_dim_in
+        hidden_features = config.num_dim_hidden
+        num_hidden_layers = config.num_hidden_layers
+        out_features = self.num_actions
+
+        layers = [
+            nn.Linear(in_features=in_features, out_features=hidden_features),
+            nn.GELU(),
+        ]
+
+        for _ in range(num_hidden_layers):
+            layers += [
+                nn.Linear(in_features=hidden_features, out_features=hidden_features),
+                nn.GELU(),
+            ]
+
+        layers += [
+            nn.Linear(in_features=hidden_features, out_features=out_features),
+            nn.Softmax(dim=-1),
+        ]
+
+        self.policy = nn.Sequential(*layers)
+        self.memory = []
+
+        self.apply(self._init_weights)
+
+        self.actions_lookup = None
+        self._init_action_lookup()
+
+        self.epsilon = None
+
+    def _init_weights(self, module) -> None:
+        if isinstance(module, nn.Linear):
+            gain = 2**0.5  # Gain for relu nonlinearity.
+            torch.nn.init.xavier_normal_(module.weight, gain=gain)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+
+    def _init_action_lookup(self):
+        """Creates lookup table of discrete action space."""
+        self.actions_lookup = {}
+
+        thrust_levels = numpy.linspace(1.0 / self.num_thrust_levels, 1.0, self.num_thrust_levels)
+        thrust_angles = numpy.linspace(0.0, 1.0, self.num_thrust_angles)
+
+        if self.num_thrust_angles == 1:
+            thrust_angles = numpy.array([0.5])
+
+        n = 0
+        # Add actions to look-up table.
+        for i in range(self.num_engines):
+            for j in range(self.num_thrust_levels):
+                for k in range(self.num_thrust_angles):
+                    # Action vector with thrust and angle information for each engine.
+                    action = np.zeros((self.num_engines * 2))
+                    # Select thrust j for engine i
+                    action[2 * i] = thrust_levels[j]
+                    # Select angle k for engine i
+                    action[2 * i + 1] = thrust_angles[k]
+                    self.actions_lookup[n] = action
+                    n += 1
+
+        # Add `do nothing` action.
+        action = np.zeros((self.num_engines * 2))
+        self.actions_lookup[n] = action
+
+    def _memorize(self, state: torch.Tensor, action: int) -> None:
+        """Stores past events.
+
+        Stores current `state`, `action`.
+        """
+        self.memory.append([state, action])
+
+    @torch.no_grad()
+    def _select_action(self, state: torch.Tensor) -> int:
+        """Selects an action from a discrete action space.
+
+        We use the current policy-model to map the environment observation,
+        the state, to a probability distribution of the actions, and sample
+        from this distribution.
+
+        Args:
+            state: Tensor representing observed state.
+
+        Returns:
+            Action to be performed by booster. Action consists of firing
+            engine at certain thrust level and angle.
+        """
+        # Build the probability density function (PDF) for the given state.
+        self.eval() 
+        action_prob = self.policy(state)
+        self.train()
+
+        # Sample action from the distribution (PDF).
+        action = torch.multinomial(action_prob, num_samples=1).item()
+
+        # Add state-action pair to memory.
+        self._memorize(state=state, action=action)
+
+        # Convert action index to action vector.
+        action = self.actions_lookup[action]
+
+        return action
+    
+    @torch.no_grad()
+    def predict(self, state: numpy.ndarray) -> numpy.ndarray:
+        """Predicts action.
+
+        Args:
+            state: Current state.
+
+        Returns:
+            Action vector / Q-values.
+        """
+        state = torch.from_numpy(state).float()
+        action = self._select_action(state)
+        return action
+
+    def forward(self, state: torch.Tensor) -> torch.Tensor:
+        """Predicts action based for current state.
+
+        Args:
+            state: Current state.
+
+        Returns:
+            Action vector / Q-values.
+        """
+        action_prob =  self.policy(state)
+        return action_prob
