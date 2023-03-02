@@ -2,14 +2,14 @@
 # Configuration for (asynchronous) Policy Gradient Reinforcement Learning #
 ###########################################################################
 
-random_seed: 41
+random_seed: 42
 
 # Policy Gradient
 optimizer:
-  num_boosters: 4
-  num_simulation_steps: 200    # Length of episode.
-  num_thrust_levels: 3        # Thrust levels of engines. 
-  num_thrust_angles: 3        # Thrust angles of engines.
+  num_boosters: 1
+  num_simulation_steps: 400    # Length of episode.
+  num_thrust_levels: 2        # Thrust levels of engines. 
+  num_thrust_angles: 2        # Thrust angles of engines.
   learning_rate: 0.0005
   batch_size: 128
   gamma: 1.0                 # Discount rate.
