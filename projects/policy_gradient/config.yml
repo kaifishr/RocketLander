@@ -7,12 +7,11 @@ random_seed: 42
 # Policy Gradient
 optimizer:
   num_boosters: 1
-  num_simulation_steps: 400    # Length of episode.
+  num_simulation_steps: 200    # Length of episode.
   num_thrust_levels: 2        # Thrust levels of engines. 
   num_thrust_angles: 2        # Thrust angles of engines.
-  learning_rate: 0.0005
-  batch_size: 128
-  gamma: 1.0                 # Discount rate.
+  learning_rate: 0.0003
+  gamma: 0.92                 # Discount rate.
   lib: "torch"                # Fix.
   net: "policy_gradient"      # Fix.
 
@@ -54,11 +53,11 @@ env:
 
     init:
       position: # [m]
-        x: 50.0
-        y: 250.0
+        x: 20.0
+        y: 150.0
       linear_velocity: # [m / s]
         x: 0.0
-        y: -30.0
+        y: -10.0
       angular_velocity: 0.0   # [deg / s], counterclockwise for positive numbers
       angle: 0.0              # [deg] counterclockwise
 
@@ -78,8 +77,8 @@ env:
       # Specifies whether every agent gets the same starting noise: "identical" or "different"
       type: "different"
       position: # [m]
-        x: 10.0
-        y: 10.0
+        x: 1.0
+        y: 1.0
       linear_velocity: # [m / s]
         x: 1.0
         y: 1.0
@@ -87,9 +86,9 @@ env:
       angle: 0.0  # [deg]
 
     neural_network: # model
-      num_dim_in: 6       # Position, linear velocity, angular velocity, angle.
+      num_dim_in: 6       # Fix. Position, linear velocity, angular velocity, angle.
       num_dim_hidden: 64
-      num_hidden_layers: 1
+      num_hidden_layers: 2
 
 framework:
   screen:

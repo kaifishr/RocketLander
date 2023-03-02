@@ -79,17 +79,17 @@ class Booster(Booster2D):
                     # Simple:
                     reward += gamma / (1.0 + distance)
             else:
-                # reward -= 0.01
-                reward -= 0.5
+                reward -= 0.01
+                # reward -= 0.5
 
             if self._detected_escape():
-                reward -= 100.0
+                reward -= 10.0
 
             if self._detected_stress():
-                reward -= 100.0
+                reward -= 10.0
 
             if self._detected_impact():
-                reward -= 100.0
+                reward -= 10.0
 
             if self._detected_landing():
                 reward += 100.0

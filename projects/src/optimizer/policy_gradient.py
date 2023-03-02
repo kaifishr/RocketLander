@@ -26,7 +26,6 @@ class PolicyGradient(Optimizer):
         config = config.optimizer
         self.gamma = config.gamma
         self.learning_rate = config.learning_rate
-        self.batch_size = config.batch_size
         self.num_thrust_levels = config.num_thrust_levels
         self.num_thrust_angles = config.num_thrust_angles
         self.num_actions = 1 + self.num_engines * self.num_thrust_levels * self.num_thrust_angles

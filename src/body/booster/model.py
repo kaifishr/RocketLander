@@ -355,12 +355,14 @@ class PolicyGradientNetwork(nn.Module):
         layers = [
             nn.Linear(in_features=in_features, out_features=hidden_features),
             nn.GELU(),
+            nn.LayerNorm(hidden_features),
         ]
 
         for _ in range(num_hidden_layers):
             layers += [
                 nn.Linear(in_features=hidden_features, out_features=hidden_features),
                 nn.GELU(),
+                nn.LayerNorm(hidden_features),
             ]
 
         layers += [
