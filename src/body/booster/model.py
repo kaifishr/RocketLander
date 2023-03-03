@@ -25,12 +25,12 @@ class ModelLoader:
     def __call__(self):
         """Loads and returns model."""
         lib = self.config.optimizer.lib
-        net = self.config.optimizer.net
 
         # Instantiate network.
         if lib == "numpy":
             model = NumpyNeuralNetwork(self.config)
         elif lib == "torch":
+            net = self.config.optimizer.net
             if net == "deep_q":
                 model = DeepQNetwork(self.config)
             elif net == "policy_gradient":
